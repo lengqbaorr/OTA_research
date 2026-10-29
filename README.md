@@ -17,6 +17,7 @@ Bộ tài liệu nghiên cứu **nghiệp vụ & ngành** (chưa đi vào công 
 | 09 | [KPI, xu hướng & định hướng](docs/09-kpi-xu-huong-va-dinh-huong.md) | Bộ KPI, xu hướng 2024–2026, các hướng định vị, câu hỏi cần trả lời trước khi viết requirement |
 | 10 | [Từ điển thuật ngữ](docs/10-thuat-ngu-glossary.md) | Glossary Anh – Việt |
 | 11 | [Ý tưởng Social-to-Booking](docs/11-y-tuong-social-to-booking.md) | Ý tưởng sản phẩm: từ nội dung mạng xã hội (video, ảnh, bài viết, bình luận) đến chuyến đi đã đặt — ràng buộc, so sánh phương án kênh, lõi hệ thống, kiến trúc khái niệm, lộ trình, rủi ro |
+| 12 | [Đánh giá tính khả thi](docs/12-danh-gia-tinh-kha-thi.md) | Feasibility study 7 chiều, chấm điểm có trọng số (MVP ≈70%, nâng lên 75–80% có điều kiện), unit economics thô, giả thuyết sống còn, tiêu chí Go/No-go |
 
 ## Cách đọc
 - Người mới vào ngành: 01 → 02 → 03 → 10.
