@@ -1,480 +1,536 @@
-# 03. Ý tưởng triển khai: "Vinpearl cho người trẻ"
+# 03. Ý tưởng triển khai (bản chốt sơ khai)
 
-> Tài liệu này kết hợp hai nguồn:
-> - [02 – Đề bài của ban tổ chức](02-de-bai-vinpearl-cho-nguoi-tre.md): **nguồn sự thật cao nhất, bắt buộc tuân theo**. Mọi chỗ mâu thuẫn, đề bài thắng.
-> - [01 – Kiến thức nền ngành OTA](01-kien-thuc-nganh-OTA.md): dùng để đưa ra lựa chọn có cơ sở.
->
-> Ký hiệu: **A1–A16, B1–B7** là mã yêu cầu trong đề bài; "mục X" là mục của đề bài.
-> Các con số (thời gian, trọng số, ngưỡng) là **giá trị khởi điểm**. Chúng sẽ được hiệu chỉnh bằng đo đạc, và mọi thay đổi đều ghi lại lý do.
+> **Tên làm việc**: *Đi Ngay*: nền tảng video du lịch "xem là đi được".
+> **Bối cảnh**: đề tài mở, nền tảng của riêng đội, không làm cho một tập đoàn nào. [02 – Đề bài](02-de-bai-vinpearl-cho-nguoi-tre.md) dùng làm **tham chiếu yêu cầu** (persona, nghiệm thu, cách đo, quy tắc trung thực). [01 – Kiến thức ngành OTA](01-kien-thuc-nganh-OTA.md) là nền lý thuyết.
+> **Bản mô phỏng kèm theo**: [demo/mo-phong-di-ngay.html](../demo/mo-phong-di-ngay.html) (giao diện điện thoại) · [demo/workflow-diagram.html](../demo/workflow-diagram.html) (sơ đồ để trình bày).
+> Mọi con số (ngưỡng, trọng số, giá) là **giá trị khởi điểm**, sẽ hiệu chỉnh bằng đo đạc. Số liệu thị trường lấy từ báo chí và trang giới thiệu, cần kiểm chứng trước khi trích dẫn.
 
 ---
 
-## 1. Hiểu bài toán
+## 0. Các quyết định đã chốt
 
-> Biến Vinpearl từ *"chỗ bố mẹ đi"* thành nơi người trẻ **thấy chuyến đi thật của người thật, rồi đặt y chang chỉ với một chạm**, trong ngân sách của họ và bằng ngôn ngữ của họ.
-
-| Trụ cột | Ý nghĩa | Yêu cầu |
+| # | Quyết định | Thay cho |
 |---|---|---|
-| **Nội dung thật** | Chỉ người đã đặt và đã đi mới đăng bài. Lộ trình lấy từ đơn thật | A2, A10, A14, mục 5 |
-| **Khám phá theo gu & xu hướng** | Bảng tin xu hướng, tìm bằng lời, gợi ý cá nhân, trợ lý | A1, A3, A6, A7, A12, A15 |
-| **Đặt nhanh, đặt đúng** | Một chạm tới trang chi tiết, đặt theo lộ trình, giá thật, không trừ tiền hai lần, không bán trùng chỗ cuối | A4, A8, A9, A11, A16 |
-
-**Bốn sản phẩm, một nguồn dữ liệu**: Android app, Web OTA, Trợ lý (chạy trong app và web), Trang quản trị. Tất cả dùng chung một tài khoản và một backend (mục 7).
-
-**Phạm vi**: chỉ dịch vụ Vinpearl (khách sạn/resort, VinWonders, golf, vé máy bay, combo); thanh toán giả lập; bộ dữ liệu sản phẩm và khách hàng mô phỏng **không có bài đăng**. Ngoài phạm vi: iOS, tính năng nhóm, thanh toán thật, hệ thống khách hàng thật, dịch vụ ngoài Vinpearl, ngôn ngữ khác, CS người thật.
-
----
-
-## 2. Áp dụng tri thức OTA vào đề bài
-
-Phần này cho thấy *vì sao* các lựa chọn ở sau là đúng hướng. Mỗi dòng là một bài học của ngành được áp vào một yêu cầu cụ thể.
-
-| Tri thức ngành (tài liệu 01) | Áp vào đề bài |
-|---|---|
-| **Tồn kho dễ hỏng, giá động, giữ chỗ có hạn (Hold/TTL)** | Giữ chỗ 10 phút khi vào màn xác nhận; giá chốt theo báo giá có hạn; giá đổi thì báo trước khi trả (A4) |
-| **Trạng thái "đã trả mà không có chỗ" là khiếu nại số 1** | Máy trạng thái đơn chặt chẽ, tự hoàn tiền, A16 phát hiện đơn bất thường |
-| **Idempotency, đối soát đơn ↔ thanh toán** | Không trừ tiền hai lần (A4, A8, A11); bộ phát hiện bất thường đối chiếu đơn với giao dịch |
-| **Overbooking, tranh chỗ cuối** | Trừ tồn kho nguyên tử: hai người tranh chỗ cuối thì đúng một người được |
-| **Dynamic packaging / combo: một mục hỏng kéo cả gói** | Đặt theo lộ trình = giỏ nhiều mục, giữ chỗ tất cả trước rồi mới trả tiền, có chính sách khi một mục hỏng (A11) |
-| **Review đã xác minh** (Booking, Airbnb) | Bài đăng gắn với đơn đã hoàn thành, kèm dấu "Đã đi thật" (A2), phục vụ persona Hà |
-| **UGC + AI của Trip.com** (Trip Moments, TripGenie) | Bảng tin bài đăng + trợ lý gợi ý (A1, A12) là hướng đã được thị trường chứng minh |
-| **Chống gian lận: lạm dụng nhiều tài khoản** | Chống đẩy xu hướng ảo bằng điểm tin cậy tài khoản và gom cụm thiết bị (A15) |
-| **Dark patterns bị xử phạt** (khan hiếm giả, giá nhỏ giọt) | Không "chỉ còn 1 phòng" sai sự thật, không đếm ngược giả, luôn hiện giá cuối (mục 5, mục 6) |
-| **Look-to-book cao, chi phí tra cứu** | Cache kết quả tìm kiếm và trợ lý; giới hạn tần suất; đo chi phí trợ lý (mục 7) |
-| **Back-office là "khối chìm" quyết định vận hành** | Trang quản trị không làm qua loa: hàng chờ ưu tiên, audit log, phân quyền (A13–A16) |
-| **Hành trình khách: Mơ ước → Kế hoạch → Đặt → Trải nghiệm → Chia sẻ** | App phủ trọn vòng: bảng tin (mơ ước), tìm và trợ lý (kế hoạch), đặt ngay (đặt), Chuyến đi của tôi (trải nghiệm), đăng bài (chia sẻ, quay lại nuôi bảng tin) |
-| **Bán kèm tăng biên, connected trip** | Gợi ý sau khi đặt: có phòng thì gợi ý vé máy bay và hoạt động, không gợi ý thêm phòng (A9) |
-| **Pháp lý: dữ liệu cá nhân, người tiêu dùng, khuyến mại** | Tối thiểu hóa dữ liệu gửi cho trợ lý; lộ trình không lộ thông tin riêng; không bịa khuyến mãi; ≥ 18 tuổi mới tự đặt |
-| **Đặc điểm người Việt: nhạy giá, nói lóng, mạng di động** | Hiểu "2 củ", "4 đứa", không dấu; tối ưu cho máy yếu và mạng yếu |
+| Q1 | Nền tảng độc lập, nguồn hàng **lai**: hàng tự cung cấp + API đối tác + link affiliate | "Chỉ bán dịch vụ Vinpearl" |
+| Q2 | **Không bắt buộc xác minh "đã đi thật"** khi đăng bài. Niềm tin dựa vào nhãn Hợp tác, đánh giá "khớp thực tế" sau chuyến, điểm uy tín, kiểm duyệt | Xác minh bằng đơn, email ký số, thẻ lên máy bay, QR, vị trí |
+| Q3 | Người đăng dựng **lộ trình bằng các điểm có cấu trúc**, chọn từ dữ liệu địa điểm sẵn có | Lộ trình lấy từ đơn đặt chỗ |
+| Q4 | Nút **"Đi ngay"**: bộ lập kế hoạch **lai (AI + luật)** tự lên phương án đi lại và chỗ ở theo nơi đi, ngày, số người, **ngân sách** của người xem rồi đặt luôn | "Đi y chang" sao chép đúng các mục người đăng đã đặt |
+| Q5 | Quán ăn, điểm chơi là **gợi ý** (đi gì tới, bao lâu, tầm giá), không đặt trong app | — |
+| Q6 | Đăng bài gọn: **một trang** video + caption + khai tài trợ; bỏ bước che mặt người lạ (riêng tư xử lý qua kiểm duyệt, báo cáo) | Nhiều bước, có che mặt |
 
 ---
 
-## 3. Persona → Yêu cầu → Kịch bản sẽ bị thử
+## 1. Ý tưởng
 
-| Persona | Nhu cầu | Yêu cầu | Người hướng dẫn có thể thử |
+### 1.1. Một câu
+> **Ứng dụng video ngắn về du lịch: mỗi video kèm một lộ trình gồm các điểm (đi từ đâu, ở đâu, chơi gì, ăn gì). Người xem bấm "Đi ngay", hệ thống tự lên phương án đi lại và chỗ ở vừa ngân sách, tính từ thành phố của họ, và đặt luôn trong một màn hình.**
+
+### 1.2. Vấn đề
+- Người trẻ tìm cảm hứng du lịch qua video ngắn, nhưng giữa "thấy video" và "đặt xong" là một chuỗi việc thủ công: đoán chỗ trong video, tự tìm vé xe hoặc máy bay, tự tìm phòng, tự ghép giờ giấc, tự cân ngân sách.
+- Nhiều nội dung là seeding, ảnh "quá đẹp", khó biết có đáng tin không.
+- Ngân sách hạn chế; ngại quy trình đặt dài.
+
+### 1.3. Người dùng (theo đề bài)
+
+| Persona | Nhu cầu | Sản phẩm đáp ứng |
+|---|---|---|
+| **Vy, 21**, ngân sách ít | "Chỗ chill dưới 2 củ" | Ngân sách là đầu vào chính của Đi ngay; tìm bằng lời hiểu tiếng lóng |
+| **Khang, 25**, quyết sát ngày | Thấy chuyến hay là muốn đi ngay | Đi ngay ra 3 phương án trong vài giây, đặt trong một màn hình |
+| **Linh, 22**, thích kể chuyện | Đăng video kèm lộ trình | Đăng một trang + dựng lộ trình bằng ô chọn địa điểm |
+| **Hà, 23**, không tin bài quá đẹp | Muốn biết nội dung thật hay giả | Nhãn Hợp tác, "X người đã đi theo · điểm khớp thực tế", tóm tắt ý kiến |
+| **Bạn 17 tuổi** | Muốn đặt phòng | Không được tự đặt; vẫn xem, lưu, lên kế hoạch |
+| **Người mới tải app** | Chưa biết đi đâu | Bảng tin xu hướng không cần đăng nhập; trợ lý |
+| **Nhân viên kiểm duyệt** | Hàng trăm mục mỗi ngày | Hàng chờ ưu tiên, AI gợi ý, audit log |
+
+---
+
+## 2. Đối chiếu với đề bài
+
+| Yêu cầu đề bài | Trạng thái | Ghi chú |
+|---|---|---|
+| A1 Bảng tin xu hướng | ✅ | Video dọc kiểu TikTok, lý do ngắn bằng số thật |
+| A2 Đăng bài kèm lộ trình | ⚠️ **Điều chỉnh** | Giữ: chữ, ảnh, video, lộ trình, nháp không mất khi rớt mạng. **Bỏ** điều kiện "chỉ người đã đặt và đã đi" (Q2). Lộ trình dựng bằng ô chọn địa điểm thay vì lấy từ đơn (Q3) |
+| A3, A6 Tìm bằng lời | ✅ | Chuẩn hóa không dấu, teencode, emoji; tìm theo ý; không có thì nói thật |
+| A4, A8 Đặt chỗ, giá thật, không trừ tiền hai lần, chỗ cuối, dưới 18 | ✅ | Giữ chỗ 10 phút, mã chống trùng, trừ tồn kho nguyên tử |
+| A5 Chuyến đi của tôi, đồng bộ | ✅ | |
+| A7 Gợi ý dành cho bạn | ✅ | |
+| A9 Gợi ý phần còn thiếu | ✅ | Gợi ý ăn chơi trong chuyến lưu kèm đơn |
+| A10 Tương tác | ✅ | Realtime, đếm đúng, deep link |
+| A11 Đặt theo lộ trình | ✅ **Mở rộng** | Thành "Đi ngay": không sao chép mà **lập phương án mới** theo người xem |
+| A12 Trợ lý | ✅ | Cùng lớp AI với Đi ngay; không bịa, không tự đặt |
+| A13–A16 Quản trị | ✅ | Thêm màn đối tác cho chủ homestay |
+| Mục 5 "Không bài đăng giả" | ⚠️ **Thay cơ chế** | Thay xác minh bằng nhãn Hợp tác bắt buộc + đánh giá khớp thực tế + kiểm duyệt (mục 9) |
+| Mục 8 "Chỉ dịch vụ Vinpearl" | ❌ Không áp dụng | Đề tài mở (Q1) |
+
+---
+
+## 3. Sản phẩm & danh mục tính năng
+
+**Bốn sản phẩm, một backend**: Android app · Web · Trợ lý (trong app và web) · Trang quản trị (kèm màn đối tác).
+
+Ưu tiên: **P0** bắt buộc cho demo · **P1** nên có · **P2** nếu còn thời gian · **V** tầm nhìn sau dự án.
+
+| Nhóm | Tính năng | Ưu tiên |
+|---|---|---|
+| **Bảng tin** | Video dọc tự phát, chương theo điểm lộ trình, lý do hot bằng số thật, không lặp bài, mượt trên máy yếu và mạng yếu | P0 |
+| | Thả cảm xúc, bình luận, lưu, chia sẻ, báo cáo; realtime giữa app và web | P0 |
+| | Bảng lộ trình trượt lên từ video | P0 |
+| **Đăng bài** | Một trang: video + caption + khai tài trợ | P0 |
+| | Dựng lộ trình bằng ô chọn địa điểm (di chuyển, ở, chơi, ăn), có địa chỉ và tầm giá | P0 |
+| | Nháp không mất khi rớt mạng; tải video lên theo từng phần | P0 |
+| **Đi ngay** | Chọn nơi đi, ngày, số người, ngân sách, ưu tiên (rẻ / cân bằng / nhanh), tránh đi đêm | P0 |
+| | Gõ tự do ("2 đứa, 3 củ mỗi người, không đi xe đêm") → AI hiểu | P0 |
+| | 3 phương án, đổi chỗ ở, gợi ý ăn chơi kèm cách đi và tầm giá | P0 |
+| | Nói thật khi không có phương án vừa ngân sách, gợi ý mức cần nâng | P0 |
+| **Đặt & thanh toán** | Giỏ vé các chặng + phòng, giữ chỗ 10 phút, thanh toán giả lập chống trùng, chỗ cuối cùng, chặn dưới 18 | P0 |
+| | Trả trước trong app hoặc trả tại homestay (với hàng tự cung cấp) | P1 |
+| **Chuyến đi** | Danh sách chuyến, gợi ý đã lưu, bài đã lưu; đồng bộ đa thiết bị | P0 |
+| **Tìm kiếm & trợ lý** | Tìm theo ý, hiểu tiếng Việt kiểu người trẻ; trợ lý gợi ý chỗ và bài có thật | P0 |
+| **Quản trị** | Phân quyền, kiểm duyệt, xu hướng và phát hiện đẩy ảo, tra cứu đơn và đơn bất thường | P0 |
+| | Màn đối tác: lịch phòng, ngừng bán, giá, đơn mới | P1 |
+| | Theo dõi trợ lý: câu hỏi, gợi ý, chi phí (B7) | P1 |
+| **Niềm tin** | Nhãn Hợp tác, đánh giá khớp thực tế sau chuyến, điểm uy tín tài khoản | P0 / P1 |
+| **Mở rộng** | Offline đọc lại bảng tin (B4), tóm tắt ý kiến (B1) | P2 |
+| | Thưởng người đăng theo người đi theo hoàn thành chuyến; API đối tác thật; "Có X triệu đi đâu?"; trợ lý canh giá; định giá theo xu hướng cho homestay | V |
+
+---
+
+## 4. Đăng bài
+
+### 4.1. Bước 1: một trang
+Chọn video (gợi ý ≤ 60 giây) · caption · "Bài này có nhận tài trợ không?" (bắt buộc trả lời; "Có" thì gắn nhãn **Hợp tác**).
+
+### 4.2. Bước 2: dựng lộ trình bằng ô có cấu trúc
+Theo ngày, mỗi điểm chọn một loại; địa điểm **chọn từ dữ liệu sẵn có** (API bản đồ, danh mục sân bay, ga, bến xe, dữ liệu đối tác, địa điểm tích lũy từ người dùng đã kiểm duyệt).
+
+| Loại | Ô nhập | Tự điền khi chọn từ gợi ý | Dùng cho Đi ngay |
 |---|---|---|---|
-| **Vy, 21** | Đúng ngân sách, nói "dưới 2 củ" | A3, A6, A7, A12 | Gõ không dấu "cho chill duoi 2 cu": có lẫn resort 5 sao không? |
-| **Khang, 25** | Thấy bài Phú Quốc 3 ngày là đặt y vậy, quyết sát ngày | A1, A4, A11 | Bấm "Đặt ngay": bao nhiêu thao tác? Mục hết chỗ thì sao? |
-| **Linh, 22** | Đăng ảnh/video + lộ trình | A2, A10 | Chưa đi mà đăng bài được không? Mất mạng giữa chừng thì mất bài không? |
-| **Hà, 23** | Không tin bài quá đẹp | A2, A14, B1 | Có dấu "đã đi thật" không? Bài quảng cáo có lọt không? |
-| **Bạn 17 tuổi** | Muốn đặt phòng | A8, mục 5 | Tự đặt được không? Gọi thẳng API có lách được không? |
-| **Người mới tải app** | Chưa có tài khoản, chưa biết đi đâu | A1, A12 | Có thấy bảng tin ngay không? Bấm đặt rồi đăng nhập thì có quay lại đúng chỗ không? |
-| **Nhân viên kiểm duyệt** | Hàng trăm mục/ngày | A13, A14 | Hàng chờ có ưu tiên không? Ẩn bài thì bao lâu biến mất? Có xem được thanh toán không (phải là không)? |
+| **Di chuyển** | Từ · Đến · Phương tiện | Loại điểm + **địa chỉ chi tiết** (ví dụ "Bến xe Mỹ Đình · 20 Phạm Hùng, Nam Từ Liêm, Hà Nội") | Xác định điểm trung chuyển của điểm đến |
+| **Ở** | Chỗ ở · Số đêm | Loại chỗ, địa chỉ, giá tham khảo | Ưu tiên chỗ này nếu còn phòng, vừa ngân sách |
+| **Chơi / Ăn** | Địa điểm · Tầm giá · Ghi chú | Loại, địa chỉ, giá, khoảng cách tới chỗ ở | Gợi ý kèm "đi gì tới, bao lâu, bao nhiêu" |
 
-**Bảng truy vết rút gọn** (mốc theo mục 10 đề bài):
+- Gõ tên chưa có trong dữ liệu → cảnh báo, khuyên chọn từ gợi ý.
+- **Điều kiện đăng**: ít nhất một chặng di chuyển và một chỗ ở chọn từ dữ liệu.
 
-| Mốc | Yêu cầu | Độ rủi ro |
-|---|---|---|
-| 1 | A1 (v1), A4 (trang chi tiết), A6, A7, A12 (thử nghiệm), A13 | A1, A6: cao |
-| 2 | A2, A3, A4 (đặt nhanh), A8, A9, A10, A12 (gợi ý địa điểm), A14, A16 | **A4, A8 rất cao**; A2, A3, A10 cao |
-| 3 | A5, A11, A12 (gợi ý bài đăng, đa nền tảng), A15, phần B | **A11 rất cao** |
+### 4.3. Hệ thống xử lý sau khi đăng
+Chuyển mã video (nhiều mức chất lượng, ảnh bìa) → sàng lọc AI (xúc phạm, quảng cáo ẩn, lừa đảo, số điện thoại, link lạ, thông tin cá nhân) → chép lời và đọc chữ để lập chỉ mục tìm kiếm theo ý → đưa vào bảng tin và bắt đầu tính xu hướng.
 
 ---
 
-## 4. Đề xuất cho các câu hỏi mở (mục 5)
+## 5. "Đi ngay": bộ lập kế hoạch lai
 
-Mỗi đề xuất có ba phần: **Đề xuất → Vì sao → Thể hiện trong sản phẩm**.
+### 5.1. Kiến trúc hai lớp
 
-### 4.1. Xu hướng
-
-**"Đang được quan tâm" tính theo gì?** Kết hợp nhiều tín hiệu. Mỗi tín hiệu tính **theo số người khác nhau**, nhân **trọng số** của hành động, nhân **độ tin cậy tài khoản**, rồi **giảm dần theo thời gian**.
-
-| Tín hiệu | Trọng số | Lý do |
+| Lớp | Làm gì | Không được làm |
 |---|---|---|
-| Xem đủ lâu (≥ 3 giây hoặc mở chi tiết) | 1 | Rẻ, dễ giả |
-| Thả cảm xúc | 2 | Ít công |
-| Bình luận (người khác nhau, không rác) | 3 | Tốn công hơn |
-| Lưu bài / Chia sẻ có người mở | 4 | Thể hiện ý định đi |
-| **Đặt theo lộ trình** | 10 | Mạnh nhất, khó giả nhất (cần tài khoản ≥ 18 tuổi, đi hết luồng đặt) |
-| Bỏ qua nhanh / ẩn bài | –1 | Phản hồi tiêu cực |
+| **AI (agent)** | Hiểu câu nói thành điều kiện có cấu trúc `{origin, ppl, budget/người, noNight, pref}`; hỏi lại 1 câu nếu thiếu; giải thích phương án; nhận yêu cầu sửa | Bịa giá, giờ, chuyến, chỗ; tự đặt chỗ |
+| **Luật (rule engine)** | Tìm đường đi, ràng buộc giờ, kiểm tra phòng trống, tính tiền, lọc ngân sách, chọn phương án | — |
 
-`Điểm(t) = Σ tín hiệu [ trọng số × Σ người ( tin cậy × suy giảm theo thời gian ) ]`. Xu hướng *địa điểm* = tổng điểm các bài về chỗ đó + lượt xem trang chi tiết + lượt đặt.
-→ *Trong sản phẩm*: mỗi bài có **lý do ngắn bằng số thật** ("32 người lưu trong 24h", "5 người đã đặt theo lộ trình này tuần này"); admin có bảng phân rã điểm.
+**Vì sao lai**: chỉ dùng luật thì không hiểu "3 củ", "đỡ mệt"; chỉ dùng AI thì có thể bịa và khó kiểm thử. Lai thì AI lo phần hiểu, luật lo mọi phép tính từ dữ liệu thật, đúng yêu cầu "không bịa" của đề bài.
 
-**Bao lâu lên bảng tin, bao lâu hạ nhiệt?**
-- Tính lại **mỗi 5 phút**, có phát hiện tăng tốc (1 giờ gần nhất so với nền 7 ngày) → bài tăng vọt lên bảng tin trong **5–15 phút**.
-- Suy giảm theo **chu kỳ bán rã 24 giờ** cho bài đăng và 72 giờ cho địa điểm → bài không còn tương tác rời nhóm xu hướng sau **2–3 ngày**.
-- *Vì sao*: người trẻ quyết trước 1–2 ngày (persona Khang) và đi theo nhịp cuối tuần, nên bài hot cần ở trên bảng tin đúng cửa sổ ra quyết định đó, đồng thời bảng tin vẫn mới mỗi ngày. Địa điểm thay đổi chậm hơn bài đăng.
-- *Trong sản phẩm*: admin có biểu đồ điểm theo thời gian; có kịch bản demo dồn tương tác vào một bài rồi xem nó lên và xuống.
+### 5.2. Thuật toán (lớp luật)
+1. **Đọc lộ trình**: điểm đến, điểm trung chuyển (Tà Xùa → Bến xe Bắc Yên; Phú Quốc → sân bay PQC), số đêm, chỗ ở người đăng chọn.
+2. **Đường đi**: tìm trên đồ thị phương tiện (máy bay, tàu, xe giường nằm, limousine), tối đa 2 chặng đặt được + **chặng cuối** gợi ý (xe ôm, taxi) có giá ước tính.
+3. **Ràng buộc giờ**: nối chuyến ≥ 1,5 giờ; tới chỗ ở trước 23h ngày 1; chặng quá dài thì **lùi ngày khởi hành** và báo rõ. Chiều về rời sau giờ đã chơi buổi sáng ngày cuối.
+4. **Chỗ ở**: số phòng = số người / 2 làm tròn lên; ưu tiên **đúng chỗ trong lộ trình** nếu còn phòng và vừa ngân sách, không thì chỗ tương tự gần đó.
+5. **Lọc**: ngân sách mỗi người (vé + phòng), "tránh đi đêm" (chỉ tính chặng dài ≥ 4 giờ phải ngủ trên xe hoặc tàu).
+6. **Chọn 3 phương án**: Tiết kiệm (rẻ nhất), Nhanh (ít giờ di chuyển nhất), Cân bằng (tổng điểm chi phí và thời gian đã chuẩn hóa, trọng số theo ưu tiên). Bỏ phương án trùng.
+7. **Không có gì vừa ngân sách**: nói thật, đưa phương án gần nhất và mức cần nâng.
 
-**Chống một người tạo nhiều tài khoản để đẩy bài**:
-1. Một tài khoản chỉ được tính một lần mỗi loại tín hiệu trên mỗi bài (bấm 100 lần vẫn là 1).
-2. **Điểm tin cậy tài khoản** (0–1): tăng theo tuổi tài khoản, đã xác minh, **đã có đơn hoặc đã đi**, hành vi đa dạng.
-3. Gom cụm theo thiết bị/mạng: nhiều tài khoản cùng nguồn tính như một vài người.
-4. Phát hiện bùng nổ: tỷ lệ tương tác từ tài khoản tin cậy thấp vượt ngưỡng → gắn cờ "nghi đẩy ảo", đóng băng điểm.
-5. Tác giả tự tương tác bài mình: 0 điểm.
-
-*Vì sao*: không thể chặn tuyệt đối việc tạo nhiều tài khoản, nhưng có thể làm việc đó **tốn công mà vô hiệu** (50 tài khoản mới có sức nặng xấp xỉ 5 người thật). *Trong sản phẩm*: A15 có danh sách "Xu hướng đáng ngờ" kèm lý do.
-
-**Người mới chưa có gu**: hiện xu hướng chung ngay, không bắt đăng nhập, có đa dạng điểm đến và mức giá. Chen một thẻ "Bạn thích kiểu nào?" có thể bỏ qua. Học từ các tương tác đầu trên định danh ẩn danh, đăng nhập thì gộp vào tài khoản. Bảng tin trộn ~60% hợp gu, ~20% xu hướng chung, ~20% khám phá để tránh bong bóng thông tin.
-
-### 4.2. Bài đăng & tương tác
-
-**Biết chắc người đăng đã đi thật**: bài **gắn với một đơn của chính người đó** ở trạng thái *Đã hoàn thành* (đã qua ngày trả phòng/sử dụng, không hủy, đã thanh toán giả lập). Server kiểm tra lại khi đăng, không chỉ ẩn nút. Dấu hiển thị "Đã đi thật · Hè 2026" ở mức mùa, **không hiện ngày cụ thể**.
-*Vì sao*: dữ liệu đơn thuộc Vinpearl nên không giả được, đúng như cơ chế review đã xác minh của các OTA lớn.
-
-**Báo cáo thì ẩn ngay hay chờ? Tự động kiểm duyệt? AI Agent?** Kiểm duyệt 3 tầng:
-
-| Tầng | Quy tắc |
-|---|---|
-| **Sàng lọc tự động khi đăng** (AI + luật) | Phân loại an toàn / cần xem / nguy hiểm. Các nhóm: xúc phạm, quảng cáo, lừa đảo (số điện thoại, link lạ, "chuyển khoản trước"), nguy hiểm, **thông tin cá nhân**, **mặt người lạ**. An toàn thì hiện ngay; cần xem thì hiện và vào hàng chờ; nguy hiểm thì giữ lại chờ duyệt |
-| **Báo cáo** | Ưu tiên theo số người báo × độ tin cậy người báo × mức nghiêm trọng. **Tự ẩn tạm** khi có ≥ 3 người báo cáo tin cậy khác nhau, hoặc AI xác nhận nhóm nghiêm trọng (lừa đảo, nguy hiểm, lộ thông tin cá nhân) |
-| **Con người quyết định** | Kiểm duyệt viên hiện/ẩn/xóa và **bắt buộc chọn lý do**. AI Agent gợi ý hành động, lý do và đoạn vi phạm; người bấm xác nhận |
-
-*Vì sao*: ẩn ngay mọi thứ bị báo cáo thì dễ bị lạm dụng để "đánh" bài thật; chờ hoàn toàn thì lừa đảo tồn tại lâu. AI chỉ gợi ý để giữ trách nhiệm giải trình theo A14.
-
-**Sửa bài sau khi đăng**: mọi bản sửa đều qua sàng lọc tự động. Sửa chữ nhỏ và an toàn thì hiện ngay. Đổi ảnh, video, lộ trình hoặc bị AI gắn cờ thì vào hàng chờ, trong lúc đó vẫn hiện bản cũ đã duyệt. Lưu lịch sử phiên bản, admin xem được khác biệt giữa các bản. *Vì sao*: chặn chiêu "đăng sạch rồi sửa thành quảng cáo".
-
-**Số lượt cảm xúc**: **kết quả cuối luôn đúng tuyệt đối, độ trễ hiển thị giữa các thiết bị ≤ 2 giây.** Nguồn sự thật là bản ghi duy nhất cho mỗi cặp người × bài; bấm liên tục chỉ bật/tắt bản ghi đó. Người bấm thấy kết quả ngay trên máy mình; nơi khác nhận qua kênh realtime. *Vì sao*: "ngay lập tức trên mọi máy" đòi khóa đồng bộ rất tốn kém mà mắt người không phân biệt được 0 với 2 giây. Điều người dùng cảm nhận được là con số không bao giờ sai.
-
-### 4.3. Đặt theo lộ trình
-
-**Lộ trình lưu theo "ngày tương đối"** (Ngày 1, 2, 3…), **không lưu ngày thật** ở phần công khai.
-
-| Hiện (người đăng bật/tắt từng mục) | Luôn riêng tư |
-|---|---|
-| Điểm đến, tên khách sạn/khu vui chơi/golf, loại phòng/loại vé, thứ tự theo ngày, số đêm, chặng bay (nơi đi – nơi đến), ghi chú của người đăng, **giá hiện tại** lúc người xem mở bài | Ngày đi/về, **số tiền đã trả**, mã đặt chỗ, số hiệu chuyến kèm ngày cụ thể, thông tin người đi cùng, số người đi (mặc định ẩn), lịch sử đặt khác |
-
-*Vì sao*: đủ để người khác đặt y chang, không lộ thông tin cá nhân; việc dời theo ngày mới trở nên tự nhiên.
-
-**Người đăng xóa bài / mục ngừng bán**:
-- Xóa bài → nội dung biến mất; trong "Bài đã lưu" của người khác hiện thẻ *"Bài này đã được tác giả gỡ"*. Các đơn đã đặt theo bài đó vẫn còn nguyên.
-- Bài bị kiểm duyệt ẩn → *"Bài này không còn hiển thị"*.
-- Mục ngừng bán hoặc hết chỗ → bài vẫn hiện, mục đó có nhãn rõ. Khi "Đặt ngay" thì gợi ý mục tương tự (cùng điểm đến, cùng loại, giá gần nhất) hoặc cho bỏ mục đó.
-
-**Một mục thất bại khi thanh toán cả lộ trình**: áp dụng mô hình **"giữ chỗ tất cả → thanh toán một lần → xác nhận tất cả"** (cách xử lý combo của ngành):
-1. Vào màn xác nhận thì **giữ chỗ và chốt giá mọi mục**. Mục nào giữ không được thì báo ngay, để bỏ, đổi hoặc chọn mục tương tự. Phần lớn thất bại được phát hiện **trước khi trả tiền**.
-2. Thanh toán một giao dịch, có mã chống trùng.
-3. Nếu vẫn hỏng sau khi trả (hiếm), áp dụng chính sách **người dùng đã chọn trước**:
-   - **Mặc định "Giữ phần đặt được"**: mục lỗi tự hoàn tiền ngay (giả lập), báo rõ từng mục và số tiền; cho **hủy miễn phí phần còn lại trong 30 phút**.
-   - **Tùy chọn "Tất cả hoặc không"**: hủy toàn bộ, hoàn toàn bộ.
-
-*Vì sao*: không có lựa chọn đúng cho mọi người (mất vé vui chơi khác hẳn mất vé máy bay). Cho người dùng chọn trước là trung thực và không ép mua.
-
-**"Chênh lệch nhiều" (A11)**: không so với giá người đăng đã trả (vì riêng tư). Thay vào đó so tổng giá hiện tại với **"mức giá thường thấy"** của chính các mục đó (trung vị 30 ngày). Lệch > 20% thì báo rõ và gợi ý dời 1–2 ngày.
-
-### 4.4. Trợ lý
-
-**Dựa vào đâu, làm sao không bịa?**
-1. **Hiểu câu hỏi** → điều kiện có cấu trúc: điểm đến, ngày ("cuối tuần này"), số người ("4 đứa"), ngân sách ("3 củ", tính theo người hay cả nhóm), gu ("chill", "quẩy", "không đông").
-2. **Chỉ lấy dữ liệu qua công cụ** của hệ thống: tìm địa điểm, giá và chỗ, tìm bài **đang hiển thị**. Đây là cùng bộ tìm kiếm với A3/A6.
-3. **Gợi ý phải gắn ID có thật.** Thẻ hiển thị (tên, giá, ảnh, link) được dựng từ dữ liệu hệ thống; mô hình chỉ viết câu dẫn và lý do.
-4. **Validator sau khi sinh**: kiểm ID tồn tại, đang bán hoặc đang hiển thị, giá trong câu chữ khớp dữ liệu. Sai thì loại gợi ý đó.
-5. **Trích dẫn bài đăng phải là đoạn có thật** trong bài; không có thì không được gán.
-6. Không có gì phù hợp → nói thật và gợi ý nới điều kiện.
-7. **Không có công cụ đặt chỗ**, nên về mặt kỹ thuật trợ lý không thể tự đặt thay người dùng.
-
-**Nhớ gì, bao lâu**:
-
-| Loại | Thời hạn |
-|---|---|
-| Ngữ cảnh hội thoại | Theo cuộc trò chuyện, lưu 30 ngày (đã đăng nhập) |
-| Sở thích bền (ngân sách, gu, điểm đến quan tâm) | Đến khi người dùng xóa. Hiển thị cho người dùng xem/sửa/xóa ở mục "Trợ lý nhớ về bạn" |
-| Chưa đăng nhập | Gắn định danh ẩn danh trên thiết bị, 7 ngày |
-| Đăng nhập giữa chừng | Gộp cuộc trò chuyện vào tài khoản, không mất |
-| Đa thiết bị | Lưu ở server, nên mở web vẫn tiếp tục được cuộc trò chuyện đang dở trên app |
-
-**Được dùng thông tin gì**: ngân sách và gu người dùng đã nói; thích/lưu/bỏ qua trên app và web; điểm đến của các chuyến đã đặt (để không gợi ý trùng). **Không dùng**: thanh toán, số điện thoại, giấy tờ, ngày sinh cụ thể (chỉ dùng cờ "đủ 18"), dữ liệu người khác, bài đã ẩn. Dữ liệu gửi cho mô hình bên ngoài được tối thiểu hóa: không gửi tên, email, số điện thoại.
-
-**Chi phí & giới hạn**:
-- **Đo** token vào/ra mỗi lượt, quy ra VNĐ, tổng hợp theo lượt, cuộc trò chuyện, người, ngày.
-- **Giảm chi phí**: mô hình nhỏ cho hiểu câu hỏi và phân loại an toàn, mô hình lớn chỉ khi cần diễn đạt; cache câu phổ biến; tóm tắt lịch sử; chỉ đưa top 10 kết quả vào mô hình.
-- **Giới hạn khởi điểm**: chưa đăng nhập 20 tin nhắn/ngày/thiết bị; đã đăng nhập 50 tin nhắn/ngày; ~500 ký tự/tin; có trần chi phí theo ngày cho toàn hệ thống, vượt thì báo thân thiện và gợi ý dùng ô tìm kiếm.
-
-### 4.5. Đặt chỗ
-
-**Giữ chỗ bao lâu**: **10 phút**, áp dụng cho mọi loại sản phẩm và từng mục của lộ trình. Hiển thị giờ hết hạn **thật** ("giữ đến 14:32"); đây là thông tin trung thực chứ không phải khan hiếm giả. Hết hạn thì nhả chỗ, quay lại thì kiểm tra lại chỗ và giá. Mỗi tài khoản giữ tối đa 2 phiên cùng lúc để chống giữ chỗ ảo.
-
-**App và web mở cùng lúc**: đang mở và có mạng thì đồng bộ realtime, **≤ 2–3 giây (p95)**; app ở nền hoặc vừa có mạng lại thì đồng bộ ngay khi mở. Xung đột: đơn đặt chỗ do server quyết (thao tác đến sau bị từ chối nếu trạng thái đã đổi); lưu và thả cảm xúc thì thao tác cuối thắng; bài nháp giữ bản mới nhất và cảnh báo nếu có bản mới hơn ở máy khác.
-
-### 4.6. Các quyết định bổ sung
-
-| Chủ đề | Đề xuất |
-|---|---|
-| **Dưới 18 tuổi** | Ngày sinh bắt buộc khi đăng ký và khóa không cho sửa; server kiểm tra ở bước giữ chỗ **và** thanh toán, áp dụng cho cả app, web, đặt thường, đặt theo lộ trình. Thông báo thân thiện: *"Bạn cần đủ 18 tuổi để tự đặt chỗ. Bạn vẫn có thể khám phá, lưu bài và lên ý tưởng chuyến đi!"* Giới hạn này cần nêu trung thực khi trình bày: tuổi chỉ dựa trên lời khai |
-| **Ngân sách theo người hay cả nhóm** | Có từ "một người/mỗi người" thì hiểu là theo người; có "tổng/cả nhóm" thì hiểu là cả nhóm. Không rõ thì hiện chip chọn "2 củ mỗi người / 2 củ cả nhóm" thay vì hỏi dồn |
-| **Giá đổi** | Báo giá có hiệu lực trong thời gian giữ chỗ; giá đổi thì hiện chênh lệch và bắt xác nhận lại trước khi trả |
-| **Đường dẫn chia sẻ** | Là link web mở được ở mọi trình duyệt; máy đã cài app thì mở thẳng vào app (App Links) |
-| **Ảnh có mặt người lạ / thông tin cá nhân** | Khi tải ảnh lên, phát hiện khuôn mặt và chữ nhạy cảm, đề xuất làm mờ; người đăng chọn giữ mặt mình và bạn mình. Ảnh có giấy tờ hoặc thẻ lên máy bay chưa làm mờ thì không cho đăng |
+### 5.3. Đầu ra cho người xem
+- Chiều đi, chỗ ở (đổi được), chiều về: giờ, ngày, giá thật, nguồn hàng.
+- **Gợi ý trong chuyến** từ lộ trình người đăng: tên, tầm giá, ghi chú, *"Từ chỗ ở: đi bộ 10 phút"* / *"xe ôm ~20 phút · ~60k"* / *"taxi ~50 phút · ~290k"*.
+- Tổng **trả trong app**, **chi phí ngoài app dự kiến**, trạng thái **trong / vượt ngân sách**.
 
 ---
 
-## 5. Giải pháp & kiến trúc
+## 6. Đặt chỗ & thanh toán
 
-### 5.1. Nguyên tắc
-1. **Một backend, một CSDL, nhiều giao diện.** Không giao diện nào giữ dữ liệu riêng.
-2. **Server là nguồn sự thật cho tiền, chỗ, tuổi, quyền.** Không tin giao diện.
-3. **Offline-first cho thao tác viết trên app**: nháp, bình luận, tương tác lưu trên máy trước, gửi khi có mạng.
-4. **Nhẹ cho máy yếu, mạng yếu**: ảnh nhiều kích cỡ, video thích ứng theo mạng, phân trang, tải trước có kiểm soát.
-5. **AI không phải nguồn sự thật**: chỉ diễn giải và xếp hạng; dữ liệu hiển thị lấy từ hệ thống.
-6. **Ghi nhận sự kiện từ ngày đầu** cho xu hướng, cá nhân hóa và đo đạc.
+| Vấn đề | Cách làm |
+|---|---|
+| Giá thật, giá đổi | Báo giá có hạn theo thời gian giữ chỗ; giá đổi thì báo chênh lệch trước khi trả |
+| Giữ chỗ | 10 phút cho mọi mục; giờ hết hạn hiển thị là **thật**, không phải đếm ngược giả |
+| Không trừ tiền hai lần | Mỗi lần thanh toán có **mã chống trùng (idempotency key)**; server và cổng giả lập chỉ xử lý một lần |
+| Chỗ cuối cùng | Trừ tồn kho bằng câu lệnh có điều kiện trong giao dịch; hai người tranh chỗ cuối thì đúng một người được |
+| Một mục lỗi | Giữ chỗ tất cả trước khi trả; vẫn lỗi sau khi trả thì áp chính sách người dùng chọn: giữ phần đặt được (hoàn mục lỗi, hủy miễn phí 30 phút) hoặc tất cả hoặc không |
+| Dưới 18 tuổi | Ngày sinh khóa sửa; server chặn khi giữ chỗ và khi thanh toán; vẫn cho xem, lưu, lên kế hoạch |
+| Đăng nhập giữa chừng | Lưu "ý định", đăng nhập xong quay lại đúng phương án |
+| Máy trạng thái đơn | Giữ chỗ → Chờ thanh toán → Đã thanh toán → Đã xác nhận / Thất bại → Hoàn tiền |
 
-### 5.2. Kiến trúc khái niệm
+---
 
-```
- Android App (offline-first)    Web OTA (SSR cho link chia sẻ)    Trang quản trị (RBAC)
-            └──────────── REST/JSON + kênh realtime (WebSocket/SSE) ────────────┘
-                                            ▼
- ┌─────────────────────────── BACKEND (modular monolith) ───────────────────────────┐
- │ Identity & Auth │ Catalog & Inventory │ Pricing & Quote │ Booking & Hold │ Payment Sim │
- │ Posts & Media │ Interactions │ Moderation │ Trending │ Personalization │ Notifications │
- │ Search (hiểu tiếng Việt người trẻ + ngữ nghĩa) │ Assistant (LLM + tools + validator) │
- │ Event log / Analytics │ Audit log                                                    │
- └─────┬───────────────────┬────────────────────┬────────────────────┬────────────────┘
-   CSDL quan hệ       Cache, bộ đếm,        Chỉ mục tìm kiếm      Lưu trữ media + CDN
-   (đơn, tiền, chỗ)   hàng đợi sự kiện      (từ khóa + vector)    (ảnh/video nhiều cỡ)
-                                  ▲
-                 Mô hình ngôn ngữ bên ngoài (qua lớp đo chi phí)
-```
+## 7. Nguồn hàng
 
-**Vì sao chọn modular monolith**: đội nhỏ, 4 tuần, cần giao dịch chặt giữa giữ chỗ, thanh toán và đơn. Một khối triển khai giảm lỗi phân tán; module ranh giới rõ để sau này tách ra được khi cần.
-
-### 5.3. Phương án cho từng sản phẩm
-
-**Android app**
-
-| Phương án | Ưu | Nhược | Kết luận |
+| Mô hình | Ví dụ | Cách hoạt động | Hiển thị |
 |---|---|---|---|
-| **Native Kotlin + Jetpack Compose** | Hiệu năng tốt nhất trên máy yếu; công cụ chuẩn cho lưu cục bộ, tác vụ nền, App Links; đo hiệu năng dễ | Không chia sẻ code với web | **Khuyến nghị mặc định** nếu đội có người biết Kotlin |
-| Flutter | Hiệu năng khá, giao diện nhất quán | App nặng hơn; offline và tác vụ nền cần thêm thư viện | Nếu đội mạnh Dart |
-| React Native | Dùng chung TypeScript với web | Cần tối ưu kỹ cho danh sách dài trên máy yếu | Nếu đội mạnh React |
-| PWA | — | Không đúng yêu cầu "Ứng dụng Android" | Không chọn |
+| **Tự cung cấp** | Homestay, nhà xe đối tác | Kho phòng và ghế trong hệ thống; màn đối tác (lịch phòng, ngừng bán, giá, đơn); trả trước trong app (mua đi bán lại) hoặc trả tại chỗ (đại lý hưởng hoa hồng) | "Bán trực tiếp", số phòng còn thật |
+| **API đối tác** | Khách sạn, vé máy bay, tàu | Tìm → kiểm tra lại trước khi trả → đặt. Ví dụ: Traveloka Atlas API (khách sạn), mô hình *Online Affiliates* của Agoda; cần đăng ký làm đối tác và thường đòi có pháp nhân | "Đặt qua đối tác", giá thật |
+| **Affiliate** | Vé máy bay khi chưa có API | Giá tham khảo lưu tạm; mở trang đối tác đã điền sẵn, kèm mã theo dõi theo bài | "Liên kết", không hiện giờ và số ghế |
 
-Kỹ thuật bắt buộc dù chọn phương án nào:
-- Phân trang bằng **con trỏ** (cursor) để không lặp bài.
-- Ảnh thumbnail ~20–60KB, tải lười.
-- Video thích ứng theo mạng, chỉ tự phát khi đang nhìn thấy.
-- Cache bảng tin đã xem (nền tảng cho B4).
-- **Hàng đợi gửi lại** cho nháp và bình luận, có mã chống trùng.
-- **Tải video lên theo từng phần** để tiếp tục được sau khi mất mạng.
-- **Lưu "ý định"** trước khi đăng nhập (đang đặt gì, đang ở bài nào) để quay lại đúng chỗ.
+**Trong demo**: mọi nguồn là dữ liệu mô phỏng, không gọi đối tác thật.
 
-**Web & Admin**: framework có **render phía server** cho web người dùng (link chia sẻ có ảnh xem trước, tải nhanh trên điện thoại). Admin dùng cùng framework, là ứng dụng riêng, không cần SSR.
-
-**Backend & dữ liệu**
-
-| Thành phần | Đề xuất | Vì sao |
-|---|---|---|
-| CSDL chính | CSDL quan hệ có giao dịch (ví dụ PostgreSQL) | ACID và ràng buộc duy nhất cho đơn, tiền, chỗ |
-| Bộ đếm, hàng đợi, giới hạn tần suất | Kho khóa–giá trị (ví dụ Redis) | Đếm nhanh, phát sự kiện realtime |
-| Tìm kiếm | Kết hợp từ khóa + vector (ví dụ phần mở rộng vector của PostgreSQL) | Vừa khớp chính xác tên chỗ, vừa hiểu ý ("không đông" ≈ "vắng") |
-| Media | Lưu trữ đối tượng + CDN, xử lý nén ở nền | Mạng yếu, máy yếu |
-| Realtime | WebSocket hoặc SSE | "Thấy ngay" giữa app và web |
-| Ngôn ngữ backend | Theo kỹ năng của đội | Quan trọng là làm đúng giao dịch và idempotency |
-
-### 5.4. Ba cơ chế sống còn cho đặt chỗ (phải giải thích được nguyên lý)
-1. **Giữ chỗ nguyên tử**: trừ tồn kho bằng câu lệnh có điều kiện "chỉ trừ nếu còn ≥ 1" trong giao dịch. Hai người tranh chỗ cuối thì đúng một người được.
-2. **Idempotency key**: mỗi lần thanh toán mang một mã duy nhất. Server và cổng giả lập chỉ xử lý mã đó một lần, nên bấm hai lần, thử lại hay webhook trùng đều không trừ tiền hai lần.
-3. **Máy trạng thái đơn**: Giữ chỗ → Chờ thanh toán → Đã thanh toán → Đã xác nhận / Thất bại → Hoàn tiền. Chỉ cho chuyển theo đường hợp lệ. Đơn lệch trạng thái được A16 phát hiện.
-
-**Cổng thanh toán giả lập** có công tắc tạo tình huống: thành công, thất bại, chậm phản hồi, gửi xác nhận trùng, làm lỗi một mục cụ thể. Dùng để demo và kiểm thử.
-
-### 5.5. Tìm bằng lời của mình (A3, A6) và Trợ lý (A12)
-
-```
-Câu người dùng
- → Chuẩn hóa: giữ cả bản có dấu và không dấu; từ điển teencode ("k"→không, "cn"→chỗ nào,
-   "củ"→triệu, "4 đứa"→4 người); emoji → nghĩa (🏖️→biển)
- → Hiểu ý: trích điều kiện {điểm đến, ngày, số người, ngân sách (mỗi người | cả nhóm), gu}
- → Lọc cứng: ngân sách, sức chứa, còn chỗ, bài đang hiển thị
- → Xếp hạng lai: từ khóa + ngữ nghĩa + gu cá nhân + xu hướng
- → Dưới ngưỡng liên quan thì KHÔNG hiện → "Chưa có chỗ phù hợp" + gợi ý nới điều kiện
-```
-
-Trợ lý dùng lại toàn bộ pipeline trên dưới dạng **công cụ**. Thêm:
-- **Bộ phân loại an toàn** chạy trước: ngoài phạm vi, nguy hiểm, prompt injection → từ chối thân thiện, không gọi mô hình lớn.
-- **Validator** kiểm tra mọi gợi ý trước khi hiện.
-- **Lớp đo chi phí** bao quanh mọi lần gọi mô hình.
-- **Chọn mô hình bằng đo đạc**: thử 2–3 mô hình trên bộ câu hỏi thử, so độ hiểu tiếng Việt kiểu người trẻ, độ gọi công cụ đúng, chi phí và độ trễ. Đây là nội dung "thử nghiệm cách làm" của mốc 1.
-
-### 5.6. Xu hướng, cá nhân hóa, quản trị
-- Điểm xu hướng tính mỗi 5 phút từ nhật ký sự kiện.
-- Hồ sơ gu cập nhật từ hành vi trên **cả app và web**.
-- Mỗi bài/gợi ý có lý do ngắn sinh từ tín hiệu thật.
-- **RBAC**: Quản trị (toàn quyền, có đơn và thanh toán) và Kiểm duyệt (hàng chờ, bài, bình luận, xu hướng; **không** có quyền gọi API thanh toán). Kiểm tra quyền ở server cho từng API.
-- **Audit log chỉ ghi thêm**: ai, lúc nào, hành động, đối tượng, lý do, gợi ý AI là gì.
-- **Bộ phát hiện bất thường đơn** (A16): định kỳ đối chiếu đơn, giao dịch và tồn kho để tìm đơn trả tiền hai lần, đã trả mà không có chỗ, lộ trình chỉ đặt được một phần.
+**Pháp lý khi làm thật**: cần pháp nhân, đăng ký thương mại điện tử, cổng thanh toán được cấp phép. Bán vé + phòng thành **một gói giá** có thể bị coi là kinh doanh lữ hành (cần giấy phép và ký quỹ), nên giai đoạn đầu bán **từng mục riêng lẻ trong một giỏ**.
 
 ---
 
-## 6. Mô hình dữ liệu & quy ước trao đổi (chốt trong tuần 1, theo mục 11)
+## 8. Bảng tin, xu hướng, cá nhân hóa
 
-| Nhóm | Thực thể | Lưu ý |
-|---|---|---|
-| Người dùng | `User` (ngày sinh bắt buộc, khóa sửa), `Profile` (gu, ngân sách), `Device`, `AnonymousSession` | Phiên ẩn danh gộp vào User khi đăng nhập |
-| Nhân viên | `StaffUser`, `Role` (admin, moderator) | Tách riêng khỏi User |
-| Sản phẩm | `Destination`, `Property`, `RoomType`, `Attraction`, `TicketType`, `Flight`, `Combo` + `ComboItem` | Lấy từ bộ dữ liệu được cấp |
-| Tồn kho & giá | `Inventory` (sản phẩm × ngày × số còn), `Price` (sản phẩm × ngày), `PriceQuote` (có hạn) | Giá đổi thì báo giá cũ hết hiệu lực |
-| Đặt chỗ | `BookingSession`, `Hold` (10 phút), `Booking`, `BookingItem` (trạng thái riêng từng mục), `Payment` (idempotency_key duy nhất), `Refund` | `Booking.source_post_id` nếu đặt theo lộ trình |
-| Chuyến đi | `Trip` (gom các Booking của một chuyến) | Nguồn cho "Chuyến đi của tôi" và lộ trình bài đăng |
-| Bài đăng | `Post` (gắn `booking_id` đã hoàn thành, cờ mô phỏng), `PostVersion`, `PostMedia` (nhiều cỡ, cờ đã làm mờ), `Itinerary` + `ItineraryItem` (**day_offset**, product_id, ghi chú, cờ hiển thị; **không có ngày thật hay giá đã trả**) | — |
-| Tương tác | `Reaction` (duy nhất theo user × post), `Comment` (cây trả lời), `Save`, `Share`, `Report` | Ràng buộc duy nhất chống đếm trùng |
-| Kiểm duyệt | `ModerationItem` (độ ưu tiên, nhãn AI), `ModerationAction` (audit) | — |
-| Xu hướng | `InteractionEvent`, `TrendScore` (phân rã theo tín hiệu), `TrustScore`, `TrendFlag` | — |
-| Trợ lý | `Conversation`, `Message`, `AssistantMemory`, `AssistantUsage` (token, chi phí) | — |
-| Thông báo | `Notification` | — |
-
-**Quy ước API**:
-- API có phiên bản (`/v1`); ngày giờ theo ISO 8601 có múi giờ; **tiền là số nguyên VNĐ**.
-- Phân trang bằng con trỏ.
-- **Idempotency-Key** bắt buộc cho giữ chỗ, thanh toán, đăng bài, bình luận, tương tác.
-- Mã lỗi nghiệp vụ dùng chung (`PRICE_CHANGED`, `SOLD_OUT`, `HOLD_EXPIRED`, `UNDER_18`, `NOT_TRAVELED`, `RATE_LIMITED`…) để app và web hiện cùng thông điệp.
-- Sự kiện realtime đặt tên thống nhất (`post.reaction.updated`, `booking.status.changed`, `post.hidden`…).
-- **Viết đặc tả API trước khi làm giao diện**, để app, web và admin làm song song với dữ liệu giả.
-
----
-
-## 7. Trung thực & an toàn (mục 6): cách làm và cách kiểm chứng
-
-| Yêu cầu | Cách làm | Cách kiểm chứng |
-|---|---|---|
-| Không bịa chỗ, giá, khuyến mãi, chỗ trống | Mọi số hiển thị lấy thẳng từ dữ liệu; trợ lý qua validator | So khớp ngẫu nhiên 100 màn hình với dữ liệu; bộ câu hỏi trợ lý |
-| Không bài đăng giả | Bài gắn đơn đã hoàn thành; bài mô phỏng luôn có nhãn | Test API đăng bài khi chưa đi phải bị từ chối |
-| Không khan hiếm giả, không ép mua | Chỉ hiện số liệu thật; không đếm ngược giả; không tự tick mua thêm; nút hủy rõ | Checklist rà soát giao diện |
-| Riêng tư lộ trình & tài khoản | Ngày tương đối; kiểm quyền theo chủ sở hữu ở server | Test API: bài không chứa ngày/giá/mã; đổi ID để xem đơn người khác phải bị chặn; kiểm duyệt viên không xem được thanh toán |
-| Ảnh có mặt người lạ / thông tin cá nhân | Phát hiện và đề xuất làm mờ; chặn đăng giấy tờ chưa làm mờ | Bộ 30 ảnh thử |
-| Nội dung xấu | Sàng lọc 3 tầng (mục 4.2) | Bộ 100 bài/bình luận mẫu có gán nhãn, kể cả kiểu lách luật (không dấu, chèn ký tự, số điện thoại viết bằng chữ) |
-| Dưới 18 tuổi | Kiểm ở server khi giữ chỗ và thanh toán | Test trên app, web, đặt thường, lộ trình, gọi thẳng API |
-
----
-
-## 8. Cách đo thành công (mục 9) & kịch bản kiểm thử
-
-**Môi trường đo chuẩn**:
-- **Máy yếu**: Android 9–10, RAM 2–3GB. **Máy trung bình**: Android 12+, RAM 4–6GB.
-- **Mạng yếu**: ~400 kbps, độ trễ ~400 ms, mất gói 2%. **4G**: ~10 Mbps.
-- **Dữ liệu**: ≥ 500 bài mô phỏng (có nhãn), ≥ 5.000 tương tác.
-- **Cách ghi**: mỗi phép đo ghi build, thiết bị, mạng, số lần lặp, p50 và p95.
-
-| Mục thành công | Chỉ số & mục tiêu khởi điểm | Cách đo |
-|---|---|---|
-| **Bảng tin nhanh, mượt** | Thấy bài đầu tiên p95 ≤ **4 giây** (máy yếu, mạng yếu), ≤ 2 giây (máy TB, 4G); mở lại có cache ≤ 1 giây; khung hình giật ≤ 5%; **0 bài lặp** trong 300 bài; ≤ 3MB cho 50 bài đầu; RAM không tăng liên tục | Đo tự động 20 lần; công cụ đo khung hình; script cuộn so ID |
-| **Xu hướng đúng & khó đẩy ảo** | Bài hot lên trong ≤ 15 phút; điểm giảm ≥ 50% sau 24h; **50 tài khoản ảo xếp dưới 10 người thật**; bấm 200 lần = 1 người; phát hiện đẩy ảo ≥ 90%, gắn cờ nhầm ≤ 5% | Thí nghiệm mô phỏng X1–X6 (dồn tương tác thật, hạ nhiệt, đẩy bằng nhiều tài khoản, bấm liên tục, tác giả tự đẩy, kiểm tra đúng gu) |
-| **Tìm trong bài đăng ra đúng** | Precision@5 ≥ 0,8; ≥ 90% câu có kết quả đúng trong top 3; **nói thật khi không có ≥ 95%**; 0 kết quả vượt ngân sách; p95 ≤ 1,5 giây | Bộ ≥ 150 câu có gán nhãn: có dấu, không dấu, teencode, tiếng lóng, trộn tiếng Anh, emoji, theo ý không theo từ khóa, điều kiện kép, câu không có đáp án |
-| **Trợ lý không bịa** | **100% gợi ý có ID hợp lệ và đang bán/hiển thị**; 100% giá khớp; trích dẫn đúng ≥ 95%; từ chối đúng ≥ 95%; hỏi lại khi thiếu ≥ 90% (không quá 1 câu/lượt); phản hồi đầu p95 ≤ 5 giây; báo cáo VNĐ/cuộc trò chuyện (mục tiêu khởi điểm ≤ 500đ) | Bộ ≥ 200 câu chạy tự động trước mỗi demo: gợi ý thường, thiếu thông tin, chỗ không tồn tại, giá/khuyến mãi, bài đã ẩn, ngoài phạm vi, nguy hiểm, prompt injection, hỏi thông tin người khác, dùng gu từ app, đăng nhập giữa chừng |
-| **Từ bài đăng tới thanh toán xong** | Đặt theo lộ trình ≤ **6 chạm**, trung vị ≤ **60 giây**; đặt nhanh một chỗ ≤ 6 chạm, ≤ 45 giây; chưa đăng nhập thêm ≤ 3 thao tác và 0 lần phải chọn lại | Thử với ≥ 5 người ngoài đội (18–25 tuổi), quay màn hình, đếm chạm, bấm giờ |
-| **Tương tác luôn đúng** | 200 tài khoản cùng thả trong 10 giây thì sai số **0**; bật/tắt 100 lần thì trạng thái cuối đúng; mạng chập chờn không đếm trùng; lan sang thiết bị khác p95 ≤ 2 giây; 50 bình luận đồng thời đủ và đúng thứ tự | Script tải đồng thời qua cả API của app và web |
-| **Không trừ tiền hai lần, không bán trùng chỗ cuối** | **0 lần** trên mọi tình huống, mỗi tình huống chạy ≥ 20 lần | Danh sách P/R bên dưới |
-| **Mọi sản phẩm cùng dữ liệu** | Đồng bộ app ↔ web ↔ admin p95 ≤ **3 giây**; ẩn bài biến khỏi app, web, tìm kiếm, trợ lý trong ≤ 60 giây (mục tiêu 10 giây khi đang mở); gợi ý web phản ánh hành vi trên app ≤ 5 phút | Ghi thời điểm ghi và thời điểm nhận ở hai nơi |
-
-**Tình huống kiểm thử đặt chỗ & thanh toán**:
-
-| # | Tình huống | Kết quả đúng |
-|---|---|---|
-| P1 | Bấm "Thanh toán" hai lần liên tiếp | Một giao dịch |
-| P2 | Mất mạng ngay sau khi bấm, có mạng lại bấm tiếp | Một giao dịch, hiện đúng trạng thái |
-| P3 | Cổng gửi xác nhận hai lần | Ghi nhận một lần |
-| P4 | Cổng chậm phản hồi, người dùng thử lại | Một giao dịch |
-| P5 | Cùng tài khoản thanh toán cùng đơn trên app và web | Một giao dịch; nơi còn lại báo "đã thanh toán" |
-| P6 | Đã trả nhưng xác nhận chỗ lỗi | Tự hoàn tiền, A16 gắn cờ, người dùng được báo |
-| P7 | Hết thời gian giữ chỗ khi đang ở trang thanh toán | Không cho trả, kiểm tra lại chỗ và giá |
-| P8 | Giá đổi khi đang ở màn xác nhận | Báo chênh lệch, xác nhận lại |
-| R1 | Hai máy cùng đặt phòng cuối | Một người được, người kia được báo ngay, không bị trừ tiền |
-| R2 | 50 yêu cầu đồng thời tranh một chỗ | Đúng một yêu cầu thành công |
-| R3 | Lộ trình 4 mục, mục 3 bị người khác lấy mất | Báo ngay; áp đúng chính sách đã chọn |
-| R4 | Người dưới 18 tuổi gọi thẳng API tạo đơn | Bị từ chối |
-
-**Lịch đo**:
-- **Tuần 1**: trình bày cách đo này, dựng môi trường đo, bộ câu hỏi thử v1 (≥ 50 câu mỗi bộ).
-- **Tuần 2**: **chốt** chỉ số; đo lần 1.
-- **Tuần 3**: đo đầy đủ, thử với người ngoài đội.
-- **Tuần 4**: báo cáo kết quả: đạt/chưa đạt, vì sao, và sản phẩm đã thay đổi gì nhờ đo.
-
----
-
-## 9. Lựa chọn phần mở rộng (Phần B)
-
-Tiêu chí chọn: phục vụ persona nào, tận dụng hạ tầng phần A đến đâu, rủi ro, có giúp chứng minh mục 9 không.
-
-| Mã | Tính năng | Lý do | Quyết định |
-|---|---|---|---|
-| **B7** | Theo dõi trợ lý | Đề bài đã bắt đo chi phí trợ lý (mục 7) và chứng minh "không bịa" (mục 9); B7 chủ yếu là hiển thị dữ liệu đã có | **Chọn, ưu tiên 1** |
-| **B1** | Tóm tắt "50 người đã đi nói gì" | Phục vụ Hà; dùng lại trợ lý, tìm kiếm và validator trích dẫn; tận dụng thế mạnh nội dung đã xác minh | **Chọn, ưu tiên 2** |
-| **B4** | Dùng khi mất mạng | Củng cố yêu cầu khó nhất (mạng yếu); A1, A2, A10 đã cần cache | **Chọn, ưu tiên 3** |
-| B6 | Thông báo tương tác | Phục vụ Linh; đã có hệ thống thông báo cho việc ẩn bài | Làm nếu còn thời gian |
-| B2 | Tìm bằng hình ảnh | Hấp dẫn nhưng cần thêm mô hình ảnh, rủi ro cao trong 4 tuần | Hướng làm tiếp (mốc 4) |
-| B3, B5 | Báo giảm giá, chia sẻ hình ảnh đẹp | Giá trị chứng minh mục 9 thấp; giá trong dữ liệu mô phỏng ít đổi nên khó demo | Không chọn |
-
----
-
-## 10. Kế hoạch 4 mốc & phân vai
-
-| Mốc | App | Web | Trợ lý | Admin | Đo & trả lời |
-|---|---|---|---|---|---|
-| **1** | Bảng tin v1 (xu hướng chung, cuộn không lặp), trang chi tiết | Tìm bằng lời v1, gợi ý v1, trang chi tiết | Thử 2–3 cách/mô hình trên ≥ 50 câu, chọn hướng | Đăng nhập, 2 vai trò | Hiểu bài toán (mục 1–3), cách làm & vì sao (mục 5), đề xuất cách đo (mục 8); **chốt mô hình dữ liệu & API (mục 6)** |
-| **2** | Đăng bài (đã đi thật, lộ trình, nháp offline), tương tác, tìm trong bài, đặt nhanh | Xem & tương tác bài, đặt chỗ đầy đủ 4 loại, chặn dưới 18, gợi ý sau đặt | Gợi ý địa điểm có validator | Kiểm duyệt, đơn đặt chỗ | Câu hỏi mở về xu hướng, bài đăng, đặt chỗ (mục 4) **thể hiện trong sản phẩm**; chốt cách đo; đo lần 1 |
-| **3** | Đặt theo lộ trình, Chuyến đi của tôi, B4 | Đặt theo lộ trình, Chuyến đi của tôi | Gợi ý bài đăng, chạy cả app và web, nhớ đa thiết bị, B1 | Theo dõi xu hướng & đẩy ảo, B7 | Câu hỏi mở về lộ trình và trợ lý; kết quả đo; vì sao chọn B7/B1/B4; **thứ Năm ngừng làm tính năng** |
-| **4** | Báo cáo & trình bày | | | | Nếu có thêm thời gian: B2, B6, tối ưu chi phí trợ lý |
-
-**Để giảm rủi ro A11 (khó nhất, rơi vào mốc 3)**: thiết kế lộ trình theo `day_offset` và cơ chế giữ chỗ nhiều mục **ngay từ mốc 1–2**, để mốc 3 chỉ còn ghép giao diện.
-
-| Vai trò phụ trách chính | Phần việc |
+| Thành phần | Đề xuất |
 |---|---|
-| Backend: đặt chỗ & thanh toán | Catalog, tồn kho, giữ chỗ, báo giá, cổng thanh toán giả lập, đơn, A16 |
-| Backend: nội dung & xu hướng | Bài đăng, media, tương tác, kiểm duyệt, xu hướng, cá nhân hóa, realtime |
-| Android | A1–A5 và phần app của A10–A12, offline, hiệu năng máy yếu |
-| Web & Admin | A6–A11 trên web, A13–A16 |
-| Tìm kiếm & Trợ lý | Chuẩn hóa tiếng Việt, tìm kiếm lai, trợ lý, validator, đo chi phí, B1, B7 |
-| QA & Đo lường (kiêm nhiệm) | Bộ test ở mục 8, môi trường đo, báo cáo |
-
-Mỗi người phải trả lời được về phần của người khác: nên có buổi "giải thích chéo" 30 phút trước mỗi demo. **Đổi Leader sau mỗi buổi demo** (mục 11).
+| Tín hiệu và trọng số | Xem đủ lâu 1 · thả cảm xúc 2 · bình luận 3 · lưu/chia sẻ 4 · **đặt qua Đi ngay 10** · bỏ qua nhanh −1. Tính theo **người khác nhau** × **độ tin cậy tài khoản** |
+| Thời gian | Tính lại mỗi 5 phút; bán rã 24 giờ (bài), 72 giờ (địa điểm); bài tăng vọt lên bảng tin trong 5–15 phút |
+| Chống đẩy ảo | Một người một phiếu; điểm uy tín tài khoản; gom cụm thiết bị/mạng; tác giả tự tương tác không tính; phát hiện tăng vọt từ tài khoản mới → gắn cờ cho quản trị |
+| Bảng tin | ~60% hợp gu, ~20% xu hướng chung, ~20% khám phá; người mới xem xu hướng chung, học nhanh từ hành vi, gộp khi đăng nhập |
+| Lý do ngắn | Luôn là số thật: "32 người lưu trong 24h", "12 người đã đi theo · 4,6/5 khớp thực tế" |
 
 ---
 
-## 11. Rủi ro dự án
+## 9. Niềm tin & kiểm duyệt
+
+Không còn xác minh "đã đi thật", nên chống seeding dựa vào:
+
+| Lớp | Cách làm |
+|---|---|
+| **Minh bạch** | Nhãn **Hợp tác** bắt buộc với nội dung có tài trợ (nghĩa vụ theo Luật Quảng cáo sửa đổi 2025, hiệu lực 1/1/2026; cần đối chiếu văn bản gốc); khai sai thì nhãn hồi tố, hạ uy tín |
+| **Phản hồi thật sau chuyến** | Người đặt qua Đi ngay được mời chấm **"khớp thực tế"** sau chuyến; bài hiện "X người đã đi theo · điểm khớp thực tế". Đây là tín hiệu tin cậy mạnh nhất |
+| **Uy tín tài khoản** | Tuổi tài khoản, lịch sử vi phạm, độ chính xác báo cáo, hành vi đa dạng |
+| **Kiểm duyệt 3 tầng** | AI sàng lọc khi đăng (an toàn / cần xem / giữ lại) → báo cáo theo độ tin cậy người báo (từ 3 người tin cậy hoặc nhóm nghiêm trọng thì ẩn tạm) → kiểm duyệt viên quyết định, bắt buộc lý do, audit log, người đăng được báo và kháng nghị |
+| **Sửa bài** | Sửa chữ nhỏ thì hiện ngay; đổi video hoặc lộ trình thì duyệt lại, trong lúc chờ hiện bản cũ |
+| **Riêng tư** | Ảnh có người lạ hoặc giấy tờ được xử lý qua sàng lọc AI và báo cáo; không hiện thông tin cá nhân của người dùng này cho người khác |
+
+---
+
+## 10. Trợ lý (A12)
+- **Cùng lớp AI** với Đi ngay: hiểu câu hỏi kiểu người trẻ → gọi công cụ tìm chỗ, giá, bài đang hiển thị → trả lời **chỉ với ID có thật**, qua bộ kiểm chứng (ID tồn tại, giá khớp, trích dẫn bài là đoạn có thật).
+- Không tự đặt (không có công cụ đặt). Từ chối ngoài phạm vi hoặc nguy hiểm một cách thân thiện.
+- **Nhớ**: hội thoại 30 ngày; sở thích (ngân sách, gu) người dùng xem/sửa/xóa được; chưa đăng nhập thì lưu trên thiết bị 7 ngày, đăng nhập thì gộp; tiếp tục được giữa app và web.
+- **Chi phí**: đo token mỗi lượt, quy ra VNĐ; giới hạn khởi điểm 20 tin/ngày (chưa đăng nhập), 50 tin/ngày (đã đăng nhập); mô hình nhỏ cho phân loại, mô hình lớn khi cần diễn đạt; cache câu phổ biến.
+
+---
+
+## 11. Trang quản trị
+- **Phân quyền**: quản trị (toàn quyền) và kiểm duyệt (không xem thanh toán, kiểm tra ở server).
+- **Kiểm duyệt**: hàng chờ ưu tiên, gợi ý AI, ẩn/hiện/xóa kèm lý do, xem khác biệt bản sửa, audit log; bài ẩn biến khỏi app, web, tìm kiếm, trợ lý trong thời gian ngắn.
+- **Xu hướng**: bài và chỗ đang lên, phân rã lý do, biểu đồ theo thời gian, danh sách nghi đẩy ảo.
+- **Đơn**: tra cứu, trạng thái đặt và thanh toán, đặt từ bài nào; phát hiện trừ tiền hai lần, đã trả không có chỗ, đặt được một phần.
+- **Màn đối tác** (chủ homestay, nhà xe): lịch phòng/ghế, ngừng bán, giá, đơn mới.
+- **Bảng số liệu chất lượng**: thời gian tải bảng tin, độ trễ đồng bộ, số lần trừ tiền hai lần (phải = 0), số lần bán vượt chỗ (phải = 0), chi phí trợ lý.
+
+---
+
+## 12. Kiến trúc & dữ liệu
+
+### 12.1. Kiến trúc
+
+```mermaid
+flowchart LR
+    subgraph CLIENT["Giao diện"]
+        AND["Android app<br/>offline-first"]
+        WEB["Web"]
+        ADM["Quản trị + màn đối tác"]
+    end
+    subgraph BACK["Backend: một khối chia module"]
+        AUTH["Tài khoản, phân quyền"]
+        POSTM["Bài đăng, media, tương tác"]
+        PLACE["Dữ liệu địa điểm"]
+        MODM["Kiểm duyệt"]
+        TRN["Xu hướng, cá nhân hóa"]
+        SRCH["Tìm kiếm tiếng Việt kiểu người trẻ"]
+        PLAN["Đi ngay: AI + luật"]
+        BK["Đặt chỗ, giữ chỗ, đơn"]
+        PAYM["Thanh toán, hoàn tiền"]
+        SUP["Kết nối nguồn hàng"]
+    end
+    subgraph DATA["Dữ liệu"]
+        DB[("CSDL giao dịch")]
+        CACHE[("Cache, bộ đếm, hàng đợi")]
+        IDX[("Chỉ mục tìm kiếm")]
+        MEDIA[("Kho media + CDN")]
+    end
+    subgraph EXT["Bên ngoài"]
+        OTA["API đối tác"]
+        AFFN["Affiliate"]
+        PGW["Cổng thanh toán"]
+        LLM["Mô hình ngôn ngữ"]
+        MAP["API bản đồ, địa điểm"]
+    end
+    CLIENT -->|"API + realtime"| BACK
+    BACK --> DATA
+    SUP --> OTA
+    SUP --> AFFN
+    PAYM --> PGW
+    PLAN --> LLM
+    PLACE --> MAP
+```
+
+**Nguyên tắc**:
+1. Một backend, một CSDL cho mọi giao diện.
+2. Server là nguồn sự thật cho tiền, chỗ, tuổi, quyền.
+3. Offline-first cho thao tác viết trên app.
+4. Nhẹ cho máy yếu và mạng yếu.
+5. AI không phải nguồn sự thật.
+6. Ghi sự kiện từ ngày đầu để đo đạc.
+
+**Công nghệ gợi ý** (đội chốt theo kỹ năng): Android native Kotlin + Jetpack Compose (ưu tiên máy yếu); web có render phía server; CSDL quan hệ có giao dịch (ví dụ PostgreSQL) kèm tìm kiếm vector; Redis cho bộ đếm, hàng đợi; WebSocket hoặc SSE cho realtime.
+
+### 12.2. Thực thể chính
+
+| Nhóm | Thực thể |
+|---|---|
+| Người dùng | `User` (ngày sinh khóa sửa), `Profile` (gu, ngân sách), `AnonymousSession`, `StaffUser`, `Role` |
+| Địa điểm | `Place` (loại: sân bay, ga, bến xe, điểm đến, chỗ ở, điểm chơi, quán ăn; địa chỉ; tọa độ; khu vực; giá tham khảo), `Destination` (điểm trung chuyển, chặng cuối) |
+| Phương tiện | `TransportLeg` (từ, đến, phương tiện, giờ khởi hành, thời lượng, giá, nguồn) |
+| Bài đăng | `Post` (caption, nhãn Hợp tác), `PostMedia`, `RoutePlan` → `RouteDay` → `RouteStop` (loại, place_ref, from/to, phương tiện, số đêm, tầm giá, ghi chú) |
+| Đi ngay | `PlanRequest` (nơi đi, ngày, số người, ngân sách, ưu tiên, câu nói, điều kiện AI hiểu), `PlanOption` (các chặng, chỗ ở, tổng tiền, giờ di chuyển) |
+| Đặt chỗ | `Inventory` (theo ngày), `Hold` (10 phút), `Booking`, `BookingItem`, `Payment` (idempotency key duy nhất), `Refund`; `Booking.source_post_id` |
+| Tương tác | `Reaction` (duy nhất theo người × bài), `Comment`, `Save`, `Share`, `Report`, `FitRating` (khớp thực tế sau chuyến) |
+| Kiểm duyệt, xu hướng | `ModerationItem`, `ModerationAction` (audit), `InteractionEvent`, `TrendScore`, `TrustScore`, `TrendFlag` |
+| Trợ lý | `Conversation`, `Message`, `AssistantMemory`, `AssistantUsage` |
+
+**Quy ước API**: có phiên bản `/v1`; tiền là số nguyên VNĐ; ngày giờ ISO 8601; phân trang bằng con trỏ; Idempotency-Key bắt buộc cho giữ chỗ, thanh toán, đăng bài, tương tác; mã lỗi dùng chung (`PRICE_CHANGED`, `SOLD_OUT`, `HOLD_EXPIRED`, `UNDER_18`, `OVER_BUDGET`, `RATE_LIMITED`); **chốt đặc tả API trong tuần 1**.
+
+---
+
+## 13. Sơ đồ workflow
+
+### 13.1. Toàn cảnh
+
+```mermaid
+flowchart LR
+    A["Người dùng đi du lịch"] --> C["Đăng video +<br/>lộ trình dạng điểm"]
+    C --> D["Kiểm duyệt AI + người,<br/>nhãn Hợp tác"]
+    D --> E["Bảng tin xu hướng<br/>và cá nhân hóa"]
+    E --> F["Người xem lướt video"]
+    F --> G["Đi ngay"]
+    G --> P["Lập kế hoạch lai:<br/>AI hiểu ý + luật tính toán"]
+    P --> H["Đặt vé và phòng,<br/>thanh toán một lần"]
+    H --> I["Đi chuyến đi"]
+    I --> R["Chấm khớp thực tế"]
+    R --> E
+    I --> A
+    H --> J["Ghi nhận nguồn:<br/>đặt từ bài nào"]
+    J --> E
+```
+
+### 13.2. Đăng bài
+
+```mermaid
+flowchart TD
+    S["Người dùng muốn chia sẻ chuyến đi"] --> P1["Trang 1: video + caption<br/>+ khai báo tài trợ"]
+    P1 --> P2["Trang 2: dựng lộ trình theo ngày"]
+    P2 --> T{"Loại điểm"}
+    T -->|"Di chuyển"| M["Từ · Đến · Phương tiện<br/>chọn sân bay, ga, bến xe"]
+    T -->|"Ở"| ST["Chỗ ở · số đêm"]
+    T -->|"Chơi / Ăn"| PO["Địa điểm · tầm giá · ghi chú"]
+    M --> DATA["Tự điền địa chỉ, loại điểm,<br/>giá tham khảo từ dữ liệu"]
+    ST --> DATA
+    PO --> DATA
+    DATA --> OK{"Có ít nhất 1 chặng<br/>và 1 chỗ ở hợp lệ?"}
+    OK -->|"Chưa"| P2
+    OK -->|"Rồi"| UP["Đăng: tải lên chạy nền"]
+    UP --> MOD{"Sàng lọc tự động"}
+    MOD -->|"An toàn"| LIVE["Hiện trên bảng tin"]
+    MOD -->|"Cần xem"| Q["Hiện + vào hàng chờ"]
+    MOD -->|"Nguy hiểm"| HOLD["Giữ lại chờ duyệt"]
+```
+
+### 13.3. Đi ngay
+
+```mermaid
+flowchart TD
+    IN["Người xem: nơi đi, ngày, số người,<br/>ngân sách, ưu tiên, câu nói tự do"] --> AI["Lớp AI: hiểu câu nói<br/>thành điều kiện có cấu trúc"]
+    AI --> RULE
+    ROUTE["Lộ trình của người đăng:<br/>điểm đến, chỗ ở, điểm chơi, quán ăn"] --> RULE
+    subgraph RULE["Lớp luật"]
+        R1["Tìm đường đi trên đồ thị phương tiện"]
+        R2["Ràng buộc giờ, lùi ngày nếu cần"]
+        R3["Chỗ ở: ưu tiên chỗ trong lộ trình"]
+        R4["Lọc ngân sách, tránh đi đêm"]
+        R5["3 phương án: Tiết kiệm / Cân bằng / Nhanh"]
+        R1 --> R2 --> R3 --> R4 --> R5
+    end
+    RULE --> OK{"Có phương án<br/>vừa ngân sách?"}
+    OK -->|"Có"| SHOW["Phương án + gợi ý ăn chơi:<br/>đi gì tới, tầm giá"]
+    OK -->|"Không"| HONEST["Nói thật, phương án gần nhất<br/>và mức cần nâng"]
+    SHOW --> CART["Giỏ: vé các chặng + phòng"]
+    CART --> PAY["Giữ chỗ 10 phút → thanh toán một lần"]
+```
+
+### 13.4. Trình tự hệ thống khi thanh toán
+
+```mermaid
+sequenceDiagram
+    actor U as Người xem
+    participant APP as App
+    participant BE as Backend
+    participant INV as Kho của nền tảng
+    participant API as API đối tác
+    participant PG as Cổng thanh toán
+    participant HOST as Chủ nhà / nhà xe
+    U->>APP: Đặt ngay
+    APP->>BE: Tạo phiên đặt chỗ
+    BE->>INV: Giữ phòng, ghế 10 phút
+    BE->>API: Kiểm tra lại giá và chỗ
+    API-->>BE: Còn hiệu lực
+    BE-->>APP: Đã giữ chỗ, giá đã chốt
+    U->>APP: Xác nhận thanh toán
+    APP->>BE: Thanh toán kèm mã chống trùng
+    BE->>PG: Trừ tiền một lần
+    PG-->>BE: Thành công
+    BE->>INV: Chốt đơn, trừ tồn kho
+    BE->>API: Đặt chỗ
+    API-->>BE: Mã xác nhận
+    BE->>HOST: Gửi đơn mới
+    BE-->>APP: Đã đặt xong + gợi ý trong chuyến
+```
+
+### 13.5. Kiểm duyệt
+
+```mermaid
+flowchart TD
+    NEW["Bài, bình luận mới hoặc bản sửa"] --> AI{"AI và luật sàng lọc"}
+    AI -->|"An toàn"| SHOW["Hiện ngay"]
+    AI -->|"Cần xem"| Q["Hàng chờ"]
+    AI -->|"Nguy hiểm, lừa đảo,<br/>lộ thông tin cá nhân"| HIDE["Giữ lại / ẩn tạm"] --> Q
+    SHOW --> REP{"Bị báo cáo?"}
+    REP -->|"Từ 3 người tin cậy<br/>hoặc nhóm nghiêm trọng"| HIDE
+    REP -->|"Ít báo cáo"| Q
+    Q --> MODR["Kiểm duyệt viên quyết định,<br/>AI gợi ý lý do"]
+    MODR --> ACT["Hiện / ẩn / xóa + lý do"]
+    ACT --> LOG["Audit log"]
+    ACT --> NOTI["Báo người đăng, cho kháng nghị"]
+    ACT --> SYNC["Bài ẩn biến khỏi app, web,<br/>tìm kiếm, trợ lý"]
+```
+
+---
+
+## 14. Cách đo (mục 9 đề bài)
+
+**Môi trường chuẩn**: máy yếu (Android 9–10, RAM 2–3GB); mạng yếu (~400 kbps, ~400 ms); ≥ 500 bài mô phỏng có nhãn; mỗi phép đo ghi build, thiết bị, mạng, p50 và p95.
+
+| Mục | Chỉ số & mục tiêu khởi điểm |
+|---|---|
+| Bảng tin nhanh, mượt | Thấy bài đầu p95 ≤ 4 giây (máy yếu, mạng yếu); khung hình giật ≤ 5%; 0 bài lặp trong 300 bài |
+| Xu hướng đúng, khó đẩy ảo | Bài hot lên trong ≤ 15 phút; 50 tài khoản ảo xếp dưới 10 người thật; bấm 200 lần = 1 người |
+| Tìm kiếm | Precision@5 ≥ 0,8 trên ≥ 150 câu (không dấu, teencode, tiếng lóng, emoji); nói thật khi không có ≥ 95% |
+| **Đi ngay** | Ra phương án p95 ≤ 3 giây; **100% phương án nằm trong dữ liệu thật** (chặng, giờ, giá kiểm tra tự động); tôn trọng ngân sách và "tránh đi đêm" 100%; AI hiểu đúng điều kiện ≥ 90% trên bộ ≥ 100 câu |
+| Trợ lý không bịa | 100% gợi ý có ID hợp lệ trên ≥ 200 câu; từ chối đúng ≥ 95%; báo cáo VNĐ/cuộc trò chuyện |
+| Từ bài tới thanh toán | ≤ 6 chạm, trung vị ≤ 60 giây (thử với ≥ 5 người ngoài đội) |
+| Tương tác đúng | 200 tài khoản cùng thả: sai số 0; lan sang thiết bị khác p95 ≤ 2 giây |
+| Không trừ tiền hai lần, không bán trùng | 0 lần trên các tình huống: bấm hai lần, mất mạng rồi thử lại, xác nhận trùng, hai thiết bị cùng trả, tranh chỗ cuối (50 yêu cầu đồng thời), dưới 18 gọi thẳng API |
+| Cùng dữ liệu | Đồng bộ app ↔ web ↔ quản trị p95 ≤ 3 giây; bài ẩn biến mất ≤ 60 giây |
+
+---
+
+## 15. Kế hoạch 4 tuần, 7 người
+
+### 15.1. Phạm vi
+- **Làm chắc**: phần bắt buộc của đề bài + Đi ngay (dữ liệu mô phỏng cho vài thành phố) + dựng lộ trình bằng ô chọn địa điểm.
+- **Làm mỏng**: lớp AI dùng mô hình ngôn ngữ có bộ câu mẫu dự phòng; gợi ý "đi gì tới" theo khoảng cách đường chim bay; màn đối tác.
+- **Không làm**: API đối tác thật, thưởng người đăng, các ý tưởng ở mục 18.
+
+### 15.2. Phân vai
+
+| Người | Phụ trách chính |
+|---|---|
+| 1 | Backend đặt chỗ: kho, giữ chỗ nhiều mục, đơn, thanh toán giả lập, đơn bất thường |
+| 2 | Backend nội dung: bài đăng, dữ liệu địa điểm, tương tác realtime, kiểm duyệt, xu hướng |
+| 3 | Android: bảng tin video, hiệu năng máy yếu, offline |
+| 4 | Android: đăng bài, dựng lộ trình, Đi ngay, Chuyến đi |
+| 5 | Web + trang quản trị + màn đối tác |
+| 6 | Đi ngay (lớp luật + lớp AI), tìm kiếm, trợ lý, đo chi phí |
+| 7 | Dữ liệu mô phỏng (địa điểm, phương tiện, bài mẫu có nhãn), xử lý video, kiểm thử và đo mục 9 |
+
+Leader đổi sau mỗi buổi demo; có buổi giải thích chéo trước demo để mọi người trả lời được về phần của nhau.
+
+### 15.3. Mốc
+
+| Mốc | Mục tiêu | Nội dung chính |
+|---|---|---|
+| **Tuần 0** (đầu tuần 1) | Cùng một nền | Chốt API và mô hình dữ liệu; dữ liệu mô phỏng; thiết bị và mạng chuẩn; câu hỏi gửi người hướng dẫn |
+| **Mốc 1 – Xem được** | Mở app là thấy bảng tin; tìm được chỗ; khung chạy xuyên suốt tới thanh toán giả lập | Bảng tin v1, trang chi tiết, tìm bằng lời v1, thử nghiệm lớp AI, đăng nhập quản trị |
+| **Mốc 2 – Đăng được, đặt được** | Đăng bài có lộ trình; đặt chỗ an toàn tuyệt đối | Đăng bài 2 bước, tương tác, đặt chỗ đầy đủ, **lớp luật Đi ngay**, kiểm duyệt, đơn; test thanh toán và đồng thời chạy tự động |
+| **Mốc 3 – Đi ngay** | Thấy video → 3 phương án → đặt trong một màn hình | Đi ngay hoàn chỉnh (AI + luật, gợi ý ăn chơi), Chuyến đi, trợ lý trên app và web, xu hướng quản trị, B7; đo đủ mục 9; **thứ Năm ngừng làm tính năng** |
+| **Mốc 4 – Báo cáo** | Trình bày trung thực | Số đo so với mục tiêu, điều chưa đạt và vì sao, hướng tiếp theo |
+
+**Đánh giá khả thi**: lõi (bảng tin video + đăng lộ trình + Đi ngay + đặt chỗ an toàn) **khả thi** với 7 người trong 4 tuần nếu giữ đúng phạm vi trên. Mình ước khoảng 70–80% đạt đủ nghiệm thu, tùy kỹ năng thực tế của đội.
+
+---
+
+## 16. Thị trường, khác biệt, khả thi
+
+### 16.1. So sánh
+
+| | Video là trung tâm | Lộ trình gắn video | Tự lên phương án theo ngân sách người xem | Đặt cả chuyến một lần |
+|---|---|---|---|---|
+| TikTok GO (Mỹ, Indonesia, Nhật; chưa thấy ở Việt Nam) | ✅ | ❌ | ❌ | ❌ đặt từng chỗ, chuyển sang đối tác |
+| Trip.com (Trip Moments, Trip Community) | Một phần | Một phần | ❌ | Từng mục |
+| Traveloka, Agoda, Booking | ❌ | ❌ | ❌ (tìm kiếm thường) | Combo vé + phòng, không theo nội dung |
+| Mindtrip (AI lập lịch trình) | ❌ | ✅ (AI tạo) | Ước tính, không chắc giá thật | Qua đối tác, từng mục |
+| Travly, ReelStay, Roomer, Tripbtoz | ✅ | ❌ | ❌ | Thường một khách sạn |
+| **Đi Ngay** | ✅ | ✅ (người dùng dựng, có cấu trúc) | ✅ | ✅ |
+
+### 16.2. Vì sao sự kết hợp này chưa xuất hiện (phân tích của đội)
+1. Nền tảng video tối ưu thời gian xem, không có hạ tầng đặt chỗ nhiều mục; OTA giỏi bán phòng nhưng thiếu văn hóa cộng đồng video.
+2. Phải khởi động ba phía cùng lúc: người đăng, người xem, nguồn hàng.
+3. Lập kế hoạch nhiều chặng đúng giờ, đúng ngân sách, giá thật là bài toán khó; AI thuần dễ bịa, luật thuần khó hiểu người dùng.
+4. Pháp lý: bán gói có thể là lữ hành; quảng cáo trá hình phải ghi nhãn.
+5. Kinh tế đơn vị chưa rõ: biên mỏng, tần suất du lịch thấp.
+6. Thời điểm vừa chín: TikTok GO và Trip Community mới ra 2025–2026, cho thấy thị trường đang đi theo hướng "nội dung → đặt chỗ".
+
+### 16.3. Khả thi
+| Chiều | Đội lớn, vốn lớn | Bản demo 4 tuần |
+|---|---|---|
+| Kỹ thuật | Cao | Cao (dữ liệu mô phỏng) |
+| Nguồn hàng | Cao (API, bedbank, affiliate, ký trực tiếp homestay) | Mô phỏng |
+| Pháp lý | Trung bình – cao | Không áp dụng |
+| Người dùng chấp nhận | Trung bình | Thử với ≥ 5 người |
+| Kinh tế | Trung bình – thấp | Không áp dụng |
+| Cạnh tranh | Rủi ro cao (TikTok, OTA có thể làm tương tự) | — |
+
+→ **Không viễn vông**. Rủi ro thật là **khởi động nội dung** và **khả năng có lãi**, không phải kỹ thuật.
+
+**Thông điệp trình bày**: *"Người trẻ tìm chuyến đi trên video nhưng phải tự ghép vé, phòng, giờ giấc, ngân sách. Đi Ngay biến mỗi video thành một lộ trình, và một nút bấm thành một phương án đặt được vừa túi tiền, tính từ nơi bạn ở. AI hiểu bạn nói gì; còn giá, giờ, chỗ luôn lấy từ dữ liệu thật."*
+
+---
+
+## 17. Rủi ro
 
 | Rủi ro | Mức | Giảm thiểu |
 |---|---|---|
-| Không có bài đăng nên bảng tin, xu hướng, tìm kiếm trống | Cao | Tuần 1 tạo bài mô phỏng có nhãn, gắn với đơn mô phỏng đã hoàn thành (G1) |
-| A11 phức tạp nhất mà rơi vào mốc 3 | Cao | Làm mô hình dữ liệu và giữ chỗ nhiều mục từ sớm |
-| Trợ lý bịa hoặc tốn chi phí | Cao | Validator, bộ test tự động từ mốc 1, giới hạn tần suất, đo từ lần gọi đầu |
-| Phát hiện muộn lỗi hiệu năng trên máy yếu | TB | Có máy chuẩn từ tuần 1, đo hằng tuần |
-| Các phần không khớp dữ liệu | TB | Đặc tả API và dữ liệu giả dùng chung từ tuần 1 |
-| Yêu cầu thay đổi giữa chừng | TB | Module rõ ranh giới, ghi lại quyết định (decision log), hỏi sớm |
-| Ảnh/video không có quyền sử dụng | TB | Chỉ dùng nguồn có giấy phép rõ, ghi nguồn |
+| Không có bài đăng mẫu nên bảng tin trống | Cao | Tuần 1 tạo bộ bài mô phỏng có nhãn, video có quyền sử dụng |
+| Đi ngay phức tạp, rơi vào mốc 3 | Cao | Làm lớp luật và dữ liệu phương tiện từ mốc 2 |
+| AI hiểu sai hoặc tốn chi phí | Cao | Lớp luật kiểm mọi kết quả; bộ câu thử tự động; giới hạn tần suất; đo chi phí từ đầu |
+| Seeding khi không xác minh | Trung bình | Nhãn Hợp tác, khớp thực tế, uy tín, kiểm duyệt |
+| Dữ liệu địa điểm thiếu, sai | Trung bình | Bắt buộc chọn từ dữ liệu; người dùng báo sai; quản trị sửa |
+| Hiệu năng video trên máy yếu | Trung bình | Thử máy thật từ tuần 1; ảnh bìa trước, chất lượng thích ứng |
+| Thừa ý tưởng, thiếu thời gian | Trung bình | Khóa danh sách tính năng sau mốc 1 |
 
 ---
 
-## 12. Giả định & câu hỏi cho người hướng dẫn
-
-**Giả định đang dùng** (đề bài yêu cầu ghi lại và nêu ở buổi gặp gần nhất):
-
-| # | Giả định |
-|---|---|
-| G1 | Bài đăng mẫu được tạo từ tài khoản mô phỏng và đơn mô phỏng đã hoàn thành, **gắn nhãn "Mô phỏng" rõ ràng** |
-| G2 | "Đã đi" = qua ngày trả phòng/ngày sử dụng và không hủy; admin có nút giả lập check-in để demo |
-| G3 | Tuổi dựa trên ngày sinh khai khi đăng ký, khóa sửa, kiểm tra ở server |
-| G4 | Vé máy bay và combo lấy từ bộ dữ liệu được cấp, không kết nối hãng thật |
-| G5 | Admin chỉnh được giá để tạo tình huống "giá đổi" khi demo |
-| G6 | Ảnh/video mẫu chỉ dùng nguồn có quyền sử dụng, có ghi nguồn |
-| G7 | Trợ lý dùng dịch vụ mô hình ngôn ngữ bên ngoài, chi phí tính theo token quy ra VNĐ |
-
-**Câu hỏi** (theo mẫu đề bài: tình huống → hai cách → nghiêng về cách nào, vì sao):
-1. **Bài đăng mẫu**: *"Dữ liệu không có bài đăng nên bảng tin sẽ trống. Có hai cách: (A) tạo bài mô phỏng gắn nhãn rõ, gắn với đơn mô phỏng đã hoàn thành; (B) chỉ dùng bài đội tự đặt và tự đăng. Em nghiêng về kết hợp A + B, vì cần đủ dữ liệu để thấy xu hướng mà vẫn chứng minh được luồng thật. Nhãn 'mô phỏng' có cần hiện cho người dùng cuối không ạ?"*
-2. **"Đã đi"**: *"Dữ liệu có trạng thái check-in không ạ? Nếu không, em đề xuất coi đơn đã hoàn thành khi qua ngày trả phòng, kèm nút admin giả lập check-in."*
-3. **Tuổi**: *"Ngày sinh khai khi đăng ký, khóa sửa, kiểm tra ở server: mức này đủ chưa, hay cần mô phỏng thêm xác minh giấy tờ?"*
-4. **Thanh toán giả lập**: *"Em định tự làm cổng giả lập có các tình huống thành công, thất bại, chậm, xác nhận trùng. Có cần giống một cổng cụ thể nào không ạ?"*
-5. **Trợ lý**: *"Ban tổ chức có cấp khóa API hoặc ngân sách cho mô hình ngôn ngữ không, có trần chi phí không ạ?"*
-6. **Combo**: *"Combo trong dữ liệu là gói giá cố định hay ghép từ các mục lẻ? Khi đặt theo lộ trình, 'dời theo ngày mới' áp dụng cho combo thế nào?"*
-7. **Video**: *"Em đề xuất video ngắn ≤ 60 giây, ≤ 50MB trước nén, vì mạng yếu và máy yếu. Có được không ạ?"*
-8. **Thiết bị chuẩn**: *"'Máy cấu hình thấp' cụ thể là máy nào? Em đề xuất Android 9–10, RAM 2–3GB."*
+## 18. Hướng mở rộng sau dự án
+- **"Có X triệu, đi đâu?"**: tìm ngược theo ngân sách, dùng lại lớp luật của Đi ngay cho nhiều điểm đến.
+- **Trợ lý canh giá**: canh giá giúp người dùng, chuẩn bị sẵn giỏ hàng, người dùng tự bấm đặt.
+- **Chế độ "Đang đi"**: tự xử lý sự cố, ví dụ chuyến bay trễ thì báo chỗ ở nhận phòng muộn.
+- **Định giá theo xu hướng video** cho homestay nhỏ.
+- **Thưởng người đăng** theo người đi theo đã hoàn thành chuyến.
+- **API đối tác thật**, giấy phép lữ hành để bán gói; iOS; tính năng nhóm.
 
 ---
 
-## 13. Checklist tự kiểm tra trước mỗi buổi demo
+## 19. Câu hỏi và giả định cần chốt với người hướng dẫn
+1. Đội bỏ điều kiện "chỉ người đã đi mới đăng" (A2) và thay bằng nhãn Hợp tác + đánh giá khớp thực tế + kiểm duyệt. Cách này có chấp nhận được cho phần thi không?
+2. Đề tài mở với nguồn hàng ngoài Vinpearl (homestay, nhà xe, chặng bay) dùng dữ liệu mô phỏng có nhãn: có được không?
+3. Bài đăng mẫu và dữ liệu địa điểm, phương tiện đều là mô phỏng: nhãn "mô phỏng" có cần hiện cho người dùng cuối không?
+4. Ban tổ chức có cấp khóa API hay ngân sách cho mô hình ngôn ngữ không?
+5. "Máy cấu hình thấp" cụ thể là máy nào?
 
-1. Bấm thanh toán hai lần, mất mạng ngay sau khi bấm, hai thiết bị cùng thanh toán → **không trừ tiền hai lần**.
-2. Hai máy tranh chỗ cuối → đúng một người được, người kia biết ngay.
-3. Admin đổi giá trong lúc user đang ở màn xác nhận → user được báo trước khi trả.
-4. Chưa đăng nhập mà đặt / thả cảm xúc / bình luận / chat với trợ lý → đăng nhập xong **quay lại đúng chỗ**, không mất gì.
-5. Đang viết bài hoặc bình luận thì bật chế độ máy bay → nội dung còn nguyên, có mạng lại gửi tiếp được.
-6. Nhiều người cùng thả cảm xúc, một người bấm liên tục → con số đúng.
-7. Thả trên web → app thấy ngay; lưu trên app → gợi ý trên web đổi theo.
-8. Hỏi trợ lý về chỗ không tồn tại, hỏi giá, hỏi bài đã ẩn, thử prompt injection → **không bịa, không tự đặt**.
-9. Hỏi ngoài phạm vi hoặc nội dung nguy hiểm → từ chối thân thiện.
-10. Người dưới 18 tuổi bị chặn ở app, web, đặt thường, đặt theo lộ trình và khi gọi thẳng API.
-11. Bài đăng không lộ ngày đi, số tiền đã trả, mã đặt chỗ, người đi cùng.
-12. Ẩn bài → bài biến mất khỏi app, web, tìm kiếm và gợi ý của trợ lý.
-13. Kiểm duyệt viên không xem được thông tin thanh toán, kể cả qua URL hay API.
-14. Không có khan hiếm giả hay đếm ngược giả.
-15. Tìm hoặc hỏi điều không có → nói thật và gợi ý nới điều kiện.
+---
+
+## Nguồn tham khảo (thị trường)
+- TikTok GO: [Skift](https://skift.com/2026/05/12/tiktok-go-travel-booking-social-media/) · [TechNode](https://technode.com/2026/05/14/tiktok-launches-tiktok-go-lifestyle-services-brand-in-indonesia-us-and-japan/) · [Engadget](https://www.engadget.com/2170275/tiktok-adds-in-app-travel-booking-services/?rand=26687) · [Tubefilter](https://www.tubefilter.com/?p=187752)
+- Trip.com: [Trip Community (PR Newswire)](https://tools.prnewswire.com/en-us/live/20813/release/20251218EN49637) · [Tripblazers](https://uk.trip.com/blog/tripblazers)
+- Mindtrip: [App Store](https://apps.apple.com/us/app/mindtrip-ai-travel-companion/id6503107567) · [TechCrunch – Start Anywhere](https://techcrunch.com/?p=2816045) · [aitravel.tools – review](https://aitravel.tools/mindtrip-review/)
+- Startup video du lịch: [TechCrunch – Travly](https://techcrunch.com/2024/08/25/travly-social-discovery-booking-platform-travel-influencers) · [ReelStay](https://apps.apple.com/app/id6751936146) · [Roomer](https://apps.apple.com/il/app/roomer-travel-save-earn/id877222676) · [Tripbtoz](https://apps.apple.com/app/id1206972376)
+- API đối tác: [Traveloka Partners Network](https://www.travelokapartnersnetwork.com/) · [Traveloka Atlas API](https://atlas.traveloka.com/) · [Agoda Developer](https://developer.agoda.com/demand/docs) · [Travelpayouts – Aviasales Data API](https://support.travelpayouts.com/hc/en-us/articles/203956163-Aviasales-Data-API)
+- Luật Quảng cáo 2025: [LuatVietnam](https://luatvietnam.vn/linh-vuc-khac/kols-quang-cao-san-pham-can-luu-y-04-quy-dinh-moi-tu-01-01-2026-883-106335-article.html)

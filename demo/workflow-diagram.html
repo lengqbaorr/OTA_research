@@ -16,182 +16,21 @@ h2{font-size:17px;margin:0 0 12px;color:#fff}
 footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
 </style></head><body>
 <header><h1>Workflow toàn bộ ý tưởng</h1><p>Nền tảng video du lịch "xem là đi được" · người dùng đăng video kèm lộ trình dạng điểm, người xem bấm Đi ngay để hệ thống lên phương án đi lại, chỗ ở theo ngân sách và đặt luôn.</p></header>
-<nav><a href="#s0">Toàn cảnh: vòng lặp của nền tảng</a><a href="#s1">&quot;Đi ngay&quot;: bộ lập kế hoạch lai</a><a href="#s2">Người đăng: từ video đến bài đăng có lộ trình</a><a href="#s3">Người xem: từ video đến &quot;Đi ngay&quot;</a><a href="#s4">Giữ chỗ và thanh toán</a><a href="#s5">Trình tự các hệ thống khi thanh toán</a><a href="#s6">Kiểm duyệt và chống seeding</a><a href="#s7">Xu hướng, cá nhân hóa và thưởng</a><a href="#s8">Nguồn hàng: hai mô hình cùng tồn tại</a><a href="#s9">Kiến trúc hệ thống</a></nav>
-<main><section id="s0"><h2>1. Toàn cảnh: vòng lặp của nền tảng</h2><pre class="mermaid">flowchart LR
-    A[&quot;Người dùng đi du lịch&quot;] --&gt; C[&quot;Đăng video +&lt;br/&gt;lộ trình dạng điểm&quot;]
-    C --&gt; D[&quot;Kiểm duyệt AI + người,&lt;br/&gt;nhãn Hợp tác&quot;]
-    D --&gt; E[&quot;Bảng tin xu hướng&lt;br/&gt;và cá nhân hóa&quot;]
-    E --&gt; F[&quot;Người xem lướt video&quot;]
-    F --&gt; G[&quot;Đi ngay&quot;]
-    G --&gt; P[&quot;Lập kế hoạch lai:&lt;br/&gt;AI hiểu ý + luật tính toán&quot;]
-    P --&gt; H[&quot;Đặt vé và phòng,&lt;br/&gt;thanh toán một lần&quot;]
-    H --&gt; I[&quot;Đi chuyến đi&quot;]
-    I --&gt; R[&quot;Đánh giá khớp thực tế&quot;]
-    R --&gt; E
-    I --&gt; A
-    H --&gt; J[&quot;Ghi nhận nguồn:&lt;br/&gt;đặt từ bài nào&quot;]
-    J --&gt; E
-</pre></section>
-<section id="s1"><h2>2. &quot;Đi ngay&quot;: bộ lập kế hoạch lai</h2><pre class="mermaid">flowchart TD
-    IN[&quot;Người xem: nơi đi, ngày, số người,&lt;br/&gt;ngân sách, ưu tiên, câu nói tự do&quot;] --&gt; AI[&quot;Lớp AI: hiểu câu nói&lt;br/&gt;thành điều kiện có cấu trúc&quot;]
-    AI --&gt; RULE
-    ROUTE[&quot;Lộ trình của người đăng:&lt;br/&gt;điểm đến, chỗ ở, điểm chơi, quán ăn&quot;] --&gt; RULE
-    subgraph RULE[&quot;Lớp luật&quot;]
-        R1[&quot;Tìm đường đi trên đồ thị phương tiện:&lt;br/&gt;máy bay, tàu, xe, limousine&quot;]
-        R2[&quot;Ràng buộc giờ: nối chuyến ≥ 1,5h,&lt;br/&gt;tới nơi trước 23h, lùi ngày nếu cần&quot;]
-        R3[&quot;Chỗ ở: ưu tiên chỗ trong lộ trình&lt;br/&gt;nếu còn phòng và vừa ngân sách&quot;]
-        R4[&quot;Lọc: ngân sách, tránh đi đêm&quot;]
-        R5[&quot;Chọn 3 phương án:&lt;br/&gt;Tiết kiệm / Cân bằng / Nhanh&quot;]
-        R1 --&gt; R2 --&gt; R3 --&gt; R4 --&gt; R5
-    end
-    RULE --&gt; OK{&quot;Có phương án&lt;br/&gt;vừa ngân sách?&quot;}
-    OK --&gt;|&quot;Có&quot;| SHOW[&quot;Hiện phương án + gợi ý ăn chơi:&lt;br/&gt;đi gì tới, tầm giá&quot;]
-    OK --&gt;|&quot;Không&quot;| HONEST[&quot;Nói thật, đưa phương án gần nhất&lt;br/&gt;và mức cần nâng&quot;]
-    SHOW --&gt; EXPL[&quot;AI giải thích bằng lời,&lt;br/&gt;nhận yêu cầu sửa&quot;]
-    EXPL --&gt; CART[&quot;Giỏ hàng: vé các chặng + phòng&quot;]
-</pre></section>
-<section id="s2"><h2>3. Người đăng: từ video đến bài đăng có lộ trình</h2><pre class="mermaid">flowchart TD
-    S[&quot;Người dùng muốn chia sẻ chuyến đi&quot;] --&gt; M[&quot;Chọn hoặc quay video, ảnh&quot;]
-    M --&gt; PR{&quot;Có mặt người lạ&lt;br/&gt;hoặc giấy tờ?&quot;}
-    PR --&gt;|&quot;Có&quot;| BL[&quot;Làm mờ&quot;] --&gt; TAG
-    PR --&gt;|&quot;Không&quot;| TAG[&quot;Gắn điểm dừng vào đoạn video&quot;]
-    TAG --&gt; CAP[&quot;Caption, vibe,&lt;br/&gt;khai báo có nhận tài trợ&quot;]
-    CAP --&gt; IT[&quot;Dựng lộ trình bằng điểm theo ngày:&lt;br/&gt;di chuyển, ở, chơi, ăn + tầm giá&quot;]
-    IT --&gt; PV[&quot;Xem trước&quot;]
-    PV --&gt; UP[&quot;Đăng: tải lên chạy nền,&lt;br/&gt;mất mạng vẫn tiếp tục&quot;]
-    UP --&gt; PIPE[&quot;Xử lý: chuyển mã video,&lt;br/&gt;chép lời, đọc chữ, lập chỉ mục tìm kiếm&quot;]
-    PIPE --&gt; MOD{&quot;Sàng lọc tự động&quot;}
-    MOD --&gt;|&quot;An toàn&quot;| LIVE[&quot;Hiện ngay trên bảng tin&quot;]
-    MOD --&gt;|&quot;Cần xem&quot;| LIVE2[&quot;Hiện và vào hàng chờ&quot;]
-    MOD --&gt;|&quot;Nguy hiểm&quot;| HOLD[&quot;Giữ lại chờ duyệt&quot;]
-</pre></section>
-<section id="s3"><h2>4. Người xem: từ video đến &quot;Đi ngay&quot;</h2><pre class="mermaid">flowchart TD
-    FEED[&quot;Bảng tin video dọc&quot;] --&gt; ACT{&quot;Người xem làm gì?&quot;}
-    ACT --&gt;|&quot;Thả tim, lưu, bình luận&quot;| SIG[&quot;Tín hiệu gu và xu hướng&quot;]
-    ACT --&gt;|&quot;Chạm thẻ địa điểm&quot;| DET[&quot;Trang chi tiết chỗ&quot;] --&gt; QB[&quot;Đặt riêng một chỗ&quot;]
-    ACT --&gt;|&quot;Xem lộ trình&quot;| SHEET[&quot;Bảng lộ trình theo ngày&quot;]
-    ACT --&gt;|&quot;Đi ngay&quot;| FY
-    SHEET --&gt; FY[&quot;Màn Đi ngay&quot;]
-    FY --&gt; CFG[&quot;Chọn nơi đi, ngày, số người,&lt;br/&gt;ngân sách, hoặc nói tự do&quot;]
-    CFG --&gt; ITEMS[&quot;Bộ lập kế hoạch lai&lt;br/&gt;đưa ra 3 phương án&quot;]
-    ITEMS --&gt; SRC{&quot;Nguồn của từng mục&quot;}
-    SRC --&gt;|&quot;Bán trực tiếp&quot;| OWN[&quot;Kho của nền tảng:&lt;br/&gt;còn bao nhiêu phòng, ghế&quot;]
-    SRC --&gt;|&quot;API đối tác&quot;| API[&quot;Hỏi phòng trống và giá&lt;br/&gt;qua API đối tác&quot;]
-    SRC --&gt;|&quot;Liên kết affiliate&quot;| AFF[&quot;Giá tham khảo,&lt;br/&gt;mở trang đối tác đã điền sẵn&quot;]
-    SRC --&gt;|&quot;Gợi ý ghé&quot;| FREE[&quot;Điểm tham khảo, không bán&quot;]
-    OWN --&gt; CHK{&quot;Còn chỗ?&quot;}
-    API --&gt; CHK
-    CHK --&gt;|&quot;Không&quot;| ALT[&quot;Đổi ngày, mục tương tự,&lt;br/&gt;giảm người hoặc bỏ mục&quot;] --&gt; ITEMS
-    CHK --&gt;|&quot;Có&quot;| TOT[&quot;Tổng tiền trả trong app&lt;br/&gt;+ cảnh báo nếu giá cao bất thường&quot;]
-    TOT --&gt; POL[&quot;Chọn: giữ phần đặt được&lt;br/&gt;hoặc tất cả hoặc không&quot;]
-    POL --&gt; PAY[&quot;Sang thanh toán&quot;]
-</pre></section>
-<section id="s4"><h2>5. Giữ chỗ và thanh toán</h2><pre class="mermaid">flowchart TD
-    PAY[&quot;Bấm Giữ chỗ và thanh toán&quot;] --&gt; LG{&quot;Đã đăng nhập?&quot;}
-    LG --&gt;|&quot;Chưa&quot;| LOGIN[&quot;Đăng nhập,&lt;br/&gt;quay lại đúng màn với lựa chọn cũ&quot;] --&gt; AGE
-    LG --&gt;|&quot;Rồi&quot;| AGE{&quot;Đủ 18 tuổi?&quot;}
-    AGE --&gt;|&quot;Chưa&quot;| BLOCK[&quot;Chặn tự đặt,&lt;br/&gt;cho lưu hoặc nhờ người lớn đặt&quot;]
-    AGE --&gt;|&quot;Đủ&quot;| HOLD[&quot;Giữ chỗ tất cả mục 10 phút,&lt;br/&gt;chốt giá&quot;]
-    HOLD --&gt; HOK{&quot;Giữ được hết?&quot;}
-    HOK --&gt;|&quot;Không&quot;| BACK[&quot;Báo trước khi trả tiền,&lt;br/&gt;quay lại sửa lộ trình&quot;]
-    HOK --&gt;|&quot;Có&quot;| MODEL{&quot;Phần bán trực tiếp&lt;br/&gt;trả thế nào?&quot;}
-    MODEL --&gt;|&quot;Trả trước trong app&quot;| CHARGE[&quot;Thanh toán một lần,&lt;br/&gt;có mã chống trùng&quot;]
-    MODEL --&gt;|&quot;Trả tại chỗ&quot;| CHARGE2[&quot;Chỉ thanh toán phần còn lại;&lt;br/&gt;nền tảng thu hoa hồng&quot;]
-    CHARGE --&gt; CONF[&quot;Xác nhận từng mục&quot;]
-    CHARGE2 --&gt; CONF
-    CONF --&gt; RES{&quot;Kết quả&quot;}
-    RES --&gt;|&quot;Tất cả thành công&quot;| OK[&quot;Đã đặt xong&quot;]
-    RES --&gt;|&quot;Một mục lỗi&quot;| PART[&quot;Áp chính sách đã chọn:&lt;br/&gt;hoàn tiền mục lỗi, hủy miễn phí 30 phút&lt;br/&gt;hoặc hủy và hoàn toàn bộ&quot;]
-    OK --&gt; AFTER[&quot;Chuyến đi của tôi&lt;br/&gt;+ gợi ý phần còn thiếu&lt;br/&gt;+ link đặt vé máy bay trên đối tác&quot;]
-    PART --&gt; AFTER
-</pre></section>
-<section id="s5"><h2>Trình tự các hệ thống khi thanh toán</h2><pre class="mermaid">sequenceDiagram
-    actor U as Người xem
-    participant APP as App
-    participant BE as Backend
-    participant INV as Kho của nền tảng
-    participant TV as API đối tác
-    participant PG as Cổng thanh toán
-    participant HOST as Chủ nhà / nhà xe
-    U-&gt;&gt;APP: Giữ chỗ và thanh toán
-    APP-&gt;&gt;BE: Tạo phiên đặt chỗ
-    BE-&gt;&gt;INV: Giữ phòng, ghế, 10 phút
-    BE-&gt;&gt;TV: Kiểm tra lại giá và chỗ
-    TV--&gt;&gt;BE: Còn hiệu lực
-    BE--&gt;&gt;APP: Đã giữ chỗ, giá đã chốt
-    U-&gt;&gt;APP: Xác nhận thanh toán
-    APP-&gt;&gt;BE: Thanh toán, kèm mã chống trùng
-    BE-&gt;&gt;PG: Trừ tiền một lần
-    PG--&gt;&gt;BE: Thành công
-    BE-&gt;&gt;INV: Chốt đơn, trừ tồn kho
-    BE-&gt;&gt;TV: Đặt chỗ
-    TV--&gt;&gt;BE: Mã xác nhận
-    BE-&gt;&gt;HOST: Gửi đơn mới
-    BE--&gt;&gt;APP: Đã đặt xong
-    APP--&gt;&gt;U: Kết quả và gợi ý phần còn thiếu
-</pre></section>
-<section id="s6"><h2>6. Kiểm duyệt và chống seeding</h2><pre class="mermaid">flowchart TD
-    NEW[&quot;Bài hoặc bình luận mới,&lt;br/&gt;hoặc bản sửa&quot;] --&gt; AI{&quot;AI và luật sàng lọc&quot;}
-    AI --&gt;|&quot;An toàn&quot;| SHOW[&quot;Hiện ngay&quot;]
-    AI --&gt;|&quot;Cần xem&quot;| Q[&quot;Hàng chờ kiểm duyệt&quot;]
-    AI --&gt;|&quot;Nguy hiểm, lừa đảo,&lt;br/&gt;lộ thông tin cá nhân&quot;| HIDE[&quot;Giữ lại hoặc ẩn tạm&quot;] --&gt; Q
-    SHOW --&gt; REP{&quot;Bị báo cáo?&quot;}
-    REP --&gt;|&quot;Từ 3 người tin cậy trở lên&lt;br/&gt;hoặc nhóm nghiêm trọng&quot;| HIDE
-    REP --&gt;|&quot;Ít báo cáo&quot;| Q
-    Q --&gt; MODR[&quot;Kiểm duyệt viên quyết định,&lt;br/&gt;AI gợi ý lý do&quot;]
-    MODR --&gt; ACTN[&quot;Hiện / ẩn / xóa + lý do&quot;]
-    ACTN --&gt; LOG[&quot;Ghi audit log&quot;]
-    ACTN --&gt; NOTI[&quot;Báo người đăng,&lt;br/&gt;cho kháng nghị&quot;]
-    ACTN --&gt; SYNC[&quot;Bài ẩn biến khỏi app, web,&lt;br/&gt;tìm kiếm và trợ lý&quot;]
-    subgraph SEED[&quot;Chống seeding và đẩy ảo&quot;]
-        T1[&quot;Đánh giá khớp thực tế&lt;br/&gt;từ người đã đi theo&quot;]
-        T2[&quot;Nhãn Hợp tác bắt buộc&quot;]
-        T3[&quot;Điểm uy tín tài khoản&quot;]
-        T4[&quot;Một người một phiếu,&lt;br/&gt;gom cụm thiết bị&quot;]
-        T5[&quot;Phát hiện tăng vọt bất thường&quot;]
-    end
-    SEED --&gt; TREND[&quot;Điểm xu hướng sạch&quot;]
-</pre></section>
-<section id="s7"><h2>7. Xu hướng, cá nhân hóa và thưởng</h2><pre class="mermaid">flowchart LR
-    EV[&quot;Sự kiện: xem, thả tim,&lt;br/&gt;bình luận, lưu, chia sẻ,&lt;br/&gt;đặt theo lộ trình&quot;] --&gt; W[&quot;Nhân trọng số&lt;br/&gt;và độ tin cậy người dùng&quot;]
-    W --&gt; DECAY[&quot;Giảm dần theo thời gian,&lt;br/&gt;tính lại mỗi 5 phút&quot;]
-    DECAY --&gt; TS[&quot;Điểm xu hướng bài và chỗ&quot;]
-    EV --&gt; TASTE[&quot;Hồ sơ gu người dùng&quot;]
-    TS --&gt; MIX[&quot;Bảng tin: 60% hợp gu,&lt;br/&gt;20% xu hướng, 20% khám phá&quot;]
-    TASTE --&gt; MIX
-    MIX --&gt; REASON[&quot;Lý do ngắn bằng số thật&quot;]
-    BOOK[&quot;Đơn đặt theo lộ trình&quot;] --&gt; ATTR[&quot;Ghi nhận bài nguồn&quot;]
-    ATTR --&gt; DONE{&quot;Người đi theo&lt;br/&gt;hoàn thành chuyến?&quot;}
-    DONE --&gt;|&quot;Có, không gian lận&quot;| REWARD[&quot;Mở thưởng cho người đăng&quot;]
-    DONE --&gt;|&quot;Hủy hoặc nghi farm&quot;| NO[&quot;Không thưởng&quot;]
-    ATTR --&gt; EV
-</pre></section>
-<section id="s8"><h2>8. Nguồn hàng: hai mô hình cùng tồn tại</h2><pre class="mermaid">flowchart TD
-    FY[&quot;Phương án Đi ngay&quot;] --&gt; A[&quot;Bán trực tiếp&lt;br/&gt;hàng của nền tảng&quot;]
-    FY --&gt; B[&quot;API đối tác&lt;br/&gt;OTA, bedbank&quot;]
-    FY --&gt; C[&quot;Link affiliate&quot;]
-    A --&gt; A1[&quot;Homestay, nhà xe ký hợp đồng&quot;]
-    A1 --&gt; A2[&quot;Màn đối tác: lịch phòng,&lt;br/&gt;ngừng bán, giá, đơn mới&quot;]
-    A1 --&gt; A3[&quot;Trả trước trong app&lt;br/&gt;hoặc trả tại chỗ&quot;]
-    B --&gt; B1[&quot;Tìm, kiểm tra lại, đặt qua API&quot;]
-    B1 --&gt; B2[&quot;Giá và chỗ thật,&lt;br/&gt;thanh toán trong app&quot;]
-    C --&gt; C1[&quot;Giá tham khảo lưu tạm&quot;]
-    C1 --&gt; C2[&quot;Mở trang đối tác đã điền sẵn,&lt;br/&gt;mã theo dõi theo bài&quot;]
-</pre></section>
-<section id="s9"><h2>9. Kiến trúc hệ thống</h2><pre class="mermaid">flowchart LR
+<nav><a href="#s0">Kiến trúc</a><a href="#s1">Toàn cảnh</a><a href="#s2">Đăng bài</a><a href="#s3">Đi ngay</a><a href="#s4">Trình tự hệ thống khi thanh toán</a><a href="#s5">Kiểm duyệt</a></nav>
+<main><section id="s0"><h2>12.1. Kiến trúc</h2><pre class="mermaid">flowchart LR
     subgraph CLIENT[&quot;Giao diện&quot;]
         AND[&quot;Android app&lt;br/&gt;offline-first&quot;]
-        WEB[&quot;Web đặt chỗ&quot;]
-        ADM[&quot;Trang quản trị&lt;br/&gt;và màn đối tác&quot;]
+        WEB[&quot;Web&quot;]
+        ADM[&quot;Quản trị + màn đối tác&quot;]
     end
     subgraph BACK[&quot;Backend: một khối chia module&quot;]
-        AUTH[&quot;Tài khoản và phân quyền&quot;]
-        VER[&quot;Xác minh đã đi&quot;]
+        AUTH[&quot;Tài khoản, phân quyền&quot;]
         POSTM[&quot;Bài đăng, media, tương tác&quot;]
+        PLACE[&quot;Dữ liệu địa điểm&quot;]
         MODM[&quot;Kiểm duyệt&quot;]
-        TRN[&quot;Xu hướng và cá nhân hóa&quot;]
+        TRN[&quot;Xu hướng, cá nhân hóa&quot;]
         SRCH[&quot;Tìm kiếm tiếng Việt kiểu người trẻ&quot;]
-        AST[&quot;Trợ lý: gọi công cụ + kiểm chứng&quot;]
+        PLAN[&quot;Đi ngay: AI + luật&quot;]
         BK[&quot;Đặt chỗ, giữ chỗ, đơn&quot;]
         PAYM[&quot;Thanh toán, hoàn tiền&quot;]
         SUP[&quot;Kết nối nguồn hàng&quot;]
@@ -203,21 +42,110 @@ footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
         MEDIA[(&quot;Kho media + CDN&quot;)]
     end
     subgraph EXT[&quot;Bên ngoài&quot;]
-        OTA[&quot;API đối tác OTA&quot;]
-        AFFN[&quot;Mạng affiliate&quot;]
+        OTA[&quot;API đối tác&quot;]
+        AFFN[&quot;Affiliate&quot;]
         PGW[&quot;Cổng thanh toán&quot;]
         LLM[&quot;Mô hình ngôn ngữ&quot;]
-        MAIL[&quot;Email chuyển tiếp&quot;]
+        MAP[&quot;API bản đồ, địa điểm&quot;]
     end
     CLIENT --&gt;|&quot;API + realtime&quot;| BACK
     BACK --&gt; DATA
     SUP --&gt; OTA
     SUP --&gt; AFFN
     PAYM --&gt; PGW
-    AST --&gt; LLM
-    VER --&gt; MAIL
+    PLAN --&gt; LLM
+    PLACE --&gt; MAP
+</pre></section>
+<section id="s1"><h2>13.1. Toàn cảnh</h2><pre class="mermaid">flowchart LR
+    A[&quot;Người dùng đi du lịch&quot;] --&gt; C[&quot;Đăng video +&lt;br/&gt;lộ trình dạng điểm&quot;]
+    C --&gt; D[&quot;Kiểm duyệt AI + người,&lt;br/&gt;nhãn Hợp tác&quot;]
+    D --&gt; E[&quot;Bảng tin xu hướng&lt;br/&gt;và cá nhân hóa&quot;]
+    E --&gt; F[&quot;Người xem lướt video&quot;]
+    F --&gt; G[&quot;Đi ngay&quot;]
+    G --&gt; P[&quot;Lập kế hoạch lai:&lt;br/&gt;AI hiểu ý + luật tính toán&quot;]
+    P --&gt; H[&quot;Đặt vé và phòng,&lt;br/&gt;thanh toán một lần&quot;]
+    H --&gt; I[&quot;Đi chuyến đi&quot;]
+    I --&gt; R[&quot;Chấm khớp thực tế&quot;]
+    R --&gt; E
+    I --&gt; A
+    H --&gt; J[&quot;Ghi nhận nguồn:&lt;br/&gt;đặt từ bài nào&quot;]
+    J --&gt; E
+</pre></section>
+<section id="s2"><h2>13.2. Đăng bài</h2><pre class="mermaid">flowchart TD
+    S[&quot;Người dùng muốn chia sẻ chuyến đi&quot;] --&gt; P1[&quot;Trang 1: video + caption&lt;br/&gt;+ khai báo tài trợ&quot;]
+    P1 --&gt; P2[&quot;Trang 2: dựng lộ trình theo ngày&quot;]
+    P2 --&gt; T{&quot;Loại điểm&quot;}
+    T --&gt;|&quot;Di chuyển&quot;| M[&quot;Từ · Đến · Phương tiện&lt;br/&gt;chọn sân bay, ga, bến xe&quot;]
+    T --&gt;|&quot;Ở&quot;| ST[&quot;Chỗ ở · số đêm&quot;]
+    T --&gt;|&quot;Chơi / Ăn&quot;| PO[&quot;Địa điểm · tầm giá · ghi chú&quot;]
+    M --&gt; DATA[&quot;Tự điền địa chỉ, loại điểm,&lt;br/&gt;giá tham khảo từ dữ liệu&quot;]
+    ST --&gt; DATA
+    PO --&gt; DATA
+    DATA --&gt; OK{&quot;Có ít nhất 1 chặng&lt;br/&gt;và 1 chỗ ở hợp lệ?&quot;}
+    OK --&gt;|&quot;Chưa&quot;| P2
+    OK --&gt;|&quot;Rồi&quot;| UP[&quot;Đăng: tải lên chạy nền&quot;]
+    UP --&gt; MOD{&quot;Sàng lọc tự động&quot;}
+    MOD --&gt;|&quot;An toàn&quot;| LIVE[&quot;Hiện trên bảng tin&quot;]
+    MOD --&gt;|&quot;Cần xem&quot;| Q[&quot;Hiện + vào hàng chờ&quot;]
+    MOD --&gt;|&quot;Nguy hiểm&quot;| HOLD[&quot;Giữ lại chờ duyệt&quot;]
+</pre></section>
+<section id="s3"><h2>13.3. Đi ngay</h2><pre class="mermaid">flowchart TD
+    IN[&quot;Người xem: nơi đi, ngày, số người,&lt;br/&gt;ngân sách, ưu tiên, câu nói tự do&quot;] --&gt; AI[&quot;Lớp AI: hiểu câu nói&lt;br/&gt;thành điều kiện có cấu trúc&quot;]
+    AI --&gt; RULE
+    ROUTE[&quot;Lộ trình của người đăng:&lt;br/&gt;điểm đến, chỗ ở, điểm chơi, quán ăn&quot;] --&gt; RULE
+    subgraph RULE[&quot;Lớp luật&quot;]
+        R1[&quot;Tìm đường đi trên đồ thị phương tiện&quot;]
+        R2[&quot;Ràng buộc giờ, lùi ngày nếu cần&quot;]
+        R3[&quot;Chỗ ở: ưu tiên chỗ trong lộ trình&quot;]
+        R4[&quot;Lọc ngân sách, tránh đi đêm&quot;]
+        R5[&quot;3 phương án: Tiết kiệm / Cân bằng / Nhanh&quot;]
+        R1 --&gt; R2 --&gt; R3 --&gt; R4 --&gt; R5
+    end
+    RULE --&gt; OK{&quot;Có phương án&lt;br/&gt;vừa ngân sách?&quot;}
+    OK --&gt;|&quot;Có&quot;| SHOW[&quot;Phương án + gợi ý ăn chơi:&lt;br/&gt;đi gì tới, tầm giá&quot;]
+    OK --&gt;|&quot;Không&quot;| HONEST[&quot;Nói thật, phương án gần nhất&lt;br/&gt;và mức cần nâng&quot;]
+    SHOW --&gt; CART[&quot;Giỏ: vé các chặng + phòng&quot;]
+    CART --&gt; PAY[&quot;Giữ chỗ 10 phút → thanh toán một lần&quot;]
+</pre></section>
+<section id="s4"><h2>13.4. Trình tự hệ thống khi thanh toán</h2><pre class="mermaid">sequenceDiagram
+    actor U as Người xem
+    participant APP as App
+    participant BE as Backend
+    participant INV as Kho của nền tảng
+    participant API as API đối tác
+    participant PG as Cổng thanh toán
+    participant HOST as Chủ nhà / nhà xe
+    U-&gt;&gt;APP: Đặt ngay
+    APP-&gt;&gt;BE: Tạo phiên đặt chỗ
+    BE-&gt;&gt;INV: Giữ phòng, ghế 10 phút
+    BE-&gt;&gt;API: Kiểm tra lại giá và chỗ
+    API--&gt;&gt;BE: Còn hiệu lực
+    BE--&gt;&gt;APP: Đã giữ chỗ, giá đã chốt
+    U-&gt;&gt;APP: Xác nhận thanh toán
+    APP-&gt;&gt;BE: Thanh toán kèm mã chống trùng
+    BE-&gt;&gt;PG: Trừ tiền một lần
+    PG--&gt;&gt;BE: Thành công
+    BE-&gt;&gt;INV: Chốt đơn, trừ tồn kho
+    BE-&gt;&gt;API: Đặt chỗ
+    API--&gt;&gt;BE: Mã xác nhận
+    BE-&gt;&gt;HOST: Gửi đơn mới
+    BE--&gt;&gt;APP: Đã đặt xong + gợi ý trong chuyến
+</pre></section>
+<section id="s5"><h2>13.5. Kiểm duyệt</h2><pre class="mermaid">flowchart TD
+    NEW[&quot;Bài, bình luận mới hoặc bản sửa&quot;] --&gt; AI{&quot;AI và luật sàng lọc&quot;}
+    AI --&gt;|&quot;An toàn&quot;| SHOW[&quot;Hiện ngay&quot;]
+    AI --&gt;|&quot;Cần xem&quot;| Q[&quot;Hàng chờ&quot;]
+    AI --&gt;|&quot;Nguy hiểm, lừa đảo,&lt;br/&gt;lộ thông tin cá nhân&quot;| HIDE[&quot;Giữ lại / ẩn tạm&quot;] --&gt; Q
+    SHOW --&gt; REP{&quot;Bị báo cáo?&quot;}
+    REP --&gt;|&quot;Từ 3 người tin cậy&lt;br/&gt;hoặc nhóm nghiêm trọng&quot;| HIDE
+    REP --&gt;|&quot;Ít báo cáo&quot;| Q
+    Q --&gt; MODR[&quot;Kiểm duyệt viên quyết định,&lt;br/&gt;AI gợi ý lý do&quot;]
+    MODR --&gt; ACT[&quot;Hiện / ẩn / xóa + lý do&quot;]
+    ACT --&gt; LOG[&quot;Audit log&quot;]
+    ACT --&gt; NOTI[&quot;Báo người đăng, cho kháng nghị&quot;]
+    ACT --&gt; SYNC[&quot;Bài ẩn biến khỏi app, web,&lt;br/&gt;tìm kiếm, trợ lý&quot;]
 </pre></section></main>
-<footer>Nguồn sơ đồ: docs/10-diagram-workflow.md</footer>
+<footer>Nguồn sơ đồ: docs/03-y-tuong-trien-khai.md</footer>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>
 mermaid.initialize({startOnLoad:true,theme:"dark",securityLevel:"strict",
