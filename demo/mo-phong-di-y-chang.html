@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô phỏng Đi y chang</title>
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --text:#1d2330; --muted:#5f6878; --line:#e2e5ea;
+  --brand:#0b7a75; --brand-weak:#e3f3f2; --accent:#e8590c; --ok:#2b8a3e; --warn:#c77700; --bad:#c92a2a;
+  --phone:#0f1115; --screen:#ffffff; --chip:#f1f3f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111418; --panel:#1a1f26; --text:#e8ebf0; --muted:#9aa3b2; --line:#2c333d;
+    --brand:#3cc4bd; --brand-weak:#16302f; --accent:#ff8a3d; --ok:#51cf66; --warn:#fcc419; --bad:#ff6b6b;
+    --phone:#000; --screen:#151a20; --chip:#232a33;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111418; --panel:#1a1f26; --text:#e8ebf0; --muted:#9aa3b2; --line:#2c333d;
+  --brand:#3cc4bd; --brand-weak:#16302f; --accent:#ff8a3d; --ok:#51cf66; --warn:#fcc419; --bad:#ff6b6b;
+  --phone:#000; --screen:#151a20; --chip:#232a33;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:20px 16px 8px;max-width:1100px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0}
+.badge-sim{display:inline-block;background:var(--accent);color:#fff;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.flow{max-width:1100px;margin:12px auto;padding:0 16px;display:flex;gap:6px;flex-wrap:wrap}
+.flow .grp{font-size:12px;color:var(--muted);width:100%;margin-top:4px}
+.flow button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+.flow button.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.flow button.poster{border-left:4px solid #845ef7}
+.flow button.viewer{border-left:4px solid var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:8px 16px 32px;display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.phone{background:var(--phone);border-radius:36px;padding:12px;width:100%;max-width:360px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.screen{background:var(--screen);border-radius:26px;height:660px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.status{display:flex;justify-content:space-between;font-size:12px;padding:8px 18px;color:var(--muted)}
+.scr{flex:1;overflow:auto;padding:10px 14px 14px}
+.nav{display:flex;justify-content:space-between;gap:8px;max-width:360px;margin:12px auto 0}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;background:var(--chip);color:var(--text)}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.accent{background:var(--accent);color:#fff}
+.btn.small{padding:6px 10px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel h2{margin:0 0 4px;font-size:19px}
+.actor{font-size:13px;font-weight:600;padding:2px 8px;border-radius:99px;display:inline-block;margin-bottom:8px}
+.actor.poster{background:#efe7ff;color:#5f3dc4}
+.actor.viewer{background:#fff0e6;color:#b34700}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .actor.poster{background:#2b2342;color:#b197fc}:root:not([data-theme="light"]) .actor.viewer{background:#3a2616;color:#ffa94d}}
+.panel h3{font-size:14px;margin:14px 0 6px;color:var(--brand);text-transform:uppercase;letter-spacing:.04em}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:3px 0}
+.rule{display:inline-block;font-size:12px;background:var(--chip);border-radius:6px;padding:1px 6px;margin:2px 4px 2px 0;color:var(--muted)}
+.card{border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0;background:var(--panel)}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{display:inline-block;background:var(--chip);border-radius:99px;padding:3px 10px;font-size:12px;margin:2px 4px 2px 0;cursor:pointer;border:1px solid transparent}
+.chip.on{background:var(--brand-weak);border-color:var(--brand);color:var(--brand)}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.verified{font-size:12px;color:var(--ok);font-weight:600}
+.exp{font-size:12px;color:var(--muted)}
+.video{height:100%;border-radius:0;position:relative;color:#fff;background:linear-gradient(160deg,#0b7285 0%,#1c7ed6 45%,#f08c00 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:14px}
+.video .scene{position:absolute;top:30%;left:0;right:0;text-align:center;font-size:64px;opacity:.9}
+.video .side{position:absolute;right:10px;bottom:150px;display:flex;flex-direction:column;gap:14px;text-align:center;font-size:12px}
+.video .side div{font-size:22px}
+.video .chapter{display:inline-block;background:rgba(0,0,0,.45);padding:3px 10px;border-radius:99px;font-size:13px;margin-bottom:6px}
+.video .tag{display:inline-block;background:#fff;color:#111;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:6px;cursor:pointer}
+.prog{display:flex;gap:3px;margin:8px 0}
+.prog span{flex:1;height:4px;background:rgba(255,255,255,.35);border-radius:2px;position:relative;overflow:hidden}
+.prog span i{position:absolute;inset:0;width:0;background:#fff}
+.vbtns{display:flex;gap:8px}
+.vbtns button{flex:1;border:0;border-radius:10px;padding:10px;font-weight:700;cursor:pointer}
+.sheet{position:absolute;left:0;right:0;bottom:0;height:62%;background:var(--screen);border-radius:18px 18px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.25);padding:12px 14px;overflow:auto}
+.handle{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 8px}
+.day{font-weight:700;margin-top:10px}
+.stop{display:flex;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.stop .t{width:52px;flex:none;color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:4px;margin:8px 0}
+.tabs button{flex:1;border:1px solid var(--line);background:var(--chip);color:var(--text);border-radius:8px;padding:6px;font-size:13px;cursor:pointer}
+.tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+select,input[type=text],input[type=tel],textarea{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--screen);color:var(--text);font:inherit}
+.ctrl{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--chip);color:var(--text);cursor:pointer}
+.item{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0;font-size:14px}
+.item.off{opacity:.45}
+.total{position:sticky;bottom:0;background:var(--screen);border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.notice{border-radius:10px;padding:8px;font-size:13px;margin:6px 0}
+.notice.warn{background:rgba(252,196,25,.15);color:var(--text);border:1px solid var(--warn)}
+.notice.ok{background:rgba(64,192,87,.12);color:var(--text);border:1px solid var(--ok)}
+.notice.bad{background:rgba(250,82,82,.12);color:var(--text);border:1px solid var(--bad)}
+.blur{filter:blur(4px)}
+.face{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:var(--chip);margin:4px;font-size:24px;border:2px dashed var(--accent)}
+.log{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--chip);border-radius:8px;padding:8px;max-height:120px;overflow:auto;white-space:pre-wrap}
+.overview{max-width:1100px;margin:0 auto 8px;padding:0 16px}
+.ov{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}
+.ov span.b{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.ov span.a{color:var(--muted)}
+footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Mô phỏng "Đi y chang" <span class="badge-sim">Dữ liệu mô phỏng</span></h1>
+  <p class="sub">Linh (Hà Nội) đăng chuyến Phú Quốc đã đi → Khang (Sài Gòn) xem video và đặt y chang. Bấm từng bước hoặc dùng nút Tiếp/Quay lại. Màn "Đi y chang" có thể bấm thử.</p>
+</header>
+<div class="overview">
+  <div class="ov">
+    <span class="b">🧳 Linh đi chuyến thật</span><span class="a">→</span>
+    <span class="b">🎬 Đăng video + lộ trình</span><span class="a">→</span>
+    <span class="b">🛡 Hệ thống kiểm duyệt</span><span class="a">→</span>
+    <span class="b">📱 Khang lướt bảng tin</span><span class="a">→</span>
+    <span class="b">✨ Đi y chang</span><span class="a">→</span>
+    <span class="b">💳 Giữ chỗ & thanh toán</span><span class="a">→</span>
+    <span class="b">🧳 Khang đi, về kể lại</span><span class="a">↺</span>
+  </div>
+</div>
+<nav class="flow" id="flow"></nav>
+<main>
+  <div>
+    <div class="phone"><div class="screen"><div class="status"><span id="clock">09:41</span><span>4G ▂▄▆</span></div><div class="scr" id="scr"></div></div></div>
+    <div class="nav"><button class="btn" id="prev">← Quay lại</button><span class="muted" id="pos"></span><button class="btn primary" id="next">Tiếp →</button></div>
+  </div>
+  <section class="panel" id="panel"></section>
+</main>
+<footer>Mọi tên, giá, chuyến bay trong trang này đều là dữ liệu mô phỏng để minh họa luồng, không phải giá thật của Vinpearl. Bám theo tài liệu 06 và 07 trong repo.</footer>
+
+<script>
+const VND = n => n.toLocaleString('vi-VN') + 'đ';
+const DATES = [
+  {label:'T7 15/11', start:'15/11', f:1.00, vwSoldOut:true},
+  {label:'T7 22/11', start:'22/11', f:0.82, vwSoldOut:false},
+  {label:'T7 29/11', start:'29/11', f:0.90, vwSoldOut:false},
+  {label:'T7 06/12', start:'06/12', f:1.25, vwSoldOut:false}
+];
+const ORIGINS = {SGN:{name:'Sài Gòn', code:'SGN', base:1290000, out:'07:45–08:50', back:'18:30–19:35'},
+                 HAN:{name:'Hà Nội', code:'HAN', base:1650000, out:'07:30–09:40', back:'18:00–20:10'},
+                 DAD:{name:'Đà Nẵng', code:'DAD', base:0}};
+const HOTEL = 2950000, VW = 950000, SAFARI = 650000, USUAL_F = 0.90;
+
+const S = {origin:'SGN', date:1, people:2, inc:{fly:true,hotel:true,vw:true,sunset:true}, vwAlt:false, tab:'plan',
+           policy:'keep', loggedIn:false, held:false, payCount:0, log:[], blurred:false, sponsored:null, vibes:['chill'],
+           itin:{sunset:true, note:true}};
+
+function fromPrice(){
+  let best=Infinity;
+  DATES.forEach(d=>{ if(d.vwSoldOut) return;
+    const fly=Math.round(ORIGINS.SGN.base*d.f/1000)*1000*2*2, hotel=Math.round(HOTEL*d.f/1000)*1000*2, vw=VW*2;
+    best=Math.min(best,(fly+hotel+vw)/2); });
+  return (Math.round(best/100000)/10).toLocaleString('vi-VN')+'tr';
+}
+function addDay(ddmm, n){ const [d,m]=ddmm.split('/').map(Number); const dt=new Date(2026,m-1,d+n); return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0'); }
+function calc(){
+  const d=DATES[S.date], o=ORIGINS[S.origin], rooms=Math.ceil(S.people/2);
+  const flyOk = o.base>0;
+  const fly = (S.inc.fly && flyOk) ? Math.round(o.base*d.f/1000)*1000*2*S.people : 0;
+  const hotelNight = Math.round(HOTEL*d.f/1000)*1000;
+  const hotel = S.inc.hotel ? hotelNight*rooms*2 : 0;
+  const vwSold = d.vwSoldOut && !S.vwAlt;
+  const vwPrice = S.vwAlt ? SAFARI : VW;
+  const vw = (S.inc.vw && !vwSold) ? vwPrice*S.people : 0;
+  const total = fly+hotel+vw;
+  const usual = ((S.inc.fly&&flyOk)? Math.round(o.base*USUAL_F/1000)*1000*2*S.people:0) + (S.inc.hotel? Math.round(HOTEL*USUAL_F/1000)*1000*rooms*2:0) + ((S.inc.vw&&!vwSold)? vwPrice*S.people:0);
+  return {d,o,rooms,flyOk,fly,hotelNight,hotel,vwSold,vw,vwPrice,total,usual,
+          diff: usual? (total-usual)/usual : 0,
+          outside: S.inc.sunset ? 200000*S.people : 0};
+}
+
+/* ---------- STEPS ---------- */
+const STEPS = [
+ {actor:'poster', title:'1. Chuyến đi của tôi', phone:()=>`
+   <h3 style="margin:4px 0">Chuyến đi của tôi</h3>
+   <div class="card"><div class="row"><b>Phú Quốc · 3N2Đ</b><span class="verified">✅ Đã hoàn thành</span></div>
+   <div class="muted">✈ HAN ⇄ PQC · 🏨 Vinpearl Resort Phú Quốc · 🎢 VinWonders</div>
+   <button class="btn accent small" style="margin-top:8px;width:100%" onclick="go(1)">🎬 Kể lại chuyến đi</button></div>
+   <div class="card"><div class="row"><b>Nha Trang · sắp đi</b><span class="muted">Chưa đi</span></div>
+   <div class="muted">Chưa thể đăng bài: chuyến chưa diễn ra</div></div>`,
+  see:['Nút "Kể lại chuyến đi" chỉ có ở chuyến đã hoàn thành.','Chuyến sắp đi chưa đăng được.'],
+  sys:['Kiểm tra quyền đăng ở server: đơn của chính Linh, đã qua ngày trả phòng, không hủy, đã thanh toán.','Nếu gọi thẳng API khi chưa đi → từ chối với mã NOT_TRAVELED.'],
+  rules:['A2','Mục 5: không bài đăng giả']},
+
+ {actor:'poster', title:'2. Video & riêng tư hình ảnh', phone:()=>`
+   <h3 style="margin:4px 0">Chọn video và ảnh</h3>
+   <div class="card" style="text-align:center"><div style="font-size:44px">🎞️</div><div class="muted">video_phuquoc.mp4 · 48 giây · đã nén còn 12MB</div></div>
+   <div class="card"><b>Phát hiện trong khung hình</b>
+   <div><span class="face ${S.blurred?'blur':''}">🙂</span><span class="face ${S.blurred?'blur':''}">🙂</span><span class="face" style="border-color:var(--ok)">😎</span></div>
+   <div class="muted">2 khuôn mặt người lạ · 1 là bạn (đã giữ)</div>
+   <div class="notice warn">🎫 Có ảnh thẻ lên máy bay chứa mã đặt chỗ → bắt buộc làm mờ</div>
+   <button class="btn primary small" onclick="S.blurred=true;render()">${S.blurred?'✅ Đã làm mờ':'Làm mờ tất cả mục được đề xuất'}</button></div>`,
+  see:['Video dọc ≤ 60 giây, ảnh tối đa 10 tấm.','Mặt người lạ và giấy tờ được khoanh sẵn để làm mờ.'],
+  sys:['Nén và cắt video ngay trên máy để tải nhẹ khi mạng yếu.','Phát hiện khuôn mặt, chữ nhạy cảm (thẻ lên máy bay, CCCD, biển số).','Chưa làm mờ giấy tờ thì không cho đăng.'],
+  rules:['A2','Mục 6: riêng tư']},
+
+ {actor:'poster', title:'3. Gắn chương & thẻ địa điểm', phone:()=>`
+   <h3 style="margin:4px 0">Gắn điểm dừng vào video</h3>
+   <div class="muted">Kéo thẻ vào đoạn video tương ứng. Hệ thống gợi ý sẵn.</div>
+   <div class="card">
+    <div class="row"><span>0:00–0:10</span><span class="chip on">✈ Ngày 1 · Bay đến</span></div>
+    <div class="row"><span>0:10–0:24</span><span class="chip on">🏨 Vinpearl Resort</span></div>
+    <div class="row"><span>0:24–0:38</span><span class="chip on">🎢 VinWonders <small>(gợi ý AI)</small></span></div>
+    <div class="row"><span>0:38–0:48</span><span class="chip on">🌅 Sunset Town</span></div>
+   </div>
+   <div class="muted">Thẻ chỉ lấy từ các mục trong chuyến của Linh, không gõ tự do được.</div>`,
+  see:['Thanh thời gian video với các đoạn đã gắn điểm dừng.'],
+  sys:['So khung hình với ảnh chính thức của các chỗ trong chuyến để gợi ý đoạn nào là chỗ nào.','Người đăng xác nhận hoặc sửa. Địa điểm luôn được neo từ đơn, không đoán.'],
+  rules:['A4: một chạm tới chi tiết','Tài liệu 07, mục 4.4']},
+
+ {actor:'poster', title:'4. Caption, vibe, khai tài trợ', phone:()=>`
+   <h3 style="margin:4px 0">Kể chuyện</h3>
+   <input type="text" value="Phú Quốc 3N2Đ chill hết nấc 🌅">
+   <div style="margin-top:8px"><b>Kiểu chuyến</b><br>
+   ${['chill','quẩy','sống ảo','nghỉ dưỡng','ăn uống'].map(v=>`<span class="chip ${S.vibes.includes(v)?'on':''}" onclick="toggleVibe('${v}')">${v}</span>`).join('')}</div>
+   <div style="margin-top:8px"><b>Hợp với:</b> <span class="chip on">nhóm bạn</span><span class="chip">cặp đôi</span><span class="chip">gia đình</span></div>
+   <div style="margin-top:8px"><b>Mùa đi:</b> Hè 2026 <span class="exp">(tự điền, không hiện ngày)</span></div>
+   <div class="card"><b>Bài này có nhận tài trợ không?</b> <span class="bad">*</span><br>
+   <span class="chip ${S.sponsored===false?'on':''}" onclick="S.sponsored=false;render()">Không</span>
+   <span class="chip ${S.sponsored===true?'on':''}" onclick="S.sponsored=true;render()">Có → nhãn "Hợp tác"</span></div>`,
+  see:['Caption, chọn vibe, mùa đi tự điền.','Câu hỏi tài trợ là bắt buộc.'],
+  sys:['Gợi ý hashtag và vibe từ nội dung.','Khai có tài trợ → gắn nhãn "Hợp tác" công khai.','Khai sai mà bị phát hiện → nhãn hồi tố, hạ uy tín, thu hồi thưởng.'],
+  rules:['Mục 6: quảng cáo','Luật Quảng cáo 2025 (KOL)']},
+
+ {actor:'poster', title:'5. Biên tập lộ trình (2 lớp)', phone:()=>`
+   <h3 style="margin:4px 0">Lộ trình</h3>
+   <div class="muted">✅ = hệ thống tự điền từ đơn đã đặt · 📝 = Linh tự thêm</div>
+   <div class="day">Ngày 1</div>
+   <div class="stop"><span class="t">Sáng</span><span>✅ ✈ Bay HAN → PQC <span class="exp">(khung giờ sáng)</span></span></div>
+   <div class="stop"><span class="t">Chiều</span><span>✅ 🏨 Vinpearl Resort · Deluxe hướng biển · 2 đêm
+     ${S.itin.note?'<br><span class="exp">💬 "Xin tầng cao, view hoàng hôn đỉnh"</span>':''}</span></div>
+   <div class="stop"><span class="t">Tối</span><span>${S.itin.sunset?'📝 📍 Sunset Town · ~200k/người <span class="exp">(ước tính)</span>':'<span class="muted">(đã ẩn)</span>'}</span></div>
+   <div class="day">Ngày 2</div>
+   <div class="stop"><span class="t">Cả ngày</span><span>✅ 🎢 VinWonders · vé 1 ngày<br><span class="exp">💬 "Vào lúc 9h cho vắng"</span></span></div>
+   <div class="day">Ngày 3</div>
+   <div class="stop"><span class="t">Tối</span><span>✅ ✈ Bay PQC → HAN <span class="exp">(khung giờ tối)</span></span></div>
+   <div style="margin-top:8px">
+     <span class="chip ${S.itin.sunset?'on':''}" onclick="S.itin.sunset=!S.itin.sunset;render()">Hiện Sunset Town</span>
+     <span class="chip ${S.itin.note?'on':''}" onclick="S.itin.note=!S.itin.note;render()">Hiện ghi chú phòng</span>
+     <span class="chip">+ Thêm điểm dừng</span></div>`,
+  see:['Khung đã đặt (✅) hệ thống tự điền, Linh không sửa được loại phòng, ngày.','Linh thêm kế hoạch theo sáng/chiều/tối, ghi chú, chi phí ước tính cho phần ngoài app.'],
+  sys:['Chuyển ngày thật → Ngày 1/2/3; giờ cụ thể → khung giờ.','Bỏ hẳn giá đã trả, mã đặt chỗ, số hiệu chuyến bay, người đi cùng.','Không cho thêm mục đặt chỗ mà Linh không đặt.'],
+  rules:['A2: lộ trình lấy từ đơn, không gõ lại','A11: không lộ thông tin người đăng','Cần hỏi: điểm ngoài Vinpearl']},
+
+ {actor:'poster', title:'6. Xem trước riêng tư', phone:()=>`
+   <h3 style="margin:4px 0">Người khác sẽ thấy</h3>
+   <div class="card"><b class="ok">Công khai</b><ul class="muted" style="padding-left:18px;margin:4px 0">
+   <li>Video (đã làm mờ), caption, vibe</li><li>Lộ trình theo Ngày 1/2/3, khung giờ</li><li>"Đã đi thật · Hè 2026"</li><li>Ghi chú và mẹo của Linh</li></ul></div>
+   <div class="card"><b class="bad">Không bao giờ hiện</b><ul class="muted" style="padding-left:18px;margin:4px 0">
+   <li>Ngày đi 12/07–14/07</li><li>Số tiền đã trả</li><li>Mã đặt chỗ, số hiệu chuyến bay</li><li>Tên người đi cùng</li><li>Số người đi (đang tắt)</li></ul></div>
+   <button class="btn primary" style="width:100%" onclick="go(6)">Đăng</button>`,
+  see:['Linh thấy rõ cái gì công khai, cái gì luôn ẩn trước khi bấm Đăng.'],
+  sys:['Kiểm tra lại phía server: phản hồi API của bài không chứa ngày thật, giá đã trả, mã đặt chỗ.'],
+  rules:['A11','Mục 5: thông tin cá nhân không hiện cho người khác']},
+
+ {actor:'poster', title:'7. Đăng & sàng lọc tự động', phone:()=>`
+   <h3 style="margin:4px 0">Đang đăng…</h3>
+   <div class="card"><div class="row"><span>⬆ Tải lên theo từng phần</span><span class="ok">100%</span></div><div class="exp">Mất mạng giữa chừng → tự tiếp tục, nháp không mất</div></div>
+   <div class="card"><div class="row"><span>🎞 Chuyển mã nhiều chất lượng</span><span class="ok">Xong</span></div></div>
+   <div class="card"><div class="row"><span>🛡 Sàng lọc AI</span><span class="ok">An toàn</span></div><div class="exp">Không có SĐT, link lạ, nội dung xấu; đã làm mờ giấy tờ</div></div>
+   <div class="card"><div class="row"><span>🔎 Lập chỉ mục tìm kiếm</span><span class="ok">Xong</span></div><div class="exp">"yên tĩnh", "hoàng hôn", "vắng buổi sáng"…</div></div>
+   <div class="notice ok">✅ Đã đăng! Bài xuất hiện trên bảng tin, tìm kiếm và trợ lý.</div>`,
+  see:['Trạng thái: Đang tải → Đang xử lý → Đã đăng (hoặc Đang xem xét).'],
+  sys:['Sàng lọc 3 nhóm: An toàn (hiện ngay) / Cần xem (hiện + vào hàng chờ) / Nguy hiểm (giữ lại chờ duyệt).','AI đọc lời nói, chữ trên hình, caption để phục vụ tìm kiếm theo ý, trợ lý và tóm tắt, không để đoán địa điểm.','Bắt đầu tính điểm xu hướng.'],
+  rules:['A2: mất mạng không mất bài','A3','A14']},
+
+ {actor:'viewer', title:'8. Khang lướt bảng tin', phone:()=>`
+   <div class="video" style="margin:-10px -14px -14px">
+     <div class="scene">🏝️🌅</div>
+     <div class="side"><div>❤️</div>1,2k<div>💬</div>86<div>🔖</div>Lưu<div>↗</div>Chia sẻ</div>
+     <div><span class="chapter" id="chap">▸ Ngày 1 · Bay đến Phú Quốc</span></div>
+     <div><span class="tag" onclick="go(8)">🏨 Vinpearl Resort Phú Quốc ›</span></div>
+     <div style="font-size:13px"><b>@linh.dichoi</b> · <span style="background:rgba(43,138,62,.9);padding:1px 6px;border-radius:6px">✅ Đã đi thật · Hè 2026</span></div>
+     <div style="font-size:14px;margin:4px 0">Phú Quốc 3N2Đ chill hết nấc 🌅</div>
+     <div style="font-size:12px;opacity:.9">🔥 32 người lưu trong 24h · Từ ~${fromPrice()}/người (2 người, có chỗ trong 30 ngày) · giá đổi theo ngày</div>
+     <div class="prog"><span><i id="p0"></i></span><span><i id="p1"></i></span><span><i id="p2"></i></span></div>
+     <div class="vbtns"><button style="background:rgba(255,255,255,.9);color:#111" onclick="go(8)">🗺 Xem lộ trình</button><button style="background:var(--accent);color:#fff" onclick="go(9)">✨ ĐI Y CHANG</button></div>
+   </div>`,
+  see:['Video dọc tự phát, chip chương đổi theo đoạn đang phát.','Thẻ địa điểm, dấu "Đã đi thật", lý do đang hot bằng số thật, giá tham khảo.'],
+  sys:['Bảng tin trộn ~60% hợp gu, ~20% xu hướng, ~20% khám phá; không lặp bài.','Mạng yếu: ảnh bìa và chất lượng thấp trước.','Giá "từ ~X/người" = tổng rẻ nhất còn chỗ trong 30 ngày tới cho 2 người.'],
+  rules:['A1','A4','Mục 5: không khan hiếm giả']},
+
+ {actor:'viewer', title:'9. Vuốt lên xem lộ trình', phone:()=>`
+   <div class="video" style="margin:-10px -14px -14px"><div class="scene" style="top:12%">🏝️🌅</div>
+   <div class="sheet"><div class="handle"></div>
+   <b>Lộ trình 3N2Đ của Linh</b> <span class="verified">✅ Đã đi thật</span>
+   <div class="day">Ngày 1</div>
+   <div class="stop"><span class="t">Sáng</span><span>✈ Bay đến Phú Quốc <span class="exp">[đổi theo nơi bạn ở]</span></span></div>
+   <div class="stop"><span class="t">Chiều</span><span>🏨 Vinpearl Resort · Deluxe hướng biển · 2 đêm <span class="ok">· Đang bán</span></span></div>
+   <div class="stop"><span class="t">Tối</span><span>📍 Sunset Town <span class="exp">(gợi ý ghé, không đặt được)</span></span></div>
+   <div class="day">Ngày 2</div>
+   <div class="stop"><span class="t">Cả ngày</span><span>🎢 VinWonders · vé 1 ngày <span class="ok">· Đang bán</span></span></div>
+   <div class="day">Ngày 3</div>
+   <div class="stop"><span class="t">Tối</span><span>✈ Bay về</span></div>
+   <div class="card"><b>Người đã đi nói gì</b> <span class="exp">(B1 · 14 bài)</span><br><span class="ok">+ View biển, phòng sạch</span><br><span class="warn">− Cuối tuần VinWonders đông</span></div>
+   <button class="btn accent" style="width:100%" onclick="go(9)">✨ ĐI Y CHANG</button>
+   </div></div>`,
+  see:['Bảng lộ trình che nửa màn hình, video vẫn chạy phía trên.','Chạm một mục → trang chi tiết để đặt riêng mục đó.'],
+  sys:['Trạng thái từng mục tính theo hiện tại (Đang bán / Ngừng bán).','Tóm tắt chỉ dựa trên bài có thật, có trích dẫn.'],
+  rules:['A10','A11','B1']},
+
+ {actor:'viewer', title:'10. Màn "Đi y chang" (bấm thử)', interactive:true, phone:()=>confirmScreen(),
+  see:['Đi từ đâu, ngày đi (màu theo giá), số người.','3 tab: Lịch trình / Bản đồ / Chi phí.','Mục hết chỗ có 3 lựa chọn; bật/tắt từng mục.'],
+  sys:['Ngày thật = ngày Khang chọn + số ngày tương đối của từng mục.','Đổi nơi đi → thay chặng bay; không có chặng → báo và cho bỏ mục bay.','Số phòng tự tính theo sức chứa (2 người/phòng).','Giá luôn là giá hiện tại; lệch > 20% so với mức thường thấy → cảnh báo.','Không bao giờ hiện giá Linh đã trả.'],
+  rules:['A11','A8','Thử: chọn ngày 15/11 (VinWonders hết vé), ngày 06/12 (giá cao), nơi đi Đà Nẵng (không có chặng)']},
+
+ {actor:'viewer', title:'11. Đăng nhập giữa chừng', phone:()=> S.loggedIn ? `
+   <div class="notice ok">✅ Đã đăng nhập. Quay lại đúng màn xác nhận, lựa chọn còn nguyên:</div>
+   <div class="card">📍 Đi từ ${ORIGINS[S.origin].name} · 📅 ${DATES[S.date].label} · 👥 ${S.people} người<br>Tổng: <b>${VND(calc().total)}</b></div>
+   <div class="card"><b>Kiểm tra tuổi:</b> <span class="ok">Đủ 18 ✅</span><div class="exp">Nếu dưới 18: "Bạn cần đủ 18 tuổi để tự đặt chỗ. Bạn vẫn có thể lưu lộ trình!"</div></div>
+   <button class="btn accent" style="width:100%" onclick="go(11)">Giữ chỗ & thanh toán →</button>` : `
+   <h3 style="margin:4px 0">Đăng nhập để giữ chỗ</h3>
+   <div class="muted">Lựa chọn của bạn được giữ nguyên sau khi đăng nhập.</div>
+   <div style="margin:10px 0"><input type="tel" value="09xx xxx 123"></div>
+   <button class="btn primary" style="width:100%" onclick="S.loggedIn=true;render()">Nhận OTP & đăng nhập (giả lập)</button>`,
+  see:['Chưa đăng nhập vẫn xem và chọn được; chỉ khi giữ chỗ mới cần đăng nhập.','Đăng nhập xong quay lại đúng màn đang đặt.'],
+  sys:['Lưu "ý định" (bài nào, lựa chọn gì) trước khi đăng nhập rồi khôi phục.','Phiên ẩn danh gộp vào tài khoản.','Kiểm tra ≥ 18 tuổi ở server khi giữ chỗ và khi thanh toán.'],
+  rules:['A4','A8: dưới 18 không tự đặt']},
+
+ {actor:'viewer', title:'12. Giữ chỗ 10 phút & thanh toán', phone:()=>holdScreen(),
+  see:['Giờ hết hạn giữ chỗ là thật (không phải đếm ngược giả).','Thử bấm "Thanh toán" 2 lần: chỉ trừ tiền 1 lần.'],
+  sys:['Giữ chỗ tất cả mục cùng lúc, chốt giá trong 10 phút.','Mỗi lần thanh toán có Idempotency-Key: yêu cầu trùng bị bỏ qua.','Mục nào giữ không được → báo trước khi trả tiền.'],
+  rules:['A4: không trừ tiền hai lần','A4: chỗ cuối cùng','Mục 5: không khan hiếm giả']},
+
+ {actor:'viewer', title:'13. Kết quả & phần còn thiếu', phone:()=>{const c=calc();return `
+   <div class="notice ok">🎉 Đặt thành công cả chuyến!</div>
+   <div class="card"><b>Mã đơn VP-26-0042</b> <span class="exp">(mô phỏng)</span><br>
+   ${S.inc.fly&&c.flyOk?`✈ ${c.o.code} ⇄ PQC · ${S.people} khách ✅<br>`:''}
+   ${S.inc.hotel?`🏨 Vinpearl Resort · ${c.rooms} phòng · 2 đêm ✅<br>`:''}
+   ${S.inc.vw&&!c.vwSold?`🎢 ${S.vwAlt?'Vinpearl Safari':'VinWonders'} · ${S.people} vé ✅<br>`:''}
+   <b>Đã thanh toán: ${VND(c.total)}</b></div>
+   <div class="card"><b>Gợi ý cho phần còn thiếu</b> <span class="exp">(A9)</span><br>
+   🚐 Xe đưa đón sân bay PQC ↔ resort<br>🧖 Spa tại resort<br>🐬 Tour 4 đảo<br><span class="exp">Không gợi ý thêm phòng vì đã có chỗ ở</span></div>
+   <div class="card"><b>Chuyến đi của tôi</b><br>Phú Quốc · ${addDay(DATES[S.date].start,0)}–${addDay(DATES[S.date].start,2)} · <span class="exp">đặt theo lộ trình của một bài đăng</span><br><span class="exp">Đồng bộ app và web trong vài giây</span></div>`;},
+  see:['Kết quả rõ từng mục. Nếu một mục lỗi: báo mục nào, tiền hoàn bao nhiêu, cho hủy miễn phí phần còn lại trong 30 phút.'],
+  sys:['Ghi nhận nguồn: đơn này đặt từ bài của Linh (admin thấy ở A16).','Gợi ý phần còn thiếu theo những gì đã có.','Đẩy realtime sang web và máy khác.'],
+  rules:['A5','A9','A11','A16']},
+
+ {actor:'viewer', title:'14. Vòng lặp: Khang về kể lại', phone:()=>`
+   <h3 style="margin:4px 0">Sau chuyến đi</h3>
+   <div class="card">🔔 <b>Khang ơi, chuyến Phú Quốc thế nào?</b><br><span class="muted">Kể lại chuyến đi để bạn bè đi theo</span>
+   <button class="btn accent small" style="margin-top:6px;width:100%" onclick="go(0)">🎬 Kể lại chuyến đi</button></div>
+   <div class="card"><b>Chấm "khớp thực tế"</b><br><span class="chip">1</span><span class="chip">2</span><span class="chip">3</span><span class="chip on">4</span><span class="chip">5</span><div class="exp">Video của Linh có giống thực tế không? Điểm này ảnh hưởng uy tín bài và thưởng</div></div>
+   <div class="card"><b>Phía Linh</b> <span class="exp">(đề xuất, cần người hướng dẫn đồng ý)</span><br>
+   👣 +1 người đi theo đã hoàn thành chuyến<br>🎁 Điểm thưởng: <b>đã mở khóa</b> (sau khi chuyến của Khang hoàn thành, qua hạn hủy)</div>`,
+  see:['Khang được nhắc kể lại, vòng lặp nội dung tiếp tục.','Khang chấm độ "khớp thực tế" của video.'],
+  sys:['Thưởng tính theo người đi theo đã hoàn thành chuyến + độ hữu ích, không theo view.','Lượt đi theo không tính nếu có liên hệ bất thường (cùng thiết bị, cùng phương thức thanh toán).'],
+  rules:['A2','Tài liệu 04: thưởng & chống seeding']}
+];
+
+/* ---------- interactive screens ---------- */
+function confirmScreen(){
+  const c=calc(), d=c.d;
+  const dateChips = DATES.map((x,i)=>{const t=Math.round(ORIGINS.SGN.base*x.f/1000)*1000;const lvl=x.f<0.88?'ok':x.f>1.1?'bad':'warn';
+    return `<span class="chip ${S.date===i?'on':''}" onclick="S.date=${i};render()">${x.label} <span class="${lvl}">●</span></span>`;}).join('');
+  const D1=addDay(d.start,0), D2=addDay(d.start,1), D3=addDay(d.start,2);
+  let plan=`
+   <div class="day">Ngày 1 · ${D1}</div>
+   <div class="item ${S.inc.fly&&c.flyOk?'':'off'}"><div class="row"><span>✈ ${c.flyOk?`${c.o.code} → PQC · ${c.o.out}`:'Chuyến bay đến PQC'}</span><input type="checkbox" ${S.inc.fly?'checked':''} onchange="S.inc.fly=this.checked;render()"></div>
+     ${c.flyOk?`<div class="row"><span class="ok">✅ Còn chỗ</span><span>${VND(Math.round(c.o.base*d.f/1000)*1000)}/người/chiều</span></div>`:`<div class="notice bad">⛔ Không có chặng bay từ ${c.o.name} tới Phú Quốc trong dữ liệu. Bỏ mục bay và tự đến, hoặc chọn nơi đi khác.</div>`}</div>
+   <div class="item ${S.inc.hotel?'':'off'}"><div class="row"><span>🏨 Vinpearl Resort · Deluxe hướng biển · 2 đêm</span><input type="checkbox" ${S.inc.hotel?'checked':''} onchange="S.inc.hotel=this.checked;render()"></div>
+     <div class="row"><span class="ok">✅ Còn chỗ</span><span>${c.rooms} phòng × ${VND(c.hotelNight)}/đêm</span></div>
+     <div class="exp">💬 "Xin tầng cao, view hoàng hôn đỉnh" — Linh</div></div>
+   <div class="item ${S.inc.sunset?'':'off'}"><div class="row"><span>📍 Sunset Town <span class="exp">(gợi ý, không đặt được)</span></span><input type="checkbox" ${S.inc.sunset?'checked':''} onchange="S.inc.sunset=this.checked;render()"></div>
+     <div class="exp">📝 ~200.000đ/người · người đăng ước tính, không tính vào tiền phải trả</div></div>
+   <div class="day">Ngày 2 · ${D2}</div>
+   <div class="item ${S.inc.vw&&!c.vwSold?'':'off'}"><div class="row"><span>🎢 ${S.vwAlt?'Vinpearl Safari (thay thế)':'VinWonders'} · vé 1 ngày</span><input type="checkbox" ${S.inc.vw?'checked':''} onchange="S.inc.vw=this.checked;render()"></div>
+     ${c.vwSold&&S.inc.vw?`<div class="notice warn">⚠️ Hết vé VinWonders ngày ${D2}.<br>
+        <button class="btn small" onclick="S.date=1;render()">Chọn ngày khác</button>
+        <button class="btn small" onclick="S.vwAlt=true;render()">Vé tương tự: Safari</button>
+        <button class="btn small" onclick="S.inc.vw=false;render()">Bỏ mục</button></div>`
+      : `<div class="row"><span class="ok">✅ Còn chỗ</span><span>${S.people} × ${VND(c.vwPrice)}</span></div>`}
+     <div class="exp">💬 "Vào lúc 9h cho vắng" — Linh</div></div>
+   <div class="day">Ngày 3 · ${D3}</div>
+   <div class="item ${S.inc.fly&&c.flyOk?'':'off'}"><span>✈ ${c.flyOk?`PQC → ${c.o.code} · ${c.o.back}`:'Chuyến bay về'}</span> <span class="exp">(đi cùng mục bay ở trên)</span></div>
+   <button class="btn small">+ Thêm mục (đưa đón, vé, hoạt động)</button>`;
+  let map=`<svg viewBox="0 0 300 260" width="100%" style="background:var(--chip);border-radius:10px">
+     <path d="M40 210 Q90 120 150 130 T260 60" fill="none" stroke="var(--muted)" stroke-dasharray="5 5"/>
+     <circle cx="40" cy="210" r="9" fill="#1c7ed6"/><text x="54" y="214" font-size="11" fill="currentColor">✈ Sân bay PQC</text>
+     <circle cx="150" cy="130" r="11" fill="#1c7ed6"/><text x="112" y="112" font-size="11" fill="currentColor">🏨 ${VND(c.hotelNight)}/đêm</text>
+     <circle cx="205" cy="105" r="8" fill="#1c7ed6"/><text x="214" y="122" font-size="11" fill="currentColor">🌅 Sunset</text>
+     <circle cx="260" cy="60" r="11" fill="#e8590c"/><text x="168" y="46" font-size="11" fill="currentColor">🎢 ${c.vwSold?'Hết vé':VND(c.vwPrice)}</text>
+   </svg><div class="exp">🔵 Ngày 1 · 🟠 Ngày 2 · Giá trên ghim là giá thật cho ngày đã chọn. Chạm ghim để xem đoạn video của Linh tại điểm đó.</div>`;
+  let cost=`<div class="card">
+     <div class="row"><span>✈ Vé máy bay (${S.people} người, khứ hồi)</span><b>${VND(c.fly)}</b></div>
+     <div class="row"><span>🏨 Chỗ ở (${c.rooms} phòng × 2 đêm)</span><b>${VND(c.hotel)}</b></div>
+     <div class="row"><span>🎢 Vé vui chơi</span><b>${VND(c.vw)}</b></div>
+     <hr style="border:0;border-top:1px solid var(--line)">
+     <div class="row"><span><b>Phải trả trong app</b></span><b>${VND(c.total)}</b></div>
+     <div class="exp">≈ ${VND(Math.round(c.total/S.people/1000)*1000)}/người · giá thật hôm nay</div>
+     <div class="row" style="margin-top:6px"><span>📝 Ngoài app (người đăng ước tính)</span><span>~${VND(c.outside)}</span></div></div>
+     <div class="exp">Không hiển thị số tiền người đăng đã trả.</div>`;
+  const warnPrice = c.diff>0.2 ? `<div class="notice warn">💡 Giá ngày bạn chọn cao hơn ~${Math.round(c.diff*100)}% so với mức thường thấy. Đi từ T7 22/11 rẻ hơn. <button class="btn small" onclick="S.date=1;render()">Đổi sang 22/11</button></div>`:'';
+  return `
+   <div class="row"><b>✨ Đi y chang · Phú Quốc 3N2Đ</b><span class="exp">theo @linh.dichoi</span></div>
+   <div class="ctrl" style="margin-top:6px">
+     <label class="muted">📍 Đi từ<select onchange="S.origin=this.value;render()">
+       ${Object.keys(ORIGINS).map(k=>`<option value="${k}" ${S.origin===k?'selected':''}>${ORIGINS[k].name}</option>`).join('')}</select></label>
+     <label class="muted">👥 Số người<div class="stepper"><button onclick="S.people=Math.max(1,S.people-1);render()">−</button><b>${S.people}</b><button onclick="S.people=Math.min(8,S.people+1);render()">+</button></div></label>
+   </div>
+   <div class="muted" style="margin-top:6px">📅 Ngày đi <span class="exp">(<span class="ok">●</span> rẻ <span class="warn">●</span> TB <span class="bad">●</span> cao)</span></div>
+   <div>${dateChips}</div>
+   ${warnPrice}
+   <div class="tabs"><button class="${S.tab==='plan'?'on':''}" onclick="S.tab='plan';render()">Lịch trình</button><button class="${S.tab==='map'?'on':''}" onclick="S.tab='map';render()">Bản đồ</button><button class="${S.tab==='cost'?'on':''}" onclick="S.tab='cost';render()">Chi phí</button></div>
+   ${S.tab==='plan'?plan:S.tab==='map'?map:cost}
+   <div class="card"><b>Nếu một mục lỗi khi thanh toán</b><br>
+     <label><input type="radio" name="pol" ${S.policy==='keep'?'checked':''} onchange="S.policy='keep'"> Giữ phần đặt được (hủy miễn phí phần còn lại trong 30 phút)</label><br>
+     <label><input type="radio" name="pol" ${S.policy==='all'?'checked':''} onchange="S.policy='all'"> Tất cả hoặc không</label></div>
+   <div class="total"><div class="row"><span>Tổng phải trả</span><b style="font-size:18px">${VND(c.total)}</b></div>
+     <div class="row" style="gap:6px;margin-top:6px"><button class="btn small">💬 Chỉnh bằng trợ lý</button><button class="btn small">🔖 Lưu nháp</button>
+     <button class="btn accent small" ${c.total===0?'disabled':''} onclick="go(10)">Giữ chỗ & thanh toán</button></div></div>`;
+}
+function holdScreen(){
+  const c=calc(); const now=new Date(); const until=new Date(now.getTime()+10*60000);
+  const hh=String(until.getHours()).padStart(2,'0')+':'+String(until.getMinutes()).padStart(2,'0');
+  return `
+   <h3 style="margin:4px 0">Xác nhận thanh toán</h3>
+   <div class="notice ok">⏱ Chỗ của bạn được giữ đến <b>${hh}</b> (10 phút). Đây là thời gian giữ chỗ thật.</div>
+   <div class="card">
+     ${S.inc.fly&&c.flyOk?`<div class="row"><span>✈ Vé máy bay</span><span class="ok">Đã giữ</span></div>`:''}
+     ${S.inc.hotel?`<div class="row"><span>🏨 ${c.rooms} phòng · 2 đêm</span><span class="ok">Đã giữ</span></div>`:''}
+     ${S.inc.vw&&!c.vwSold?`<div class="row"><span>🎢 ${S.people} vé</span><span class="ok">Đã giữ</span></div>`:''}
+     ${S.inc.vw&&c.vwSold?`<div class="row"><span>🎢 VinWonders</span><span class="bad">Hết vé · không tính tiền</span></div>`:''}
+     ${!S.inc.vw?`<div class="row"><span>🎢 Vé vui chơi</span><span class="muted">Bạn đã bỏ</span></div>`:''}
+     <div class="row"><b>Tổng</b><b>${VND(c.total)}</b></div>
+     <div class="exp">Giá đã chốt. Nếu giá đổi trước khi trả, bạn sẽ được báo để xác nhận lại.</div></div>
+   <div class="card"><b>Phương thức (giả lập)</b><br><span class="chip on">QR ngân hàng</span><span class="chip">Thẻ</span><span class="chip">Ví điện tử</span></div>
+   <div class="row" style="gap:6px"><button class="btn accent" style="flex:1" onclick="pay()">Thanh toán</button><button class="btn small" onclick="pay();pay()">Bấm 2 lần (thử)</button></div>
+   ${S.payCount>0?`<div class="notice ok" style="margin-top:8px">✅ Thanh toán thành công · trừ tiền <b>1 lần</b></div><button class="btn primary" style="width:100%" onclick="go(12)">Xem kết quả →</button>`:''}
+   ${S.log.length?`<div class="log" style="margin-top:8px">${S.log.join('\n')}</div>`:''}`;
+}
+function pay(){
+  const key='idem-7f3a';
+  if(S.payCount===0){S.payCount=1;S.log.push(`→ POST /v1/payments  Idempotency-Key: ${key}\n← 200 Đã thanh toán (giao dịch #1)`);}
+  else {S.log.push(`→ POST /v1/payments  Idempotency-Key: ${key}\n← 200 Trả lại kết quả cũ, KHÔNG trừ tiền lần 2`);}
+  render();
+}
+function toggleVibe(v){const i=S.vibes.indexOf(v); i>=0?S.vibes.splice(i,1):S.vibes.push(v); render();}
+
+/* ---------- navigation & render ---------- */
+let cur=0, timer=null;
+function go(i){cur=Math.max(0,Math.min(STEPS.length-1,i)); try{localStorage.setItem('dyc-step',cur)}catch(e){} render(); window.scrollTo({top:0,behavior:'smooth'});}
+function render(){
+  const st=STEPS[cur];
+  document.getElementById('scr').innerHTML=st.phone();
+  document.getElementById('pos').textContent=(cur+1)+' / '+STEPS.length;
+  document.getElementById('prev').disabled=cur===0;
+  document.getElementById('next').disabled=cur===STEPS.length-1;
+  document.getElementById('panel').innerHTML=`
+    <span class="actor ${st.actor}">${st.actor==='poster'?'👩 Linh · người đăng':'🧑 Khang · người xem'}</span>
+    <h2>${st.title}</h2>
+    <h3>Người dùng thấy</h3><ul>${st.see.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h3>Hệ thống làm gì</h3><ul>${st.sys.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h3>Bám yêu cầu</h3><div>${st.rules.map(x=>`<span class="rule">${x}</span>`).join('')}</div>`;
+  document.querySelectorAll('#flow button').forEach((b,i)=>b.classList.toggle('active',i===cur));
+  clearInterval(timer);
+  if(cur===7){ // feed video animation
+    const chaps=['▸ Ngày 1 · Bay đến Phú Quốc','▸ Ngày 1 · Chiều · Vinpearl Resort','▸ Ngày 2 · VinWonders','▸ Ngày 2 · Tối · Sunset Town','▸ Ngày 3 · Bay về'];
+    let t=0; timer=setInterval(()=>{t=(t+1)%100; const seg=Math.floor(t/33.4);
+      [0,1,2].forEach(k=>{const el=document.getElementById('p'+k); if(el) el.style.width=(k<seg?100:k===seg?((t%33.4)/33.4*100):0)+'%';});
+      const ch=document.getElementById('chap'); if(ch) ch.textContent=chaps[Math.min(chaps.length-1,Math.floor(t/20))];},120);
+  }
+}
+const flow=document.getElementById('flow');
+flow.innerHTML='<div class="grp">👩 Người đăng (Linh)</div>'+STEPS.slice(0,7).map((s,i)=>`<button class="poster" onclick="go(${i})">${s.title}</button>`).join('')
+  +'<div class="grp">🧑 Người xem (Khang)</div>'+STEPS.slice(7).map((s,i)=>`<button class="viewer" onclick="go(${i+7})">${s.title}</button>`).join('');
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+try{const s=+localStorage.getItem('dyc-step'); if(s>=0&&s<STEPS.length) cur=s;}catch(e){}
+render();
+</script>
+</body>
+</html>
