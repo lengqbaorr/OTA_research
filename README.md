@@ -16,7 +16,7 @@ Tài liệu nghiên cứu và đề xuất triển khai cho một **nền tảng
 | 08 | [Tính năng mở rộng](docs/08-tinh-nang-mo-rong.md) | Rà soát khoảng trống so với đề bài và persona; 30+ tính năng mở rộng cho người xem, người đăng, quản trị; thứ tự ưu tiên cho phần thi; câu hỏi cho người hướng dẫn |
 | 09 | [Xác minh đã đi thật](docs/09-xac-minh-da-di-that.md) | Nền tảng độc lập không sở hữu dữ liệu nhà cung cấp: cộng bằng chứng "đã đặt" (đặt trong app, email có chữ ký DKIM, thẻ lên máy bay, đối tác xác nhận) và "đã có mặt" (QR động tại quầy, vị trí đúng ngày, quay trong app); 3 mức Đã đi thật / Đã đặt chỗ / Có mặt tại chỗ; chống gian lận; riêng tư |
 
-**Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Màn hình điện thoại giao diện tối kiểu TikTok: lướt bảng tin, xem lộ trình, Đi y chang, thanh toán giả lập, Chuyến đi (có **Thêm chuyến đã đi ở nơi khác**: email xác nhận, thẻ lên máy bay, QR tại quầy, có mặt tại chỗ), nút + để đăng bài.
+**Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Giao diện tối kiểu TikTok, minh họa **hai mô hình nguồn hàng** trong màn "Đi y chang": lộ trình **Tà Xùa** dùng hàng **nền tảng tự cung cấp** (homestay, nhà xe đối tác, có màn quản lý cho chủ nhà ở Tôi → Chế độ đối tác; chọn trả trước hoặc trả tại homestay); lộ trình **Phú Quốc** dùng **API đối tác Traveloka** (mô phỏng tìm → kiểm tra lại → đặt, có nút xem luồng API) và **link affiliate** cho vé máy bay. Ngoài ra có tab Chuyến đi với "Thêm chuyến đã đi ở nơi khác" và nút + để đăng bài.
 
 **Thứ tự đọc**: 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07 → 08 → 09.
 
