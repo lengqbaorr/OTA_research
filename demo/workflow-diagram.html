@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow Đi y chang</title>
+<style>
+:root{--bg:#0b0b0d;--sf:#141418;--tx:#eceef2;--mu:#8b8f99;--ac:#fe2c55}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:28px 16px 8px;max-width:1100px;margin:0 auto}
+h1{margin:0;font-size:24px} header p{color:var(--mu);margin:6px 0 0}
+nav{position:sticky;top:0;z-index:5;background:rgba(11,11,13,.92);backdrop-filter:blur(6px);padding:10px 16px;display:flex;gap:8px;overflow-x:auto;max-width:1100px;margin:0 auto}
+nav a{flex:none;color:var(--tx);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:99px;background:var(--sf)}
+nav a:hover{background:#22232a}
+main{max-width:1100px;margin:0 auto;padding:8px 16px 40px}
+section{background:var(--sf);border-radius:14px;padding:16px;margin:16px 0;overflow-x:auto}
+h2{font-size:17px;margin:0 0 12px;color:#fff}
+.mermaid{display:flex;justify-content:center;background:none;margin:0}
+footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
+</style></head><body>
+<header><h1>Workflow toàn bộ ý tưởng</h1><p>Nền tảng video du lịch "xem là đi được" · người dùng đăng video kèm lộ trình dạng điểm, người xem bấm Đi ngay để hệ thống lên phương án đi lại, chỗ ở theo ngân sách và đặt luôn.</p></header>
+<nav><a href="#s0">Kiến trúc</a><a href="#s1">Toàn cảnh</a><a href="#s2">Đăng bài</a><a href="#s3">Đi ngay</a><a href="#s4">Trình tự hệ thống khi thanh toán</a><a href="#s5">Kiểm duyệt</a></nav>
+<main><section id="s0"><h2>12.1. Kiến trúc</h2><pre class="mermaid">flowchart LR
+    subgraph CLIENT[&quot;Giao diện&quot;]
+        AND[&quot;Android app&lt;br/&gt;offline-first&quot;]
+        WEB[&quot;Web&quot;]
+        ADM[&quot;Quản trị + màn đối tác&quot;]
+    end
+    subgraph BACK[&quot;Backend: một khối chia module&quot;]
+        AUTH[&quot;Tài khoản, phân quyền&quot;]
+        POSTM[&quot;Bài đăng, media, tương tác&quot;]
+        PLACE[&quot;Dữ liệu địa điểm&quot;]
+        MODM[&quot;Kiểm duyệt&quot;]
+        TRN[&quot;Xu hướng, cá nhân hóa&quot;]
+        SRCH[&quot;Tìm kiếm tiếng Việt kiểu người trẻ&quot;]
+        PLAN[&quot;Đi ngay: AI + luật&quot;]
+        BK[&quot;Đặt chỗ, giữ chỗ, đơn&quot;]
+        PAYM[&quot;Thanh toán, hoàn tiền&quot;]
+        SUP[&quot;Kết nối nguồn hàng&quot;]
+    end
+    subgraph DATA[&quot;Dữ liệu&quot;]
+        DB[(&quot;CSDL giao dịch&quot;)]
+        CACHE[(&quot;Cache, bộ đếm, hàng đợi&quot;)]
+        IDX[(&quot;Chỉ mục tìm kiếm&quot;)]
+        MEDIA[(&quot;Kho media + CDN&quot;)]
+    end
+    subgraph EXT[&quot;Bên ngoài&quot;]
+        OTA[&quot;API đối tác&quot;]
+        AFFN[&quot;Affiliate&quot;]
+        PGW[&quot;Cổng thanh toán&quot;]
+        LLM[&quot;Mô hình ngôn ngữ&quot;]
+        MAP[&quot;API bản đồ, địa điểm&quot;]
+    end
+    CLIENT --&gt;|&quot;API + realtime&quot;| BACK
+    BACK --&gt; DATA
+    SUP --&gt; OTA
+    SUP --&gt; AFFN
+    PAYM --&gt; PGW
+    PLAN --&gt; LLM
+    PLACE --&gt; MAP
+</pre></section>
+<section id="s1"><h2>13.1. Toàn cảnh</h2><pre class="mermaid">flowchart LR
+    A[&quot;Người dùng đi du lịch&quot;] --&gt; C[&quot;Đăng video +&lt;br/&gt;lộ trình dạng điểm&quot;]
+    C --&gt; D[&quot;Kiểm duyệt AI + người,&lt;br/&gt;nhãn Hợp tác&quot;]
+    D --&gt; E[&quot;Bảng tin xu hướng&lt;br/&gt;và cá nhân hóa&quot;]
+    E --&gt; F[&quot;Người xem lướt video&quot;]
+    F --&gt; G[&quot;Đi ngay&quot;]
+    G --&gt; P[&quot;Lập kế hoạch lai:&lt;br/&gt;AI hiểu ý + luật tính toán&quot;]
+    P --&gt; H[&quot;Đặt vé và phòng,&lt;br/&gt;thanh toán một lần&quot;]
+    H --&gt; I[&quot;Đi chuyến đi&quot;]
+    I --&gt; R[&quot;Chấm khớp thực tế&quot;]
+    R --&gt; E
+    I --&gt; A
+    H --&gt; J[&quot;Ghi nhận nguồn:&lt;br/&gt;đặt từ bài nào&quot;]
+    J --&gt; E
+</pre></section>
+<section id="s2"><h2>13.2. Đăng bài</h2><pre class="mermaid">flowchart TD
+    S[&quot;Người dùng muốn chia sẻ chuyến đi&quot;] --&gt; P1[&quot;Trang 1: video + caption&lt;br/&gt;+ khai báo tài trợ&quot;]
+    P1 --&gt; P2[&quot;Trang 2: dựng lộ trình theo ngày&quot;]
+    P2 --&gt; T{&quot;Loại điểm&quot;}
+    T --&gt;|&quot;Di chuyển&quot;| M[&quot;Từ · Đến · Phương tiện&lt;br/&gt;chọn sân bay, ga, bến xe&quot;]
+    T --&gt;|&quot;Ở&quot;| ST[&quot;Chỗ ở · số đêm&quot;]
+    T --&gt;|&quot;Chơi / Ăn&quot;| PO[&quot;Địa điểm · tầm giá · ghi chú&quot;]
+    M --&gt; DATA[&quot;Tự điền địa chỉ, loại điểm,&lt;br/&gt;giá tham khảo từ dữ liệu&quot;]
+    ST --&gt; DATA
+    PO --&gt; DATA
+    DATA --&gt; OK{&quot;Có ít nhất 1 chặng&lt;br/&gt;và 1 chỗ ở hợp lệ?&quot;}
+    OK --&gt;|&quot;Chưa&quot;| P2
+    OK --&gt;|&quot;Rồi&quot;| UP[&quot;Đăng: tải lên chạy nền&quot;]
+    UP --&gt; MOD{&quot;Sàng lọc tự động&quot;}
+    MOD --&gt;|&quot;An toàn&quot;| LIVE[&quot;Hiện trên bảng tin&quot;]
+    MOD --&gt;|&quot;Cần xem&quot;| Q[&quot;Hiện + vào hàng chờ&quot;]
+    MOD --&gt;|&quot;Nguy hiểm&quot;| HOLD[&quot;Giữ lại chờ duyệt&quot;]
+</pre></section>
+<section id="s3"><h2>13.3. Đi ngay</h2><pre class="mermaid">flowchart TD
+    IN[&quot;Người xem: nơi đi, ngày, số người,&lt;br/&gt;ngân sách, ưu tiên, câu nói tự do&quot;] --&gt; AI[&quot;Lớp AI: hiểu câu nói&lt;br/&gt;thành điều kiện có cấu trúc&quot;]
+    AI --&gt; RULE
+    ROUTE[&quot;Lộ trình của người đăng:&lt;br/&gt;điểm đến, chỗ ở, điểm chơi, quán ăn&quot;] --&gt; RULE
+    subgraph RULE[&quot;Lớp luật&quot;]
+        R1[&quot;Tìm đường đi trên đồ thị phương tiện&quot;]
+        R2[&quot;Ràng buộc giờ, lùi ngày nếu cần&quot;]
+        R3[&quot;Chỗ ở: ưu tiên chỗ trong lộ trình&quot;]
+        R4[&quot;Lọc ngân sách, tránh đi đêm&quot;]
+        R5[&quot;3 phương án: Tiết kiệm / Cân bằng / Nhanh&quot;]
+        R1 --&gt; R2 --&gt; R3 --&gt; R4 --&gt; R5
+    end
+    RULE --&gt; OK{&quot;Có phương án&lt;br/&gt;vừa ngân sách?&quot;}
+    OK --&gt;|&quot;Có&quot;| SHOW[&quot;Phương án + gợi ý ăn chơi:&lt;br/&gt;đi gì tới, tầm giá&quot;]
+    OK --&gt;|&quot;Không&quot;| HONEST[&quot;Nói thật, phương án gần nhất&lt;br/&gt;và mức cần nâng&quot;]
+    SHOW --&gt; CART[&quot;Giỏ: vé các chặng + phòng&quot;]
+    CART --&gt; PAY[&quot;Giữ chỗ 10 phút → thanh toán một lần&quot;]
+</pre></section>
+<section id="s4"><h2>13.4. Trình tự hệ thống khi thanh toán</h2><pre class="mermaid">sequenceDiagram
+    actor U as Người xem
+    participant APP as App
+    participant BE as Backend
+    participant INV as Kho của nền tảng
+    participant API as API đối tác
+    participant PG as Cổng thanh toán
+    participant HOST as Chủ nhà / nhà xe
+    U-&gt;&gt;APP: Đặt ngay
+    APP-&gt;&gt;BE: Tạo phiên đặt chỗ
+    BE-&gt;&gt;INV: Giữ phòng, ghế 10 phút
+    BE-&gt;&gt;API: Kiểm tra lại giá và chỗ
+    API--&gt;&gt;BE: Còn hiệu lực
+    BE--&gt;&gt;APP: Đã giữ chỗ, giá đã chốt
+    U-&gt;&gt;APP: Xác nhận thanh toán
+    APP-&gt;&gt;BE: Thanh toán kèm mã chống trùng
+    BE-&gt;&gt;PG: Trừ tiền một lần
+    PG--&gt;&gt;BE: Thành công
+    BE-&gt;&gt;INV: Chốt đơn, trừ tồn kho
+    BE-&gt;&gt;API: Đặt chỗ
+    API--&gt;&gt;BE: Mã xác nhận
+    BE-&gt;&gt;HOST: Gửi đơn mới
+    BE--&gt;&gt;APP: Đã đặt xong + gợi ý trong chuyến
+</pre></section>
+<section id="s5"><h2>13.5. Kiểm duyệt</h2><pre class="mermaid">flowchart TD
+    NEW[&quot;Bài, bình luận mới hoặc bản sửa&quot;] --&gt; AI{&quot;AI và luật sàng lọc&quot;}
+    AI --&gt;|&quot;An toàn&quot;| SHOW[&quot;Hiện ngay&quot;]
+    AI --&gt;|&quot;Cần xem&quot;| Q[&quot;Hàng chờ&quot;]
+    AI --&gt;|&quot;Nguy hiểm, lừa đảo,&lt;br/&gt;lộ thông tin cá nhân&quot;| HIDE[&quot;Giữ lại / ẩn tạm&quot;] --&gt; Q
+    SHOW --&gt; REP{&quot;Bị báo cáo?&quot;}
+    REP --&gt;|&quot;Từ 3 người tin cậy&lt;br/&gt;hoặc nhóm nghiêm trọng&quot;| HIDE
+    REP --&gt;|&quot;Ít báo cáo&quot;| Q
+    Q --&gt; MODR[&quot;Kiểm duyệt viên quyết định,&lt;br/&gt;AI gợi ý lý do&quot;]
+    MODR --&gt; ACT[&quot;Hiện / ẩn / xóa + lý do&quot;]
+    ACT --&gt; LOG[&quot;Audit log&quot;]
+    ACT --&gt; NOTI[&quot;Báo người đăng, cho kháng nghị&quot;]
+    ACT --&gt; SYNC[&quot;Bài ẩn biến khỏi app, web,&lt;br/&gt;tìm kiếm, trợ lý&quot;]
+</pre></section></main>
+<footer>Nguồn sơ đồ: docs/03-y-tuong-trien-khai.md</footer>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({startOnLoad:true,theme:"dark",securityLevel:"strict",
+ themeVariables:{primaryColor:"#1f2028",primaryTextColor:"#eceef2",primaryBorderColor:"#3a3c47",lineColor:"#7a7f8c",secondaryColor:"#181920",tertiaryColor:"#141418",fontSize:"14px"},
+ flowchart:{curve:"basis",htmlLabels:true}});
+</script>
+</body></html>

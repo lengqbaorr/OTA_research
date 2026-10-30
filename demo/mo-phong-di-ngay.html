@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đi ngay</title>
+<style>
+:root{--bg:#000;--sf:#121212;--sf2:#1e1e1e;--ln:#2a2a2a;--tx:#fff;--mu:#8a8a8a;--ac:#fe2c55;--ok:#25d366;--wa:#f5a623;--bl:#4dabf7;--ra:12px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0a0a0a;color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
+.phone{width:390px;height:844px;max-height:calc(100vh - 32px);background:var(--bg);border-radius:44px;border:10px solid #1a1a1a;position:relative;overflow:hidden}
+@media (max-width:480px){.wrap{padding:0}.phone{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}}
+.app{position:absolute;inset:0;display:flex;flex-direction:column}
+.view{flex:1;position:relative;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+.mu{color:var(--mu)} .sm{font-size:13px} .xs{font-size:12px} .b{font-weight:600}
+.ok{color:var(--ok)} .wa{color:var(--wa)} .ac{color:var(--ac)} .bl{color:var(--bl)}
+.sim{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);z-index:30;pointer-events:none}
+.nav{height:56px;display:flex;align-items:center;justify-content:space-around;border-top:1px solid #111;background:var(--bg);font-size:12px}
+.nav button{color:var(--mu);flex:1;height:100%}
+.nav button.on{color:var(--tx);font-weight:600}
+.nav .plus{flex:none;width:44px;height:28px;border-radius:8px;background:var(--tx);color:#000;font-size:20px;line-height:28px;font-weight:700;box-shadow:-3px 0 0 #25f4ee,3px 0 0 var(--ac);display:inline-block}
+.feed{position:absolute;inset:0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.post{height:100%;scroll-snap-align:start;position:relative;overflow:hidden}
+.bgv{position:absolute;inset:-10%;animation:kb 14s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-3%,-2%)}}
+.shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent 25%,transparent 50%,rgba(0,0,0,.75))}
+.top{position:absolute;top:34px;left:0;right:0;display:flex;justify-content:center;gap:18px;font-size:16px;z-index:5}
+.top span{color:rgba(255,255,255,.6)} .top span.on{color:#fff;font-weight:700;border-bottom:2px solid #fff;padding-bottom:4px}
+.rail{position:absolute;right:10px;bottom:150px;display:flex;flex-direction:column;align-items:center;gap:18px;z-index:5}
+.rail button{display:flex;flex-direction:column;align-items:center;font-size:12px;gap:2px}
+.rail svg{width:30px;height:30px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.rail .liked svg{fill:var(--ac);stroke:var(--ac)}
+.rail .saved svg{fill:#fbc531;stroke:#fbc531}
+.avatar{width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:#444;display:flex;align-items:center;justify-content:center;font-weight:700}
+.meta{position:absolute;left:14px;right:72px;bottom:72px;z-index:5}
+.chap{font-size:12px;color:rgba(255,255,255,.85);margin-bottom:6px}
+.tagp{display:inline-block;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600;margin-bottom:8px}
+.author{font-weight:700} .vf{font-size:12px;color:#7ee2a8;margin-left:6px;font-weight:500}
+.cap{margin:4px 0;font-size:14px}
+.why{font-size:12px;color:rgba(255,255,255,.75)}
+.prog{position:absolute;left:0;right:0;bottom:62px;height:2px;display:flex;gap:2px;z-index:5}
+.prog i{flex:1;background:rgba(255,255,255,.25);position:relative;overflow:hidden}
+.prog i b{position:absolute;inset:0;width:0;background:#fff}
+.cta{position:absolute;left:14px;right:14px;bottom:12px;display:flex;gap:8px;z-index:5}
+.cta button{flex:1;height:40px;border-radius:8px;font-weight:600;font-size:14px}
+.btn-ghost{background:rgba(255,255,255,.16);backdrop-filter:blur(6px)}
+.btn-ac{background:var(--ac);color:#fff}
+.btn-w{background:#fff;color:#000}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:40;display:flex;align-items:flex-end}
+.sheet{width:100%;max-height:80%;background:var(--sf);border-radius:14px 14px 0 0;padding:10px 16px 16px;overflow:auto}
+.grab{width:36px;height:4px;border-radius:2px;background:#444;margin:0 auto 10px}
+.dh{font-size:12px;color:var(--mu);margin:14px 0 4px;text-transform:uppercase;letter-spacing:.06em}
+.it{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--ln);font-size:14px}
+.it .t{width:56px;flex:none;color:var(--mu);font-size:12px;padding-top:2px}
+.it .s{flex:1}
+.note{font-size:12px;color:var(--mu);margin-top:2px}
+.page{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:20}
+.hdr{height:52px;padding-top:6px;display:flex;align-items:center;gap:10px;padding-left:12px;padding-right:12px;border-bottom:1px solid #111;flex:none}
+.hdr .back{font-size:22px;width:28px}
+.hdr .ti{font-weight:700;flex:1;text-align:center;margin-right:28px}
+.body{flex:1;overflow:auto;padding:12px 16px 16px}
+.foot{flex:none;border-top:1px solid #1a1a1a;padding:10px 16px 14px;background:var(--bg)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.seg{display:flex;background:var(--sf2);border-radius:8px;padding:3px;gap:3px}
+.seg button{flex:1;padding:7px 0;border-radius:6px;font-size:13px;color:var(--mu)}
+.seg button.on{background:#333;color:#fff;font-weight:600}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:7px 12px;border-radius:99px;background:var(--sf2);font-size:13px;color:#ddd;border:1px solid transparent}
+.chip.on{border-color:#fff;color:#fff;font-weight:600}
+.chip small{display:block;font-size:11px;color:var(--mu)}
+.lbl{font-size:12px;color:var(--mu);margin:14px 0 6px}
+.step{display:flex;align-items:center;gap:14px}
+.step button{width:30px;height:30px;border-radius:50%;background:var(--sf2);font-size:18px}
+.card{background:var(--sf);border-radius:var(--ra);padding:12px;margin:8px 0}
+.card.off{opacity:.4}
+.alert{background:rgba(245,166,35,.12);border-radius:10px;padding:10px;font-size:13px;margin-top:8px}
+.alert .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.alert .acts button,.mini{background:#2a2a2a;padding:6px 10px;border-radius:6px;font-size:12px}
+.tog{width:40px;height:24px;border-radius:12px;background:#333;position:relative;flex:none}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#888;transition:.15s}
+.tog.on{background:var(--ac)} .tog.on::after{left:19px;background:#fff}
+.big{width:100%;height:48px;border-radius:10px;font-weight:700;font-size:15px}
+.big:disabled{opacity:.4}
+.tot{font-size:20px;font-weight:700}
+.line{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;gap:8px}
+.hr{height:1px;background:var(--ln);margin:6px 0}
+input[type=text],textarea{width:100%;background:var(--sf2);border:0;border-radius:8px;color:#fff;padding:12px;font:inherit}
+textarea{min-height:80px;resize:none}
+.thumb{height:220px;border-radius:12px;position:relative;overflow:hidden;margin:6px 0}
+.thumb .lab{position:absolute;left:10px;bottom:10px;font-size:12px;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:6px}
+.blurbox{position:absolute;width:44px;height:44px;border-radius:50%;border:2px dashed #fff;background:rgba(255,255,255,.15)}
+.blurbox.done{border-style:solid;backdrop-filter:blur(8px);background:rgba(120,120,120,.6)}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100%;padding:24px}
+.check{width:64px;height:64px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center;font-size:32px;color:#000;margin-bottom:14px}
+.dots{display:flex;gap:4px;justify-content:center;margin:4px 0 10px}
+.dots i{width:18px;height:3px;border-radius:2px;background:#333}
+.dots i.on{background:#fff}
+.toast{position:absolute;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(40,40,40,.95);padding:10px 14px;border-radius:8px;font-size:13px;z-index:60;white-space:nowrap}
+.src{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;margin-top:4px}
+.src.own{background:rgba(37,211,102,.15);color:var(--ok)}
+.src.api{background:rgba(77,171,247,.15);color:var(--bl)}
+.src.aff{background:rgba(255,255,255,.08);color:#bbb}
+.src.free{background:rgba(255,255,255,.05);color:var(--mu)}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:#0d0d0d;border:1px solid #222;border-radius:8px;padding:8px;white-space:pre-wrap;color:#9fb3c8;margin-top:6px}
+.skel{height:12px;border-radius:4px;background:linear-gradient(90deg,#1e1e1e,#2a2a2a,#1e1e1e);background-size:200% 100%;animation:sk 1s linear infinite;margin-top:6px;width:60%}
+@keyframes sk{to{background-position:-200% 0}}
+.cal{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cal div{background:var(--sf);border-radius:10px;padding:8px;text-align:center;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="phone"><div class="app" id="app"></div><div class="sim">BẢN MÔ PHỎNG</div></div></div>
+<script>
+/* =========================================================
+   BẢN MÔ PHỎNG "ĐI NGAY"
+   - Người đăng dựng lộ trình bằng các điểm (đi, ở, chơi, ăn), không cần xác minh.
+   - Nút "Đi ngay": lớp AI (mô phỏng) hiểu yêu cầu → lớp luật tính chặng đi, giờ, giá,
+     chỗ ở theo ngân sách → 3 phương án → đặt vé + chỗ ở trong app.
+   - Mọi chặng, giá, tên chỗ đều là dữ liệu mô phỏng.
+   ========================================================= */
+const VND=n=>Math.round(n).toLocaleString('vi-VN')+'đ';
+const tr=n=>(Math.round(n/100000)/10).toLocaleString('vi-VN')+'tr';
+const DATES=[{l:'15/11',f:1.00},{l:'22/11',f:0.85},{l:'29/11',f:0.92},{l:'06/12',f:1.25}];
+const CITY={SGN:'Sài Gòn',HAN:'Hà Nội',DAD:'Đà Nẵng',BY:'Bắc Yên',PQC:'Phú Quốc'};
+
+/* Đồ thị phương tiện (mô phỏng). price: mỗi người. dyn: giá đổi theo ngày */
+const LEGS=[
+ {f:'SGN',t:'HAN',m:'Máy bay',deps:[6,9.5,13,19.5],dur:2.2,p:1450000,dyn:1,src:'api'},
+ {f:'SGN',t:'HAN',m:'Tàu hỏa giường nằm',deps:[19],dur:33,p:1100000,src:'api'},
+ {f:'DAD',t:'HAN',m:'Máy bay',deps:[7,15],dur:1.3,p:950000,dyn:1,src:'api'},
+ {f:'HAN',t:'BY',m:'Limousine',deps:[7,13],dur:5,p:350000,src:'own'},
+ {f:'HAN',t:'BY',m:'Xe giường nằm',deps:[21],dur:6,p:250000,src:'own'},
+ {f:'HAN',t:'SGN',m:'Máy bay',deps:[7,12,18,21],dur:2.2,p:1450000,dyn:1,src:'api'},
+ {f:'HAN',t:'SGN',m:'Tàu hỏa giường nằm',deps:[19.5],dur:33,p:1100000,src:'api'},
+ {f:'HAN',t:'DAD',m:'Máy bay',deps:[10,19],dur:1.3,p:950000,dyn:1,src:'api'},
+ {f:'BY',t:'HAN',m:'Limousine',deps:[8,14],dur:5,p:350000,src:'own'},
+ {f:'BY',t:'HAN',m:'Xe giường nằm',deps:[20.5],dur:6,p:250000,src:'own'},
+ {f:'SGN',t:'PQC',m:'Máy bay',deps:[6.5,10,15.5],dur:1,p:1290000,dyn:1,src:'api'},
+ {f:'HAN',t:'PQC',m:'Máy bay',deps:[7.5,14],dur:2.2,p:1650000,dyn:1,src:'api'},
+ {f:'PQC',t:'SGN',m:'Máy bay',deps:[11,18.5,21],dur:1,p:1290000,dyn:1,src:'api'},
+ {f:'PQC',t:'HAN',m:'Máy bay',deps:[13,19],dur:2.2,p:1650000,dyn:1,src:'api'}
+];
+const DEST={
+ tx:{name:'Tà Xùa',hub:'BY',nights:2,leaveAfter:12,last:{m:'Xe ôm Bắc Yên ⇄ Tà Xùa',dur:1,est:150000},origins:['SGN','HAN','DAD'],
+  stays:[{id:'may',name:'Mây Homestay',sub:'Phòng view mây',p:650000,src:'own',poster:true},
+         {id:'lodge',name:'Săn Mây Lodge',sub:'Phòng gỗ, cách 1 km',p:450000,src:'api'},
+         {id:'cloud',name:'Cloud House Tà Xùa',sub:'Bungalow kính',p:950000,src:'api',out:[0]}]},
+ pq:{name:'Phú Quốc',hub:'PQC',nights:2,leaveAfter:11,last:{m:'Taxi sân bay ⇄ chỗ ở',dur:0.5,est:80000},origins:['SGN','HAN','DAD'],
+  stays:[{id:'sx',name:'Sóng Xanh Resort',sub:'Deluxe hướng biển',p:2950000,src:'api',poster:true},
+         {id:'bb',name:'Biển Bạc Bungalow',sub:'Gần bãi Sao',p:1200000,src:'api'},
+         {id:'hd',name:'Nhà Hàng Dương Homestay',sub:'Phòng đôi',p:600000,src:'own'}]}
+};
+const INV={may:{name:'Mây Homestay Tà Xùa',cap:4,booked:{'15/11':3,'22/11':1,'29/11':0,'6/12':4},stop:{},adj:0}};
+const HOSTBOOK=[{who:'Trần M.',d:'15/11',n:'2 phòng',pay:'Trả tại homestay'},{who:'Lê H.',d:'15/11',n:'1 phòng',pay:'Trả trong app'}];
+
+/* Lộ trình người đăng dựng (điểm) */
+const ROUTES={
+ tx:{title:'Tà Xùa 3N2Đ săn mây',author:'khoa.travel',dest:'tx',stayId:'may',days:[
+   [{t:'move',name:'Sài Gòn → Tà Xùa',note:'Mình bay ra Hà Nội rồi đi limousine lên Bắc Yên, xe ôm lên bản'},
+    {t:'stay',name:'Mây Homestay',note:'Phòng view mây, nên đặt sớm'},
+    {t:'eat',name:'Lẩu gà đen bản Mông',price:'250–400k/nhóm',km:0.6}],
+   [{t:'play',name:'Sống lưng khủng long',note:'Đi 5h sáng để săn mây',price:'Miễn phí',km:4},
+    {t:'eat',name:'Quán thắng cố cô Sinh',price:'60–100k/người',km:1.2},
+    {t:'play',name:'Cây cô đơn',price:'20k vé',km:3}],
+   [{t:'move',name:'Về',note:'Xuống núi trước trưa cho kịp xe'}]]},
+ pq:{title:'Phú Quốc 3N2Đ chill',author:'linh.dichoi',dest:'pq',stayId:'sx',days:[
+   [{t:'move',name:'Sài Gòn → Phú Quốc',note:'Bay sáng sớm cho kịp hoàng hôn'},
+    {t:'stay',name:'Sóng Xanh Resort',note:'Xin tầng cao, view hoàng hôn'},
+    {t:'eat',name:'Chợ đêm thị trấn',price:'150–300k/người',km:7}],
+   [{t:'play',name:'Bãi Sao',price:'Miễn phí',km:18,note:'Nước trong nhất buổi sáng'},
+    {t:'eat',name:'Quán bún quậy',price:'50–80k/người',km:6}],
+   [{t:'move',name:'Về'}]]}
+};
+
+const POSTS=[
+ {id:'tx',r:'tx',u:'khoa.travel',ini:'K',cap:'Săn mây Tà Xùa 3N2Đ, đi từ Sài Gòn',where:'Mây Homestay · Tà Xùa',why:'12 người đã đi theo · 4,6/5 khớp thực tế',likes:860,cmt:41,
+  bg:'linear-gradient(175deg,#495057,#868e96 40%,#dee2e6 75%,#f59f00)',chaps:['Ngày 1 · Sài Gòn → Tà Xùa','Ngày 1 · Mây Homestay','Ngày 2 · Sống lưng khủng long','Ngày 2 · Cây cô đơn']},
+ {id:'pq',r:'pq',u:'linh.dichoi',ini:'L',cap:'Phú Quốc 3N2Đ chill hết nấc',where:'Sóng Xanh Resort · Phú Quốc',why:'32 người lưu trong 24h',likes:1240,cmt:86,sponsored:true,
+  bg:'linear-gradient(160deg,#0b7285,#1864ab 45%,#e67700)',chaps:['Ngày 1 · Bay đến Phú Quốc','Ngày 1 · Sóng Xanh Resort','Ngày 2 · Bãi Sao','Ngày 2 · Chợ đêm']},
+ {id:'ha',u:'mai.slow',ini:'M',cap:'Góc cà phê view sông, Hội An mùa mưa',where:'Cà phê Hiên Nhà · Hội An',why:'Đang được bàn tán ở Hội An',likes:530,cmt:22,
+  bg:'linear-gradient(165deg,#2b8a3e,#5c940d 50%,#e8590c)',chaps:['Phố cổ','Hiên Nhà']}
+];
+
+const S={tab:'home',liked:{},saved:{},sheet:null,sheetR:null,page:null,login:false,trips:[],myPost:false,
+  g:null, cp:{step:1,sp:null,cap:'',video:false,items:[{day:0,t:'move'},{day:0,t:'stay',nights:2}],days:1}, paying:false,payLog:[],result:null};
+
+/* ---------- lớp LUẬT: lập phương án ---------- */
+function dayLabel(off){const [d,m]=DATES[S.g.date].l.split('/').map(Number);const x=new Date(2026,m-1,d+Math.floor(off/24));return x.getDate()+'/'+(x.getMonth()+1)}
+function hh(h){const x=((h%24)+24)%24;return String(Math.floor(x)).padStart(2,'0')+':'+String(Math.round((x%1)*60)).padStart(2,'0')}
+function legPrice(L){return L.dyn?Math.round(L.p*DATES[S.g.date].f/1000)*1000:L.p}
+function isNight(dep,dur){const d=((dep%24)+24)%24;return dur>=4&&(d>=19||d+dur>=26)} // chỉ chặng dài phải ngủ trên xe/tàu
+function nextDep(L,after){let best=null;for(let k=Math.floor(after/24)-1;k<=Math.floor(after/24)+2;k++)for(const t of L.deps){const a=k*24+t;if(a>=after&&(best===null||a<best))best=a}return best}
+function outbound(origin,hub){const res=[];
+  for(const L1 of LEGS.filter(l=>l.f===origin)){
+    const seconds=L1.t===hub?[null]:LEGS.filter(l=>l.f===L1.t&&l.t===hub);
+    for(const L2 of seconds){ for(const t of L1.deps){
+      for(let shift=0;shift<=2;shift++){const d1=t-24*shift,a1=d1+L1.dur;let legs=[{L:L1,dep:d1,arr:a1}],arr=a1;
+        if(L2){const d2=nextDep(L2,a1+1.5);if(d2===null)break;legs.push({L:L2,dep:d2,arr:d2+L2.dur});arr=d2+L2.dur}
+        const fin=arr+DEST[S.g.d].last.dur; if(fin<=23&&fin>=0){res.push({legs,start:d1,end:fin,shift});break}}}}}
+  return res}
+function inbound(hub,origin){const res=[],N=DEST[S.g.d].nights*24;
+  for(const L1 of LEGS.filter(l=>l.f===hub)){
+    const seconds=L1.t===origin?[null]:LEGS.filter(l=>l.f===L1.t&&l.t===origin);
+    for(const L2 of seconds){for(const t of L1.deps){const d1=N+t;if(t<DEST[S.g.d].leaveAfter)continue;
+      let legs=[{L:L1,dep:d1,arr:d1+L1.dur}],arr=d1+L1.dur;
+      if(L2){const d2=nextDep(L2,arr+1.5);if(d2===null)continue;legs.push({L:L2,dep:d2,arr:d2+L2.dur});arr=d2+L2.dur}
+      res.push({legs,start:d1-DEST[S.g.d].last.dur,end:arr})}}}
+  return res}
+function stayLeft(st){const date=dayLabel(0);if(st.src==='own'){const v=INV[st.id];if(!v)return 9;if(v.stop[date])return 0;return Math.max(0,v.cap-(v.booked[date]||0))}
+  return (st.out||[]).includes(S.g.date)?0:5}
+function stayPrice(st){const adj=INV[st.id]?INV[st.id].adj:0;return Math.round((st.p+adj)*DATES[S.g.date].f/1000)*1000}
+function plan(){
+  const g=S.g,D=DEST[g.d],rooms=Math.ceil(g.ppl/2);
+  const outs=outbound(g.origin,D.hub).filter(o=>!(g.noNight&&o.legs.some(x=>isNight(x.dep,x.L.dur))));
+  const backs=inbound(D.hub,g.origin).filter(o=>!(g.noNight&&o.legs.some(x=>isNight(x.dep,x.L.dur))));
+  const stays=D.stays.filter(s=>stayLeft(s)>=rooms);
+  const combos=[];
+  for(const o of outs)for(const b of backs)for(const st of stays){
+    const tix=[...o.legs,...b.legs].reduce((s,x)=>s+legPrice(x.L),0)*g.ppl;
+    const room=stayPrice(st)*rooms*D.nights;
+    const app=tix+room, per=app/g.ppl;
+    const hours=(o.end-o.start)+(b.end-b.start);
+    const comfort=[...o.legs,...b.legs].reduce((s,x)=>s+(x.L.m==='Máy bay'?0:x.L.m==='Limousine'?1:x.L.m.startsWith('Tàu')?2:3),0)+(isNightAny(o,b)?2:0);
+    combos.push({o,b,st,tix,room,app,per,hours,comfort,sig:sig(o)+'|'+sig(b)+'|'+st.id})}
+  const within=combos.filter(c=>c.per<=g.budget);
+  const posterWithin=within.filter(c=>c.st.id===ROUTES[g.r].stayId); // ưu tiên đúng chỗ ở trong lộ trình nếu còn phòng và vừa ngân sách
+  const pool=posterWithin.length?posterWithin:within.length?within:combos;
+  if(!pool.length)return {plans:[],within:false,reason:outs.length?(backs.length?'no-stay':'no-back'):'no-out'};
+  const minC=Math.min(...pool.map(c=>c.per)),maxC=Math.max(...pool.map(c=>c.per)),minH=Math.min(...pool.map(c=>c.hours)),maxH=Math.max(...pool.map(c=>c.hours));
+  const n=(v,a,b)=>b>a?(v-a)/(b-a):0;
+  const posterBonus=c=>c.st.id===ROUTES[g.r].stayId?-0.08:0;
+  const by=(f)=>[...pool].sort((a,b)=>f(a)-f(b))[0];
+  const cheap=by(c=>c.per+c.comfort*1000);
+  const fast=by(c=>c.hours*1e6+c.per);
+  const bal=by(c=>n(c.per,minC,maxC)*(g.pref==='cheap'?0.7:g.pref==='fast'?0.3:0.5)+n(c.hours,minH,maxH)*(g.pref==='cheap'?0.3:g.pref==='fast'?0.7:0.5)+posterBonus(c)+c.comfort*0.02);
+  const out=[];const seen=new Set();
+  for(const [k,c] of [['Tiết kiệm',cheap],['Cân bằng',bal],['Nhanh',fast]]){if(!seen.has(c.sig)){seen.add(c.sig);out.push({...c,label:k})}}
+  const order=g.pref==='cheap'?['Tiết kiệm','Cân bằng','Nhanh']:g.pref==='fast'?['Nhanh','Cân bằng','Tiết kiệm']:['Cân bằng','Tiết kiệm','Nhanh'];
+  out.sort((a,b)=>order.indexOf(a.label)-order.indexOf(b.label));
+  return {plans:out,within:within.length>0,minPer:Math.min(...combos.map(c=>c.per))}}
+function sig(o){return o.legs.map(x=>x.L.m+x.dep).join('>')}
+function isNightAny(o,b){return [...o.legs,...b.legs].some(x=>isNight(x.dep,x.L.dur))}
+
+/* ---------- lớp AI (mô phỏng): hiểu câu nói ---------- */
+function parseAsk(t){const s=t.toLowerCase(),u=[];const g=S.g;
+  const m=s.match(/(\d+[.,]?\d*)\s*(củ|cu|tr|triệu|trieu)/);if(m){g.budget=parseFloat(m[1].replace(',','.'))*1e6;u.push('Ngân sách '+tr(g.budget)+'/người')}
+  const p=s.match(/(\d+)\s*(đứa|dua|người|nguoi|ng)/);if(p){g.ppl=Math.min(8,+p[1]);u.push(g.ppl+' người')}
+  if(/hà nội|ha noi|hn\b/.test(s)){g.origin='HAN';u.push('Đi từ Hà Nội')} else if(/sài gòn|sai gon|sg\b|hcm/.test(s)){g.origin='SGN';u.push('Đi từ Sài Gòn')} else if(/đà nẵng|da nang|dn\b/.test(s)){g.origin='DAD';u.push('Đi từ Đà Nẵng')}
+  if(/không.*đêm|k.*đêm|khong.*dem|ko.*dem/.test(s)){g.noNight=true;u.push('Tránh đi đêm')}
+  if(/rẻ|re nhat|tiết kiệm|tiet kiem/.test(s)){g.pref='cheap';u.push('Ưu tiên rẻ')}
+  if(/nhanh|ít mệt|it met|đỡ mệt/.test(s)){g.pref='fast';u.push('Ưu tiên nhanh, ít mệt')}
+  if(!u.length)u.push('Chưa rõ ý. Thử: "2 đứa, 3 củ mỗi người, không đi xe đêm"');
+  g.understood=u}
+
+/* ---------- icon thanh bên ---------- */
+const I={heart:'<svg viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1"><path d="M12 21s-7.5-4.6-9.5-9.2C1 8.2 3.4 4.5 7 4.5c2 0 3.3 1 5 3 1.7-2 3-3 5-3 3.6 0 6 3.7 4.5 7.3C19.5 16.4 12 21 12 21z"/></svg>',
+ cmt:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.6 1.4 4.9 3.6 6.5L5 21.5l4-2.2c1 .3 2 .4 3 .4 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/></svg>',
+ save:'<svg viewBox="0 0 24 24" fill="#fff" stroke="#fff"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+ share:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M14 4l8 8-8 8v-5c-6 0-9.5 2-12 6 .8-6 4-11 12-12z"/></svg>'};
+
+/* ---------- khung ---------- */
+const $=s=>document.querySelector(s);let timer=null;
+function render(){clearInterval(timer);const sc=$('.body')?$('.body').scrollTop:0;
+  let h=`<div class="view">${S.tab==='trips'?trips():S.tab==='me'?me():feed()}</div>${nav()}`;
+  if(S.sheet==='route')h+=routeSheet();
+  if(S.sheet==='login')h+=loginSheet();
+  if(S.page==='go')h+=go();
+  if(S.page==='pay')h+=pay();
+  if(S.page==='done')h+=done();
+  if(S.page==='create')h+=create();
+  if(S.page==='host')h+=host();
+  $('#app').innerHTML=h;const b=$('.page .body');if(b&&S.keepScroll){b.scrollTop=sc}S.keepScroll=false;
+  if((S.tab==='home'||S.tab==='explore')&&!S.page)animate()}
+function nav(){const b=(k,t)=>`<button class="${S.tab===k?'on':''}" onclick="S.tab='${k}';S.page=null;S.sheet=null;render()">${t}</button>`;
+  return `<div class="nav">${b('home','Trang chủ')}${b('explore','Khám phá')}<button style="flex:1" onclick="S.page='create';S.cp.step=1;render()"><span class="plus">+</span></button>${b('trips','Chuyến đi')}${b('me','Tôi')}</div>`}
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;$('#app').appendChild(e);setTimeout(()=>e.remove(),1500)}
+function fmt(n){return n>=1000?(n/1000).toFixed(1).replace('.',',')+'k':n}
+const SRC={own:['own','Bán trực tiếp'],api:['api','Đặt qua đối tác'],tip:['free','Gợi ý · không đặt trong app']};
+const srcTag=k=>`<span class="src ${SRC[k][0]}">${SRC[k][1]}</span>`;
+
+/* ---------- bảng tin ---------- */
+function feed(){
+  const list=(S.myPost?[S.myPost]:[]).concat(POSTS);
+  return `<div class="top"><span>Khám phá</span><span class="on">Dành cho bạn</span></div><div class="feed">`+list.map(p=>`
+   <section class="post"><div class="bgv" style="background:${p.bg}"></div><div class="shade"></div>
+    <div class="rail"><div class="avatar">${p.ini}</div>
+      <button class="${S.liked[p.id]?'liked':''}" onclick="S.liked['${p.id}']=!S.liked['${p.id}'];render()">${I.heart}<span>${fmt(p.likes+(S.liked[p.id]?1:0))}</span></button>
+      <button onclick="toast('Bình luận')">${I.cmt}<span>${p.cmt}</span></button>
+      <button class="${S.saved[p.id]?'saved':''}" onclick="S.saved['${p.id}']=!S.saved['${p.id}'];render()">${I.save}<span>${S.saved[p.id]?'Đã lưu':'Lưu'}</span></button>
+      <button onclick="toast('Đã sao chép liên kết')">${I.share}<span>Chia sẻ</span></button></div>
+    <div class="meta"><div class="chap" data-chaps='${JSON.stringify(p.chaps)}'>${p.chaps[0]}</div>
+      <div class="tagp">${p.where}</div>
+      <div><span class="author">@${p.u}</span>${p.sponsored?'<span class="vf" style="color:#ffd43b">Hợp tác</span>':''}</div>
+      <div class="cap">${p.cap}</div><div class="why">${p.why}</div></div>
+    <div class="prog">${p.chaps.map(()=>'<i><b></b></i>').join('')}</div>
+    <div class="cta">${p.r?`<button class="btn-ghost" onclick="S.sheet='route';S.sheetR='${p.r}';render()">Lộ trình</button><button class="btn-ac" onclick="openGo('${p.r}')">Đi ngay</button>`
+      :`<button class="btn-ghost" onclick="toast('Bài này không kèm lộ trình')">Xem chỗ này</button>`}</div></section>`).join('')+`</div>`}
+function animate(){let t=0;timer=setInterval(()=>{t=(t+1)%300;document.querySelectorAll('.post').forEach(p=>{const ch=p.querySelector('.chap');const a=JSON.parse(ch.dataset.chaps);
+  const seg=Math.min(a.length-1,Math.floor(t/300*a.length));ch.textContent=a[seg];p.querySelectorAll('.prog b').forEach((b,k)=>b.style.width=(k<seg?100:k===seg?((t/300*a.length)%1)*100:0)+'%')})},60)}
+const TL={move:'Di chuyển',stay:'Ở',play:'Chơi',eat:'Ăn'};
+function routeSheet(){const R=ROUTES[S.sheetR];return `<div class="dim" onclick="if(event.target===this){S.sheet=null;render()}"><div class="sheet"><div class="grab"></div>
+  <div class="b">${R.title}</div><div class="xs mu">Lộ trình do @${R.author} dựng</div>
+  ${R.days.map((d,i)=>`<div class="dh">Ngày ${i+1}</div>`+d.map(x=>`<div class="it"><span class="t">${TL[x.t]}</span><span class="s">${x.name}${x.price?` · <span class="mu">${x.price}</span>`:''}${x.note?`<div class="note">${x.note}</div>`:''}</span></div>`).join('')).join('')}
+  <button class="big btn-ac" style="margin-top:12px" onclick="S.sheet=null;openGo('${S.sheetR}')">Đi ngay</button></div></div>`}
+
+/* ---------- ĐI NGAY ---------- */
+function openGo(r){S.g={r,d:ROUTES[r].dest,origin:'SGN',date:1,ppl:2,budget:5000000,pref:'bal',noNight:false,ask:'',understood:[],steps:[],planning:false,res:null,sel:0,stay:null};S.page='go';runPlan()}
+function setG(k,v){S.g[k]=v;S.g.stay=null;runPlan()}
+function runPlan(){const g=S.g;g.planning=true;g.res=null;g.sel=0;const D=DEST[g.d],R=ROUTES[g.r];
+  const nPts=R.days.flat().length;
+  const steps=[`Đọc lộ trình: ${R.days.length} ngày, ${nPts} điểm, ở ${D.nights} đêm`,
+   `Tìm chặng đi từ ${CITY[g.origin]} tới ${D.name}`,
+   `Kiểm tra phòng trống ngày ${dayLabel(0)} cho ${Math.ceil(g.ppl/2)} phòng`,
+   `Lọc theo ngân sách ${tr(g.budget)}/người${g.noNight?', tránh đi đêm':''}`,
+   'Chọn 3 phương án'];
+  g.steps=[];S.keepScroll=true;render();let i=0;const key=Math.random();g.key=key;
+  const tick=()=>{if(S.page!=='go'||g.key!==key)return;if(i<steps.length){g.steps.push(steps[i++]);S.keepScroll=true;render();setTimeout(tick,260)}
+    else{g.res=plan();g.planning=false;S.keepScroll=true;render()}};setTimeout(tick,200)}
+function legRow(x){return `<div class="it"><span class="t">${dayLabel(x.dep)}<br>${hh(x.dep)}</span><span class="s">${x.L.m}<div class="note">${CITY[x.L.f]} → ${CITY[x.L.t]} · đến ${hh(x.arr)}${Math.floor(x.arr/24)!==Math.floor(x.dep/24)?' ('+dayLabel(x.arr)+')':''}${isNight(x.dep,x.L.dur)?' · đi đêm':''}</div>${srcTag(x.L.src)}</span><span class="sm">${VND(legPrice(x.L))}</span></div>`}
+function howTo(km){if(km<1)return `Đi bộ ${Math.round(km*12)+3} phút`;if(km<5)return `Xe ôm / xe máy thuê ~${Math.round(km*4)+5} phút · ~${VND(Math.round((km*12000+10000)/1000)*1000)}`;
+  return `Taxi ~${Math.round(km*2.5)+5} phút · ~${VND(Math.round((km*15000+20000)/1000)*1000)}`}
+function go(){const g=S.g,D=DEST[g.d],R=ROUTES[g.r];const rooms=Math.ceil(g.ppl/2);
+  const res=g.res;let pl=res&&res.plans[g.sel];
+  if(pl&&g.stay){const st=D.stays.find(s=>s.id===g.stay);if(st&&stayLeft(st)>=rooms){const room=stayPrice(st)*rooms*D.nights;pl={...pl,st,room,app:pl.tix+room,per:(pl.tix+room)/g.ppl}}}
+  const budgets=[2000000,3500000,5000000,99000000];
+  const tips=R.days.flatMap((d,i)=>d.filter(x=>x.t==='eat'||x.t==='play').map(x=>({...x,day:i})));
+  const outside=pl?D.last.est*2*g.ppl:0;
+  let main='';
+  if(g.planning)main=`<div class="card">${g.steps.map(s=>`<div class="line sm"><span>${s}</span><span class="ok">✓</span></div>`).join('')}<div class="skel"></div></div>`;
+  else if(!res.plans.length)main=`<div class="alert">${res.reason==='no-out'?`Chưa tìm được chặng đi từ ${CITY[g.origin]} tới ${D.name} kịp nhận phòng ngày ${dayLabel(0)}.`:res.reason==='no-back'?'Chưa có chặng về phù hợp với điều kiện của bạn.':'Ngày này các chỗ ở đều hết phòng cho số người của bạn.'}
+     <div class="acts"><button onclick="setG('date',${(g.date+1)%4})">Thử ngày khác</button>${g.noNight?`<button onclick="setG('noNight',false)">Cho phép đi đêm</button>`:''}${g.origin!=='SGN'?`<button onclick="setG('origin','SGN')">Đi từ Sài Gòn</button>`:''}</div></div>`;
+  else{
+    main=(res.within?'':`<div class="alert">Không có phương án nào dưới ${tr(g.budget)}/người. Rẻ nhất là ~${tr(res.minPer)}/người.<div class="acts"><button onclick="setG('budget',${Math.ceil(res.minPer/500000)*500000})">Nâng ngân sách lên ${tr(Math.ceil(res.minPer/500000)*500000)}</button></div></div>`)
+    +`<div class="chips" style="margin-top:10px">${res.plans.map((p,i)=>`<button class="chip ${g.sel===i?'on':''}" style="text-align:left;min-width:108px" onclick="S.g.sel=${i};S.g.stay=null;S.keepScroll=true;render()">${p.label}<small>${tr(p.per)}/người · ${Math.round(p.hours)}h đi lại</small></button>`).join('')}</div>`
+    +`<div class="dh">Chiều đi${pl.o.shift?` · khởi hành sớm từ ${dayLabel(pl.o.start)}`:''}</div>${pl.o.legs.map(legRow).join('')}
+      <div class="it"><span class="t">${hh(pl.o.end-D.last.dur)}</span><span class="s">${D.last.m}<div class="note">~${VND(D.last.est)}/người · trả tại chỗ</div>${srcTag('tip')}</span></div>
+     <div class="dh">Ở ${D.nights} đêm · từ ${dayLabel(0)}</div>
+      ${D.stays.map(st=>{const left=stayLeft(st),ok=left>=rooms,on=pl.st.id===st.id;return `<div class="card ${ok?'':'off'}" style="${on?'outline:1px solid #fff':''};cursor:pointer" onclick="${ok?`S.g.stay='${st.id}';S.keepScroll=true;render()`:''}">
+        <div class="row"><div><div>${st.name}${st.id===R.stayId?' <span class="xs mu">· trong lộ trình</span>':''}</div><div class="xs mu">${st.sub} · ${rooms} phòng × ${VND(stayPrice(st))}/đêm</div>${srcTag(st.src)}</div>
+        <div class="xs ${ok?'ok':'ac'}" style="text-align:right">${ok?(on?'Đã chọn':'Còn '+left+' phòng'):'Hết phòng'}</div></div></div>`}).join('')}
+     <div class="dh">Chiều về</div>${pl.b.legs.map(legRow).join('')}
+     <div class="dh">Gợi ý trong chuyến (theo lộ trình của @${R.author})</div>
+      ${tips.map(x=>`<div class="it"><span class="t">Ngày ${x.day+1}<br>${TL[x.t]}</span><span class="s">${x.name}<div class="note">${x.price||''}${x.note?' · '+x.note:''}</div><div class="note">Từ ${pl.st.name}: ${howTo(x.km)}</div>${srcTag('tip')}</span></div>`).join('')}`;
+  }
+  return `<div class="page"><div class="hdr"><button class="back" onclick="S.page=null;S.g=null;render()">‹</button><div class="ti">Đi ngay</div></div>
+   <div class="body"><div class="xs mu">${R.title} · lộ trình của @${R.author}</div>
+    <div class="lbl">Đi từ</div><div class="seg">${D.origins.map(k=>`<button class="${g.origin===k?'on':''}" onclick="setG('origin','${k}')">${CITY[k]}</button>`).join('')}</div>
+    <div class="row"><div class="lbl">Ngày đi</div><div class="lbl">Số người</div></div>
+    <div class="row" style="align-items:flex-start"><div class="chips" style="flex:1">${DATES.map((d,i)=>`<button class="chip ${g.date===i?'on':''}" onclick="setG('date',${i})">T7 ${d.l}<small>${d.f<0.9?'Rẻ':d.f>1.1?'Cao':'TB'}</small></button>`).join('')}</div>
+      <div class="step" style="padding-left:6px"><button onclick="setG('ppl',Math.max(1,S.g.ppl-1))">−</button><b>${g.ppl}</b><button onclick="setG('ppl',Math.min(8,S.g.ppl+1))">+</button></div></div>
+    <div class="lbl">Ngân sách mỗi người (vé + chỗ ở)</div>
+    <div class="chips">${budgets.map(b=>`<button class="chip ${g.budget===b?'on':''}" onclick="setG('budget',${b})">${b>9e7?'Không giới hạn':tr(b)}</button>`).join('')}${!budgets.includes(g.budget)?`<button class="chip on">${tr(g.budget)}</button>`:''}</div>
+    <div class="row" style="margin-top:10px"><div class="seg" style="flex:1">${[['cheap','Rẻ'],['bal','Cân bằng'],['fast','Nhanh']].map(([k,t])=>`<button class="${g.pref===k?'on':''}" onclick="setG('pref','${k}')">${t}</button>`).join('')}</div>
+      <div class="row xs" style="gap:6px"><span class="mu">Tránh đi đêm</span><div class="tog ${g.noNight?'on':''}" onclick="setG('noNight',${!g.noNight})"></div></div></div>
+    <div class="card" style="margin-top:12px"><div class="xs mu" style="margin-bottom:6px">Hoặc nói theo cách của bạn</div>
+      <div class="row"><input type="text" id="ask" placeholder="vd: 2 đứa, 3 củ mỗi người, không đi xe đêm" value="${g.ask.replace(/"/g,'&quot;')}"><button class="mini" style="padding:12px" onclick="S.g.ask=$('#ask').value;parseAsk(S.g.ask);S.g.stay=null;runPlan()">Gửi</button></div>
+      ${g.understood.length?`<div class="xs" style="margin-top:8px"><span class="bl">AI hiểu:</span> ${g.understood.join(' · ')}</div>`:''}
+      <div class="xs mu" style="margin-top:4px">AI chỉ hiểu yêu cầu và giải thích; giờ, giá, chỗ trống do bộ luật tính từ dữ liệu thật.</div></div>
+    ${main}</div>
+   <div class="foot">${pl&&!g.planning?`<div class="row" style="margin-bottom:2px"><span class="mu sm">Trả trong app · ${g.ppl} người</span><span class="tot">${VND(pl.app)}</span></div>
+     <div class="row xs mu" style="margin-bottom:8px"><span>≈ ${VND(pl.per)}/người · ngoài app dự kiến ~${VND(outside)}</span><span>${pl.per<=g.budget?'<span class="ok">Trong ngân sách</span>':'<span class="wa">Vượt ngân sách</span>'}</span></div>`:''}
+    <button class="big btn-ac" ${pl&&!g.planning?'':'disabled'} onclick="goPay()">Đặt ngay</button></div></div>`}
+function cartOf(){const g=S.g,D=DEST[g.d],rooms=Math.ceil(g.ppl/2);let pl=g.res.plans[g.sel];const st=g.stay?D.stays.find(s=>s.id===g.stay):pl.st;
+  return [...pl.o.legs.map(x=>({name:`${x.L.m} ${CITY[x.L.f]} → ${CITY[x.L.t]}`,sub:`${dayLabel(x.dep)} ${hh(x.dep)} · ${g.ppl} vé`,src:x.L.src,total:legPrice(x.L)*g.ppl})),
+          {name:st.name,sub:`${rooms} phòng · ${D.nights} đêm từ ${dayLabel(0)}`,src:st.src,total:stayPrice(st)*rooms*D.nights,stay:st},
+          ...pl.b.legs.map(x=>({name:`${x.L.m} ${CITY[x.L.f]} → ${CITY[x.L.t]}`,sub:`${dayLabel(x.dep)} ${hh(x.dep)} · ${g.ppl} vé`,src:x.L.src,total:legPrice(x.L)*g.ppl}))]}
+function goPay(){if(!S.login){S.sheet='login';render();return}S.cart=cartOf();S.payModel='app';S.payLog=[];S.page='pay';render()}
+function loginSheet(){return `<div class="dim" onclick="if(event.target===this){S.sheet=null;render()}"><div class="sheet"><div class="grab"></div>
+  <div class="b" style="font-size:17px">Đăng nhập để đặt</div><div class="sm mu" style="margin:4px 0 12px">Phương án bạn chọn được giữ nguyên.</div>
+  <input type="text" value="0901 234 567"><button class="big btn-w" style="margin-top:10px" onclick="S.login=true;S.sheet=null;goPay()">Tiếp tục</button>
+  <div class="xs mu" style="margin-top:10px">Cần đủ 18 tuổi để tự đặt chỗ.</div></div></div>`}
+
+/* ---------- thanh toán ---------- */
+function pay(){const u=new Date(Date.now()+600000),t=String(u.getHours()).padStart(2,'0')+':'+String(u.getMinutes()).padStart(2,'0');
+  const total=S.cart.reduce((s,c)=>s+c.total,0);const ownStay=S.cart.find(c=>c.stay&&c.src==='own');const cod=S.payModel==='cod'&&ownStay?ownStay.total:0;
+  return `<div class="page"><div class="hdr"><button class="back" onclick="S.page='go';render()">‹</button><div class="ti">Thanh toán</div></div>
+   <div class="body"><div class="card sm">Vé và phòng được giữ đến <b>${t}</b></div>
+    <div class="card">${S.cart.map(c=>`<div class="line"><span>${c.name}<div class="xs mu">${c.sub}</div>${srcTag(c.src)}</span><span>${VND(c.total)}</span></div>`).join('')}
+     <div class="hr"></div><div class="line b"><span>Tổng</span><span>${VND(total)}</span></div></div>
+    ${ownStay?`<div class="lbl">Trả tiền phòng ${ownStay.name}</div><div class="seg"><button class="${S.payModel==='app'?'on':''}" onclick="S.payModel='app';render()">Trả trước trong app</button><button class="${S.payModel==='cod'?'on':''}" onclick="S.payModel='cod';render()">Trả tại homestay</button></div>`:''}
+    <div class="lbl">Phương thức</div><div class="seg"><button class="on">QR ngân hàng</button><button>Thẻ</button><button>Ví</button></div>
+    ${S.payLog.length?`<div class="card sm" style="margin-top:12px">${S.payLog.map(l=>`<div class="line"><span>${l}</span><span class="ok">✓</span></div>`).join('')}</div>`:''}</div>
+   <div class="foot">${cod?`<div class="row xs mu" style="margin-bottom:6px"><span>Trả tại homestay khi đến</span><span>${VND(cod)}</span></div>`:''}
+    <button class="big btn-ac" ${S.paying?'disabled':''} onclick="doPay()">${S.paying?'Đang xử lý…':'Thanh toán '+VND(total-cod)}</button></div></div>`}
+function doPay(){if(S.paying)return;S.paying=true;const steps=['Kiểm tra lại giá và chỗ còn hiệu lực','Giữ vé và phòng','Thanh toán thành công (1 lần, có mã chống trùng)','Đối tác và nhà xe xác nhận'];
+  let i=0;S.payLog=[];render();const tick=()=>{if(i<steps.length){S.payLog.push(steps[i++]);render();setTimeout(tick,450)}else finish()};setTimeout(tick,300)}
+function finish(){const g=S.g,D=DEST[g.d];const st=S.cart.find(c=>c.stay);
+  if(st&&st.src==='own'&&INV[st.stay.id]){const d=dayLabel(0);INV[st.stay.id].booked[d]=(INV[st.stay.id].booked[d]||0)+Math.ceil(g.ppl/2);
+    HOSTBOOK.unshift({who:'Nguyễn K. (bạn)',d,n:Math.ceil(g.ppl/2)+' phòng',pay:S.payModel==='cod'?'Trả tại homestay':'Trả trong app',isNew:true})}
+  const total=S.cart.reduce((s,c)=>s+c.total,0);
+  S.result={title:ROUTES[g.r].title,d:dayLabel(0)+'–'+dayLabel(D.nights*24),ppl:g.ppl,items:S.cart,r:g.r,stay:st.name};
+  S.trips.unshift({t:D.name+' · '+S.result.d,s:`${g.ppl} người · ${VND(total)}`,from:'Theo lộ trình của @'+ROUTES[g.r].author});
+  S.paying=false;S.page='done';render()}
+function done(){const r=S.result;const tips=ROUTES[r.r].days.flatMap(d=>d.filter(x=>x.t==='eat'||x.t==='play'));
+  return `<div class="page"><div class="body"><div class="center" style="height:auto;padding-top:36px">
+   <div class="check">✓</div><div class="b" style="font-size:20px">Đã đặt xong</div><div class="sm mu" style="margin-top:4px">${r.title} · ${r.d} · ${r.ppl} người</div></div>
+   <div class="card" style="margin-top:18px">${r.items.map(i=>`<div class="line"><span>${i.name}<div class="xs mu">${i.sub}</div></span><span class="ok sm">Đã xác nhận</span></div>`).join('')}</div>
+   <div class="card"><div class="b sm" style="margin-bottom:4px">Danh sách gợi ý đã lưu vào chuyến</div>${tips.map(x=>`<div class="xs mu">· ${x.name}${x.price?' · '+x.price:''}</div>`).join('')}</div>
+   ${r.r==='tx'?`<div class="card xs mu">Chủ homestay đã nhận đơn (nếu chọn Mây Homestay). Xem ở Tôi → Chế độ đối tác.</div>`:''}</div>
+   <div class="foot"><button class="big btn-w" onclick="S.page=null;S.g=null;S.tab='trips';render()">Xem chuyến đi</button></div></div>`}
+
+/* ---------- chuyến đi, tôi, đối tác ---------- */
+function trips(){return `<div class="page" style="z-index:1"><div class="hdr"><div class="ti" style="margin-right:0">Chuyến đi</div></div><div class="body">
+   ${S.trips.map(t=>`<div class="card"><div class="b">${t.t}</div><div class="sm mu">${t.s}</div><div class="xs mu" style="margin-top:4px">${t.from}</div></div>`).join('')||'<div class="sm mu">Chưa có chuyến nào. Lướt video và bấm Đi ngay.</div>'}
+   <div class="lbl">Đã lưu</div>${POSTS.filter(p=>S.saved[p.id]).map(p=>`<div class="card sm">${p.cap}<div class="xs mu">@${p.u}</div></div>`).join('')||'<div class="sm mu">Chưa lưu bài nào</div>'}</div></div>`}
+function me(){return `<div class="page" style="z-index:1"><div class="hdr"><div class="ti" style="margin-right:0">Tôi</div></div><div class="body">
+  <div class="center" style="height:auto;padding:20px 0"><div class="avatar" style="width:72px;height:72px;font-size:24px;margin-bottom:10px">K</div><div class="b">@khang.di</div><div class="sm mu">${S.login?'Đã đăng nhập':'Chưa đăng nhập'}</div></div>
+  <div class="card" onclick="S.page='host';render()" style="cursor:pointer"><div class="b">Chế độ đối tác</div><div class="sm mu">Mô phỏng màn hình của chủ Mây Homestay Tà Xùa</div></div></div></div>`}
+function host(){const v=INV.may;const dates=['15/11','22/11','29/11','6/12'];
+  return `<div class="page"><div class="hdr"><button class="back" onclick="S.page=null;render()">‹</button><div class="ti">Mây Homestay · Đối tác</div></div><div class="body">
+   <div class="xs mu">Kho phòng nằm trong hệ thống của nền tảng. Thay đổi ở đây ảnh hưởng ngay đến phương án "Đi ngay".</div>
+   <div class="lbl">Phòng trống (${v.cap} phòng view mây)</div>
+   <div class="cal">${dates.map(d=>{const left=v.stop[d]?0:Math.max(0,v.cap-(v.booked[d]||0));return `<div><div class="b">${d}</div><div class="${left?'ok':'ac'}">${v.stop[d]?'Ngừng bán':'Còn '+left}</div>
+     <button class="mini" style="margin-top:6px" onclick="INV.may.stop['${d}']=!INV.may.stop['${d}'];render()">${v.stop[d]?'Mở bán':'Ngừng'}</button></div>`}).join('')}</div>
+   <div class="lbl">Giá mỗi đêm</div><div class="row card"><span class="b">${VND(650000+v.adj)}</span><div class="step"><button onclick="INV.may.adj-=50000;render()">−</button><button onclick="INV.may.adj+=50000;render()">+</button></div></div>
+   <div class="lbl">Đơn đặt</div>
+   ${HOSTBOOK.map(b=>`<div class="card"><div class="row"><div><div class="b">${b.who}${b.isNew?' <span class="src own">Mới</span>':''}</div><div class="sm mu">Nhận phòng ${b.d} · ${b.n}</div></div><span class="xs mu">${b.pay}</span></div></div>`).join('')}
+   <div class="card xs mu">Hoa hồng nền tảng 12% · đối soát cuối tháng (mô phỏng)</div></div></div>`}
+
+/* ---------- đăng bài: một trang video + caption, rồi dựng lộ trình bằng ô có cấu trúc ----------
+   Dữ liệu địa điểm là bộ MẪU. App thật lấy từ API bản đồ / dữ liệu địa điểm đã thu thập. */
+const PLACES=[
+ {id:'sgn',n:'Sân bay Tân Sơn Nhất (SGN)',k:'hub',kind:'Sân bay',a:'Trường Sơn, Tân Bình, TP.HCM',c:'SGN'},
+ {id:'gsg',n:'Ga Sài Gòn',k:'hub',kind:'Ga tàu',a:'1 Nguyễn Thông, Quận 3, TP.HCM',c:'SGN'},
+ {id:'bmd',n:'Bến xe Miền Đông mới',k:'hub',kind:'Bến xe',a:'501 Hoàng Hữu Nam, TP. Thủ Đức, TP.HCM',c:'SGN'},
+ {id:'han',n:'Sân bay Nội Bài (HAN)',k:'hub',kind:'Sân bay',a:'Phú Minh, Sóc Sơn, Hà Nội',c:'HAN'},
+ {id:'ghn',n:'Ga Hà Nội',k:'hub',kind:'Ga tàu',a:'120 Lê Duẩn, Hoàn Kiếm, Hà Nội',c:'HAN'},
+ {id:'bxmd',n:'Bến xe Mỹ Đình',k:'hub',kind:'Bến xe',a:'20 Phạm Hùng, Nam Từ Liêm, Hà Nội',c:'HAN'},
+ {id:'dad',n:'Sân bay Đà Nẵng (DAD)',k:'hub',kind:'Sân bay',a:'Hải Châu, Đà Nẵng',c:'DAD'},
+ {id:'bxby',n:'Bến xe Bắc Yên',k:'hub',kind:'Bến xe',a:'Thị trấn Bắc Yên, Sơn La',c:'BY',dest:'tx'},
+ {id:'tx',n:'Bản Tà Xùa',k:'hub',kind:'Điểm đến',a:'Xã Tà Xùa, Bắc Yên, Sơn La',c:'BY',dest:'tx'},
+ {id:'pqc',n:'Sân bay Phú Quốc (PQC)',k:'hub',kind:'Sân bay',a:'Dương Tơ, Phú Quốc, Kiên Giang',c:'PQC',dest:'pq'},
+ {id:'may',n:'Mây Homestay',k:'stay',kind:'Homestay',a:'Xã Tà Xùa, Bắc Yên, Sơn La',dest:'tx',price:'~650k/đêm'},
+ {id:'lodge',n:'Săn Mây Lodge',k:'stay',kind:'Homestay',a:'Xã Tà Xùa, Bắc Yên, Sơn La',dest:'tx',price:'~450k/đêm'},
+ {id:'cloud',n:'Cloud House Tà Xùa',k:'stay',kind:'Bungalow',a:'Xã Tà Xùa, Bắc Yên, Sơn La',dest:'tx',price:'~950k/đêm'},
+ {id:'sx',n:'Sóng Xanh Resort',k:'stay',kind:'Resort',a:'Bãi Trường, Dương Tơ, Phú Quốc',dest:'pq',price:'~2,95tr/đêm'},
+ {id:'bb',n:'Biển Bạc Bungalow',k:'stay',kind:'Bungalow',a:'Gần Bãi Sao, An Thới, Phú Quốc',dest:'pq',price:'~1,2tr/đêm'},
+ {id:'hd',n:'Nhà Hàng Dương Homestay',k:'stay',kind:'Homestay',a:'Dương Đông, Phú Quốc',dest:'pq',price:'~600k/đêm'},
+ {id:'slkl',n:'Sống lưng khủng long',k:'play',kind:'Điểm ngắm cảnh',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'Miễn phí',km:4},
+ {id:'ccd',n:'Cây cô đơn',k:'play',kind:'Điểm check-in',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'20k vé',km:3},
+ {id:'dct',n:'Đồi chè cổ thụ',k:'play',kind:'Đồi chè',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'Miễn phí',km:5},
+ {id:'bs',n:'Bãi Sao',k:'play',kind:'Bãi biển',a:'An Thới, Phú Quốc',dest:'pq',price:'Miễn phí',km:18},
+ {id:'lg',n:'Lẩu gà đen bản Mông',k:'eat',kind:'Quán ăn',a:'Trung tâm xã Tà Xùa',dest:'tx',price:'250–400k/nhóm',km:0.6},
+ {id:'tc',n:'Quán thắng cố cô Sinh',k:'eat',kind:'Quán ăn',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'60–100k/người',km:1.2},
+ {id:'cf',n:'Cà phê sân mây',k:'eat',kind:'Cà phê',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'40–60k/người',km:2},
+ {id:'cd',n:'Chợ đêm Dương Đông',k:'eat',kind:'Chợ đêm',a:'Dương Đông, Phú Quốc',dest:'pq',price:'150–300k/người',km:7},
+ {id:'bq',n:'Quán bún quậy',k:'eat',kind:'Quán ăn',a:'Dương Đông, Phú Quốc',dest:'pq',price:'50–80k/người',km:6}];
+const MODES=['Máy bay','Tàu hỏa','Xe khách','Limousine','Xe máy','Ô tô riêng'];
+const findP=(n,k)=>PLACES.find(p=>p.n===n&&(!k||k.includes(p.k)));
+const datalists=()=>['hub','stay','play','eat'].map(k=>`<datalist id="dl-${k}">${PLACES.filter(p=>p.k===k).map(p=>`<option value="${p.n}">${p.kind} · ${p.a}</option>`).join('')}</datalist>`).join('');
+const TYPES=[['move','Di chuyển'],['stay','Ở'],['play','Chơi'],['eat','Ăn']];
+function setItem(i,k,v,re){S.cp.items[i][k]=v;if(k==='place'||k==='t'){const it=S.cp.items[i];const pp=findP(it.place,[it.t]);if(pp&&!it.priceEdited)it.price=pp.price}if(re){S.keepScroll=true;render()}}
+function placeInfo(name,k){const p=findP(name,k);return name?(p?`<div class="xs ok" style="margin-top:4px">${p.kind} · ${p.a}</div>`:`<div class="xs wa" style="margin-top:4px">Chưa có trong dữ liệu. Chọn từ gợi ý để hệ thống lên phương án được.</div>`):''}
+function itemBox(it,i){const typ=`<div class="seg" style="margin-bottom:8px">${TYPES.map(([k,t])=>`<button class="${it.t===k?'on':''}" onclick="setItem(${i},'t','${k}',1)">${t}</button>`).join('')}</div>`;
+  let f='';
+  if(it.t==='move')f=`<div class="lbl" style="margin-top:0">Từ</div><input type="text" list="dl-hub" placeholder="Sân bay, ga, bến xe…" value="${it.from||''}" oninput="setItem(${i},'from',this.value)" onchange="setItem(${i},'from',this.value,1)">${placeInfo(it.from,['hub'])}
+     <div class="lbl">Đến</div><input type="text" list="dl-hub" placeholder="Sân bay, ga, bến xe, điểm đến…" value="${it.to||''}" oninput="setItem(${i},'to',this.value)" onchange="setItem(${i},'to',this.value,1)">${placeInfo(it.to,['hub'])}
+     <div class="lbl">Phương tiện</div><div class="chips">${MODES.map(m=>`<button class="chip ${it.mode===m?'on':''}" onclick="setItem(${i},'mode','${m}',1)">${m}</button>`).join('')}</div>`;
+  else if(it.t==='stay')f=`<div class="lbl" style="margin-top:0">Chỗ ở</div><input type="text" list="dl-stay" placeholder="Tên khách sạn, homestay…" value="${it.place||''}" oninput="setItem(${i},'place',this.value)" onchange="setItem(${i},'place',this.value,1)">${placeInfo(it.place,['stay'])}
+     <div class="row" style="margin-top:8px"><span class="sm mu">Số đêm${it.price?' · '+it.price:''}</span><div class="step"><button onclick="setItem(${i},'nights',Math.max(1,(S.cp.items[${i}].nights||1)-1),1)">−</button><b>${it.nights||1}</b><button onclick="setItem(${i},'nights',(S.cp.items[${i}].nights||1)+1,1)">+</button></div></div>`;
+  else f=`<div class="lbl" style="margin-top:0">${it.t==='eat'?'Quán / chỗ ăn':'Điểm chơi'}</div><input type="text" list="dl-${it.t}" placeholder="${it.t==='eat'?'Tên quán…':'Tên điểm…'}" value="${it.place||''}" oninput="setItem(${i},'place',this.value)" onchange="setItem(${i},'place',this.value,1)">${placeInfo(it.place,[it.t])}
+     <div class="row" style="margin-top:8px;gap:8px"><input type="text" placeholder="Tầm giá" value="${it.price||''}" oninput="S.cp.items[${i}].price=this.value;S.cp.items[${i}].priceEdited=1" style="flex:1"><input type="text" placeholder="Ghi chú (giờ nên đi…)" value="${it.note||''}" oninput="S.cp.items[${i}].note=this.value" style="flex:1.4"></div>`;
+  return `<div class="card"><div class="row" style="margin-bottom:6px"><span class="xs mu">Điểm ${i+1}</span><button class="xs mu" onclick="S.cp.items.splice(${i},1);S.keepScroll=true;render()">Xóa</button></div>${typ}${f}</div>`}
+function cpCheck(){const it=S.cp.items;const mv=it.find(x=>x.t==='move'&&findP(x.from,['hub'])&&findP(x.to,['hub']));const st=it.find(x=>x.t==='stay'&&findP(x.place,['stay']));
+  return {mv,st,ok:!!(mv&&st)}}
+function sample(){S.cp.items=[{day:0,t:'move',from:'Sân bay Tân Sơn Nhất (SGN)',to:'Sân bay Nội Bài (HAN)',mode:'Máy bay'},{day:0,t:'move',from:'Bến xe Mỹ Đình',to:'Bến xe Bắc Yên',mode:'Limousine'},
+  {day:0,t:'stay',place:'Săn Mây Lodge',nights:2,price:'~450k/đêm'},{day:0,t:'eat',place:'Lẩu gà đen bản Mông',price:'250–400k/nhóm'},
+  {day:1,t:'play',place:'Sống lưng khủng long',price:'Miễn phí',note:'Đi 5h sáng'},{day:1,t:'eat',place:'Cà phê sân mây',price:'40–60k/người'},{day:2,t:'move',from:'Bến xe Bắc Yên',to:'Bến xe Mỹ Đình',mode:'Limousine'}];S.cp.days=3;S.keepScroll=true;render()}
+function create(){const st=S.cp.step;
+  const head=t=>`<div class="hdr"><button class="back" onclick="${st<=1?"S.page=null":"S.cp.step--"};render()">‹</button><div class="ti">${t}</div></div><div class="dots">${[1,2].map(i=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div>`;
+  if(st===1)return `<div class="page">${head('Bài đăng mới')}<div class="body">
+     <div class="thumb" style="background:${S.cp.video?'linear-gradient(175deg,#495057,#868e96 40%,#dee2e6 75%,#f59f00)':'var(--sf)'};display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="S.cp.video=true;render()">
+       ${S.cp.video?'<div class="lab">0:48 · đã chọn</div>':'<div class="mu">Chạm để chọn video từ máy</div>'}</div>
+     <div class="lbl">Caption</div><textarea placeholder="Kể ngắn về chuyến đi…" oninput="S.cp.cap=this.value">${S.cp.cap}</textarea>
+     <div class="lbl">Bài này có nhận tài trợ không?</div><div class="seg"><button class="${S.cp.sp===false?'on':''}" onclick="S.cp.sp=false;render()">Không</button><button class="${S.cp.sp===true?'on':''}" onclick="S.cp.sp=true;render()">Có · gắn nhãn Hợp tác</button></div></div>
+     <div class="foot"><button class="big btn-ac" ${S.cp.video&&S.cp.sp!==null?'':'disabled'} onclick="S.cp.step=2;render()">Tiếp: dựng lộ trình</button></div></div>`;
+  const chk=cpCheck();const days=Math.max(S.cp.days,...S.cp.items.map(x=>x.day+1));
+  return `<div class="page">${head('Dựng lộ trình')}${datalists()}<div class="body">
+     <div class="row"><div class="xs mu" style="flex:1">Chọn địa điểm từ gợi ý để có địa chỉ chính xác. Người xem bấm Đi ngay, hệ thống tự lên vé và phòng theo ngân sách của họ.</div><button class="mini" onclick="sample()">Điền mẫu</button></div>
+     ${Array.from({length:days},(_,d)=>`<div class="dh">Ngày ${d+1}</div>`+S.cp.items.map((it,i)=>it.day===d?itemBox(it,i):'').join('')
+        +`<button class="mini" onclick="S.cp.items.push({day:${d},t:'play'});S.keepScroll=true;render()">+ Thêm điểm ngày ${d+1}</button>`).join('')}
+     <div style="margin-top:14px"><button class="mini" onclick="S.cp.days=${days+1};S.keepScroll=true;render()">+ Thêm ngày</button></div>
+     <div class="card xs" style="margin-top:14px"><div class="${chk.mv?'ok':'mu'}">${chk.mv?'✓':'○'} Có ít nhất một chặng di chuyển chọn từ dữ liệu</div><div class="${chk.st?'ok':'mu'}">${chk.st?'✓':'○'} Có chỗ ở chọn từ dữ liệu</div></div></div>
+     <div class="foot"><button class="big btn-ac" ${chk.ok?'':'disabled'} onclick="publish()">Đăng</button></div></div>`}
+function publish(){const chk=cpCheck();const stay=findP(chk.st.place,['stay']);const dest=stay.dest;const its=S.cp.items;const nDays=Math.max(...its.map(x=>x.day))+1;
+  const days=Array.from({length:nDays},(_,d)=>its.filter(x=>x.day===d).map(x=>{const pp=x.t!=='move'?findP(x.place,[x.t]):null;
+    if(x.t==='move')return {t:'move',name:`${x.from||'?'} → ${x.to||'?'}`,note:x.mode||''};
+    if(x.t==='stay')return {t:'stay',name:x.place,note:`${x.nights||1} đêm`};
+    return {t:x.t,name:x.place||'(chưa đặt tên)',price:x.price||'',note:x.note||'',km:pp&&pp.km!=null?pp.km:2}}));
+  ROUTES.mine={title:S.cp.cap||('Lộ trình '+DEST[dest].name),author:'khang.di',dest,stayId:stay.id,days};
+  S.myPost={id:'mine',r:'mine',u:'khang.di',ini:'K',cap:S.cp.cap||ROUTES.mine.title,where:stay.n+' · '+DEST[dest].name,why:'Bài của bạn · vừa đăng',likes:0,cmt:0,sponsored:S.cp.sp,
+    bg:'linear-gradient(175deg,#343a40,#495057 40%,#adb5bd 75%,#f59f00)',chaps:days.map((d,i)=>'Ngày '+(i+1)+(d[0]?' · '+d[0].name:''))};
+  S.page=null;S.tab='home';render();toast('Đã đăng · đang được kiểm duyệt tự động')}
+
+render();
+</script>
+</body>
+</html>
