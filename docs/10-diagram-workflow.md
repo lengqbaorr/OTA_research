@@ -1,6 +1,7 @@
 # 10. Diagram workflow toàn bộ ý tưởng
 
-> Nền tảng video du lịch "xem là đi được": người đi thật đăng video kèm lộ trình, người xem bấm "Đi y chang" để đặt cả chuyến.
+> Nền tảng video du lịch "xem là đi được": người dùng đăng video kèm lộ trình dạng điểm, người xem bấm **"Đi ngay"** để hệ thống tự lên phương án đi lại và chỗ ở theo ngân sách rồi đặt luôn.
+> Cập nhật theo [tài liệu 13](13-di-ngay-planner-hybrid.md): đã **bỏ bước xác minh "đã đi thật"**.
 > Bản xem đẹp để trình bày: [demo/workflow-diagram.html](../demo/workflow-diagram.html) (cần mạng để tải thư viện vẽ sơ đồ).
 
 ---
@@ -9,66 +10,58 @@
 
 ```mermaid
 flowchart LR
-    A["Người đi du lịch thật"] --> B["Xác minh đã đi"]
-    B --> C["Đăng video + lộ trình"]
-    C --> D["Kiểm duyệt AI + người"]
+    A["Người dùng đi du lịch"] --> C["Đăng video +<br/>lộ trình dạng điểm"]
+    C --> D["Kiểm duyệt AI + người,<br/>nhãn Hợp tác"]
     D --> E["Bảng tin xu hướng<br/>và cá nhân hóa"]
     E --> F["Người xem lướt video"]
-    F --> G["Đi y chang"]
-    G --> H["Giữ chỗ và thanh toán"]
+    F --> G["Đi ngay"]
+    G --> P["Lập kế hoạch lai:<br/>AI hiểu ý + luật tính toán"]
+    P --> H["Đặt vé và phòng,<br/>thanh toán một lần"]
     H --> I["Đi chuyến đi"]
+    I --> R["Đánh giá khớp thực tế"]
+    R --> E
     I --> A
     H --> J["Ghi nhận nguồn:<br/>đặt từ bài nào"]
-    J --> K["Thưởng người đăng<br/>khi người đi theo hoàn thành chuyến"]
     J --> E
-    K --> C
 ```
 
 ---
 
-## 2. Xác minh "đã đi thật"
+## 2. "Đi ngay": bộ lập kế hoạch lai
 
 ```mermaid
 flowchart TD
-    subgraph DAT["Bằng chứng ĐÃ ĐẶT"]
-        E1["Đặt trong app"]
-        E2["Email xác nhận<br/>có chữ ký DKIM"]
-        E4["Nhà cung cấp đối tác<br/>xác nhận"]
+    IN["Người xem: nơi đi, ngày, số người,<br/>ngân sách, ưu tiên, câu nói tự do"] --> AI["Lớp AI: hiểu câu nói<br/>thành điều kiện có cấu trúc"]
+    AI --> RULE
+    ROUTE["Lộ trình của người đăng:<br/>điểm đến, chỗ ở, điểm chơi, quán ăn"] --> RULE
+    subgraph RULE["Lớp luật"]
+        R1["Tìm đường đi trên đồ thị phương tiện:<br/>máy bay, tàu, xe, limousine"]
+        R2["Ràng buộc giờ: nối chuyến ≥ 1,5h,<br/>tới nơi trước 23h, lùi ngày nếu cần"]
+        R3["Chỗ ở: ưu tiên chỗ trong lộ trình<br/>nếu còn phòng và vừa ngân sách"]
+        R4["Lọc: ngân sách, tránh đi đêm"]
+        R5["Chọn 3 phương án:<br/>Tiết kiệm / Cân bằng / Nhanh"]
+        R1 --> R2 --> R3 --> R4 --> R5
     end
-    subgraph MAT["Bằng chứng ĐÃ CÓ MẶT"]
-        P1["QR động tại quầy đối tác"]
-        P2["Đối tác xác nhận check-in"]
-        P3["Vị trí trong vùng,<br/>đúng khoảng ngày"]
-        P4["Quay bằng camera<br/>trong app tại chỗ"]
-    end
-    E3["Thẻ lên máy bay<br/>mã vạch IATA"] --> FLY["Dấu: Đã bay chặng này"]
-    DAT --> GHEP{"Ghép theo chỗ<br/>và khoảng ngày"}
-    MAT --> GHEP
-    GHEP -->|"Có cả đặt và có mặt"| L1["Đã đi thật"]
-    GHEP -->|"Chỉ có đặt"| L2["Đã đặt chỗ"]
-    GHEP -->|"Chỉ có vị trí / camera"| L3["Có mặt tại chỗ"]
-    GHEP -->|"Không có gì"| L0["Không được đăng"]
-    L1 --> POST["Mở nút Kể lại chuyến đi"]
-    L2 --> POST
-    L3 --> POST
+    RULE --> OK{"Có phương án<br/>vừa ngân sách?"}
+    OK -->|"Có"| SHOW["Hiện phương án + gợi ý ăn chơi:<br/>đi gì tới, tầm giá"]
+    OK -->|"Không"| HONEST["Nói thật, đưa phương án gần nhất<br/>và mức cần nâng"]
+    SHOW --> EXPL["AI giải thích bằng lời,<br/>nhận yêu cầu sửa"]
+    EXPL --> CART["Giỏ hàng: vé các chặng + phòng"]
 ```
 
 ---
 
-## 3. Người đăng: từ chuyến đi đến bài đăng
+## 3. Người đăng: từ video đến bài đăng có lộ trình
 
 ```mermaid
 flowchart TD
-    S["Chuyến đi đã xác minh"] --> M["Chọn hoặc quay video, ảnh"]
+    S["Người dùng muốn chia sẻ chuyến đi"] --> M["Chọn hoặc quay video, ảnh"]
     M --> PR{"Có mặt người lạ<br/>hoặc giấy tờ?"}
     PR -->|"Có"| BL["Làm mờ"] --> TAG
     PR -->|"Không"| TAG["Gắn điểm dừng vào đoạn video"]
     TAG --> CAP["Caption, vibe,<br/>khai báo có nhận tài trợ"]
-    CAP --> IT["Biên tập lộ trình"]
-    IT --> IT1["Lớp đã đặt:<br/>hệ thống tự điền từ đơn"]
-    IT --> IT2["Lớp kinh nghiệm:<br/>người đăng soạn theo ngày,<br/>sáng / chiều / tối"]
-    IT1 --> PV["Xem trước riêng tư:<br/>ẩn ngày đi, giá đã trả, mã đặt chỗ"]
-    IT2 --> PV
+    CAP --> IT["Dựng lộ trình bằng điểm theo ngày:<br/>di chuyển, ở, chơi, ăn + tầm giá"]
+    IT --> PV["Xem trước"]
     PV --> UP["Đăng: tải lên chạy nền,<br/>mất mạng vẫn tiếp tục"]
     UP --> PIPE["Xử lý: chuyển mã video,<br/>chép lời, đọc chữ, lập chỉ mục tìm kiếm"]
     PIPE --> MOD{"Sàng lọc tự động"}
@@ -79,7 +72,7 @@ flowchart TD
 
 ---
 
-## 4. Người xem: từ video đến "Đi y chang"
+## 4. Người xem: từ video đến "Đi ngay"
 
 ```mermaid
 flowchart TD
@@ -87,10 +80,10 @@ flowchart TD
     ACT -->|"Thả tim, lưu, bình luận"| SIG["Tín hiệu gu và xu hướng"]
     ACT -->|"Chạm thẻ địa điểm"| DET["Trang chi tiết chỗ"] --> QB["Đặt riêng một chỗ"]
     ACT -->|"Xem lộ trình"| SHEET["Bảng lộ trình theo ngày"]
-    ACT -->|"Đi y chang"| FY
-    SHEET --> FY["Màn Đi y chang"]
-    FY --> CFG["Chọn nơi đi, ngày đi, số người"]
-    CFG --> ITEMS["Dời các mục theo ngày,<br/>tính số phòng theo số người"]
+    ACT -->|"Đi ngay"| FY
+    SHEET --> FY["Màn Đi ngay"]
+    FY --> CFG["Chọn nơi đi, ngày, số người,<br/>ngân sách, hoặc nói tự do"]
+    CFG --> ITEMS["Bộ lập kế hoạch lai<br/>đưa ra 3 phương án"]
     ITEMS --> SRC{"Nguồn của từng mục"}
     SRC -->|"Bán trực tiếp"| OWN["Kho của nền tảng:<br/>còn bao nhiêu phòng, ghế"]
     SRC -->|"API đối tác"| API["Hỏi phòng trống và giá<br/>qua API đối tác"]
@@ -177,7 +170,7 @@ flowchart TD
     ACTN --> NOTI["Báo người đăng,<br/>cho kháng nghị"]
     ACTN --> SYNC["Bài ẩn biến khỏi app, web,<br/>tìm kiếm và trợ lý"]
     subgraph SEED["Chống seeding và đẩy ảo"]
-        T1["Bắt buộc xác minh đã đi"]
+        T1["Đánh giá khớp thực tế<br/>từ người đã đi theo"]
         T2["Nhãn Hợp tác bắt buộc"]
         T3["Điểm uy tín tài khoản"]
         T4["Một người một phiếu,<br/>gom cụm thiết bị"]
@@ -212,7 +205,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    FY["Lộ trình Đi y chang"] --> A["Bán trực tiếp<br/>hàng của nền tảng"]
+    FY["Phương án Đi ngay"] --> A["Bán trực tiếp<br/>hàng của nền tảng"]
     FY --> B["API đối tác<br/>OTA, bedbank"]
     FY --> C["Link affiliate"]
     A --> A1["Homestay, nhà xe ký hợp đồng"]

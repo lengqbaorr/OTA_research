@@ -15,57 +15,49 @@ h2{font-size:17px;margin:0 0 12px;color:#fff}
 .mermaid{display:flex;justify-content:center;background:none;margin:0}
 footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
 </style></head><body>
-<header><h1>Workflow toàn bộ ý tưởng</h1><p>Nền tảng video du lịch "xem là đi được" · người đi thật đăng video kèm lộ trình, người xem bấm Đi y chang để đặt cả chuyến.</p></header>
-<nav><a href="#s0">Toàn cảnh: vòng lặp của nền tảng</a><a href="#s1">Xác minh &quot;đã đi thật&quot;</a><a href="#s2">Người đăng: từ chuyến đi đến bài đăng</a><a href="#s3">Người xem: từ video đến &quot;Đi y chang&quot;</a><a href="#s4">Giữ chỗ và thanh toán</a><a href="#s5">Trình tự các hệ thống khi thanh toán</a><a href="#s6">Kiểm duyệt và chống seeding</a><a href="#s7">Xu hướng, cá nhân hóa và thưởng</a><a href="#s8">Nguồn hàng: hai mô hình cùng tồn tại</a><a href="#s9">Kiến trúc hệ thống</a></nav>
+<header><h1>Workflow toàn bộ ý tưởng</h1><p>Nền tảng video du lịch "xem là đi được" · người dùng đăng video kèm lộ trình dạng điểm, người xem bấm Đi ngay để hệ thống lên phương án đi lại, chỗ ở theo ngân sách và đặt luôn.</p></header>
+<nav><a href="#s0">Toàn cảnh: vòng lặp của nền tảng</a><a href="#s1">&quot;Đi ngay&quot;: bộ lập kế hoạch lai</a><a href="#s2">Người đăng: từ video đến bài đăng có lộ trình</a><a href="#s3">Người xem: từ video đến &quot;Đi ngay&quot;</a><a href="#s4">Giữ chỗ và thanh toán</a><a href="#s5">Trình tự các hệ thống khi thanh toán</a><a href="#s6">Kiểm duyệt và chống seeding</a><a href="#s7">Xu hướng, cá nhân hóa và thưởng</a><a href="#s8">Nguồn hàng: hai mô hình cùng tồn tại</a><a href="#s9">Kiến trúc hệ thống</a></nav>
 <main><section id="s0"><h2>1. Toàn cảnh: vòng lặp của nền tảng</h2><pre class="mermaid">flowchart LR
-    A[&quot;Người đi du lịch thật&quot;] --&gt; B[&quot;Xác minh đã đi&quot;]
-    B --&gt; C[&quot;Đăng video + lộ trình&quot;]
-    C --&gt; D[&quot;Kiểm duyệt AI + người&quot;]
+    A[&quot;Người dùng đi du lịch&quot;] --&gt; C[&quot;Đăng video +&lt;br/&gt;lộ trình dạng điểm&quot;]
+    C --&gt; D[&quot;Kiểm duyệt AI + người,&lt;br/&gt;nhãn Hợp tác&quot;]
     D --&gt; E[&quot;Bảng tin xu hướng&lt;br/&gt;và cá nhân hóa&quot;]
     E --&gt; F[&quot;Người xem lướt video&quot;]
-    F --&gt; G[&quot;Đi y chang&quot;]
-    G --&gt; H[&quot;Giữ chỗ và thanh toán&quot;]
+    F --&gt; G[&quot;Đi ngay&quot;]
+    G --&gt; P[&quot;Lập kế hoạch lai:&lt;br/&gt;AI hiểu ý + luật tính toán&quot;]
+    P --&gt; H[&quot;Đặt vé và phòng,&lt;br/&gt;thanh toán một lần&quot;]
     H --&gt; I[&quot;Đi chuyến đi&quot;]
+    I --&gt; R[&quot;Đánh giá khớp thực tế&quot;]
+    R --&gt; E
     I --&gt; A
     H --&gt; J[&quot;Ghi nhận nguồn:&lt;br/&gt;đặt từ bài nào&quot;]
-    J --&gt; K[&quot;Thưởng người đăng&lt;br/&gt;khi người đi theo hoàn thành chuyến&quot;]
     J --&gt; E
-    K --&gt; C
 </pre></section>
-<section id="s1"><h2>2. Xác minh &quot;đã đi thật&quot;</h2><pre class="mermaid">flowchart TD
-    subgraph DAT[&quot;Bằng chứng ĐÃ ĐẶT&quot;]
-        E1[&quot;Đặt trong app&quot;]
-        E2[&quot;Email xác nhận&lt;br/&gt;có chữ ký DKIM&quot;]
-        E4[&quot;Nhà cung cấp đối tác&lt;br/&gt;xác nhận&quot;]
+<section id="s1"><h2>2. &quot;Đi ngay&quot;: bộ lập kế hoạch lai</h2><pre class="mermaid">flowchart TD
+    IN[&quot;Người xem: nơi đi, ngày, số người,&lt;br/&gt;ngân sách, ưu tiên, câu nói tự do&quot;] --&gt; AI[&quot;Lớp AI: hiểu câu nói&lt;br/&gt;thành điều kiện có cấu trúc&quot;]
+    AI --&gt; RULE
+    ROUTE[&quot;Lộ trình của người đăng:&lt;br/&gt;điểm đến, chỗ ở, điểm chơi, quán ăn&quot;] --&gt; RULE
+    subgraph RULE[&quot;Lớp luật&quot;]
+        R1[&quot;Tìm đường đi trên đồ thị phương tiện:&lt;br/&gt;máy bay, tàu, xe, limousine&quot;]
+        R2[&quot;Ràng buộc giờ: nối chuyến ≥ 1,5h,&lt;br/&gt;tới nơi trước 23h, lùi ngày nếu cần&quot;]
+        R3[&quot;Chỗ ở: ưu tiên chỗ trong lộ trình&lt;br/&gt;nếu còn phòng và vừa ngân sách&quot;]
+        R4[&quot;Lọc: ngân sách, tránh đi đêm&quot;]
+        R5[&quot;Chọn 3 phương án:&lt;br/&gt;Tiết kiệm / Cân bằng / Nhanh&quot;]
+        R1 --&gt; R2 --&gt; R3 --&gt; R4 --&gt; R5
     end
-    subgraph MAT[&quot;Bằng chứng ĐÃ CÓ MẶT&quot;]
-        P1[&quot;QR động tại quầy đối tác&quot;]
-        P2[&quot;Đối tác xác nhận check-in&quot;]
-        P3[&quot;Vị trí trong vùng,&lt;br/&gt;đúng khoảng ngày&quot;]
-        P4[&quot;Quay bằng camera&lt;br/&gt;trong app tại chỗ&quot;]
-    end
-    E3[&quot;Thẻ lên máy bay&lt;br/&gt;mã vạch IATA&quot;] --&gt; FLY[&quot;Dấu: Đã bay chặng này&quot;]
-    DAT --&gt; GHEP{&quot;Ghép theo chỗ&lt;br/&gt;và khoảng ngày&quot;}
-    MAT --&gt; GHEP
-    GHEP --&gt;|&quot;Có cả đặt và có mặt&quot;| L1[&quot;Đã đi thật&quot;]
-    GHEP --&gt;|&quot;Chỉ có đặt&quot;| L2[&quot;Đã đặt chỗ&quot;]
-    GHEP --&gt;|&quot;Chỉ có vị trí / camera&quot;| L3[&quot;Có mặt tại chỗ&quot;]
-    GHEP --&gt;|&quot;Không có gì&quot;| L0[&quot;Không được đăng&quot;]
-    L1 --&gt; POST[&quot;Mở nút Kể lại chuyến đi&quot;]
-    L2 --&gt; POST
-    L3 --&gt; POST
+    RULE --&gt; OK{&quot;Có phương án&lt;br/&gt;vừa ngân sách?&quot;}
+    OK --&gt;|&quot;Có&quot;| SHOW[&quot;Hiện phương án + gợi ý ăn chơi:&lt;br/&gt;đi gì tới, tầm giá&quot;]
+    OK --&gt;|&quot;Không&quot;| HONEST[&quot;Nói thật, đưa phương án gần nhất&lt;br/&gt;và mức cần nâng&quot;]
+    SHOW --&gt; EXPL[&quot;AI giải thích bằng lời,&lt;br/&gt;nhận yêu cầu sửa&quot;]
+    EXPL --&gt; CART[&quot;Giỏ hàng: vé các chặng + phòng&quot;]
 </pre></section>
-<section id="s2"><h2>3. Người đăng: từ chuyến đi đến bài đăng</h2><pre class="mermaid">flowchart TD
-    S[&quot;Chuyến đi đã xác minh&quot;] --&gt; M[&quot;Chọn hoặc quay video, ảnh&quot;]
+<section id="s2"><h2>3. Người đăng: từ video đến bài đăng có lộ trình</h2><pre class="mermaid">flowchart TD
+    S[&quot;Người dùng muốn chia sẻ chuyến đi&quot;] --&gt; M[&quot;Chọn hoặc quay video, ảnh&quot;]
     M --&gt; PR{&quot;Có mặt người lạ&lt;br/&gt;hoặc giấy tờ?&quot;}
     PR --&gt;|&quot;Có&quot;| BL[&quot;Làm mờ&quot;] --&gt; TAG
     PR --&gt;|&quot;Không&quot;| TAG[&quot;Gắn điểm dừng vào đoạn video&quot;]
     TAG --&gt; CAP[&quot;Caption, vibe,&lt;br/&gt;khai báo có nhận tài trợ&quot;]
-    CAP --&gt; IT[&quot;Biên tập lộ trình&quot;]
-    IT --&gt; IT1[&quot;Lớp đã đặt:&lt;br/&gt;hệ thống tự điền từ đơn&quot;]
-    IT --&gt; IT2[&quot;Lớp kinh nghiệm:&lt;br/&gt;người đăng soạn theo ngày,&lt;br/&gt;sáng / chiều / tối&quot;]
-    IT1 --&gt; PV[&quot;Xem trước riêng tư:&lt;br/&gt;ẩn ngày đi, giá đã trả, mã đặt chỗ&quot;]
-    IT2 --&gt; PV
+    CAP --&gt; IT[&quot;Dựng lộ trình bằng điểm theo ngày:&lt;br/&gt;di chuyển, ở, chơi, ăn + tầm giá&quot;]
+    IT --&gt; PV[&quot;Xem trước&quot;]
     PV --&gt; UP[&quot;Đăng: tải lên chạy nền,&lt;br/&gt;mất mạng vẫn tiếp tục&quot;]
     UP --&gt; PIPE[&quot;Xử lý: chuyển mã video,&lt;br/&gt;chép lời, đọc chữ, lập chỉ mục tìm kiếm&quot;]
     PIPE --&gt; MOD{&quot;Sàng lọc tự động&quot;}
@@ -73,15 +65,15 @@ footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
     MOD --&gt;|&quot;Cần xem&quot;| LIVE2[&quot;Hiện và vào hàng chờ&quot;]
     MOD --&gt;|&quot;Nguy hiểm&quot;| HOLD[&quot;Giữ lại chờ duyệt&quot;]
 </pre></section>
-<section id="s3"><h2>4. Người xem: từ video đến &quot;Đi y chang&quot;</h2><pre class="mermaid">flowchart TD
+<section id="s3"><h2>4. Người xem: từ video đến &quot;Đi ngay&quot;</h2><pre class="mermaid">flowchart TD
     FEED[&quot;Bảng tin video dọc&quot;] --&gt; ACT{&quot;Người xem làm gì?&quot;}
     ACT --&gt;|&quot;Thả tim, lưu, bình luận&quot;| SIG[&quot;Tín hiệu gu và xu hướng&quot;]
     ACT --&gt;|&quot;Chạm thẻ địa điểm&quot;| DET[&quot;Trang chi tiết chỗ&quot;] --&gt; QB[&quot;Đặt riêng một chỗ&quot;]
     ACT --&gt;|&quot;Xem lộ trình&quot;| SHEET[&quot;Bảng lộ trình theo ngày&quot;]
-    ACT --&gt;|&quot;Đi y chang&quot;| FY
-    SHEET --&gt; FY[&quot;Màn Đi y chang&quot;]
-    FY --&gt; CFG[&quot;Chọn nơi đi, ngày đi, số người&quot;]
-    CFG --&gt; ITEMS[&quot;Dời các mục theo ngày,&lt;br/&gt;tính số phòng theo số người&quot;]
+    ACT --&gt;|&quot;Đi ngay&quot;| FY
+    SHEET --&gt; FY[&quot;Màn Đi ngay&quot;]
+    FY --&gt; CFG[&quot;Chọn nơi đi, ngày, số người,&lt;br/&gt;ngân sách, hoặc nói tự do&quot;]
+    CFG --&gt; ITEMS[&quot;Bộ lập kế hoạch lai&lt;br/&gt;đưa ra 3 phương án&quot;]
     ITEMS --&gt; SRC{&quot;Nguồn của từng mục&quot;}
     SRC --&gt;|&quot;Bán trực tiếp&quot;| OWN[&quot;Kho của nền tảng:&lt;br/&gt;còn bao nhiêu phòng, ghế&quot;]
     SRC --&gt;|&quot;API đối tác&quot;| API[&quot;Hỏi phòng trống và giá&lt;br/&gt;qua API đối tác&quot;]
@@ -152,7 +144,7 @@ footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
     ACTN --&gt; NOTI[&quot;Báo người đăng,&lt;br/&gt;cho kháng nghị&quot;]
     ACTN --&gt; SYNC[&quot;Bài ẩn biến khỏi app, web,&lt;br/&gt;tìm kiếm và trợ lý&quot;]
     subgraph SEED[&quot;Chống seeding và đẩy ảo&quot;]
-        T1[&quot;Bắt buộc xác minh đã đi&quot;]
+        T1[&quot;Đánh giá khớp thực tế&lt;br/&gt;từ người đã đi theo&quot;]
         T2[&quot;Nhãn Hợp tác bắt buộc&quot;]
         T3[&quot;Điểm uy tín tài khoản&quot;]
         T4[&quot;Một người một phiếu,&lt;br/&gt;gom cụm thiết bị&quot;]
@@ -175,7 +167,7 @@ footer{color:var(--mu);font-size:12px;text-align:center;padding-bottom:24px}
     ATTR --&gt; EV
 </pre></section>
 <section id="s8"><h2>8. Nguồn hàng: hai mô hình cùng tồn tại</h2><pre class="mermaid">flowchart TD
-    FY[&quot;Lộ trình Đi y chang&quot;] --&gt; A[&quot;Bán trực tiếp&lt;br/&gt;hàng của nền tảng&quot;]
+    FY[&quot;Phương án Đi ngay&quot;] --&gt; A[&quot;Bán trực tiếp&lt;br/&gt;hàng của nền tảng&quot;]
     FY --&gt; B[&quot;API đối tác&lt;br/&gt;OTA, bedbank&quot;]
     FY --&gt; C[&quot;Link affiliate&quot;]
     A --&gt; A1[&quot;Homestay, nhà xe ký hợp đồng&quot;]
