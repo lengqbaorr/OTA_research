@@ -16,14 +16,22 @@
 | Cần xác minh đơn để có lộ trình | Ai cũng dựng được lộ trình, nên nhiều nội dung hơn ngay từ đầu |
 | Ngân sách chỉ dùng để cảnh báo | **Ngân sách là đầu vào chính** để chọn phương tiện, chỗ ở |
 
-## 2. Lộ trình người đăng dựng
+## 2. Đăng bài: hai bước
 
-| Loại điểm | Ví dụ | Trường thông tin | Đặt được? |
+**Bước 1 – Một trang**: chọn video, viết caption, trả lời "có nhận tài trợ không" (có thì gắn nhãn Hợp tác). Không còn bước che mặt người lạ; nội dung vi phạm riêng tư được xử lý qua kiểm duyệt và báo cáo.
+
+**Bước 2 – Dựng lộ trình bằng các ô có cấu trúc**, chọn từ **dữ liệu địa điểm sẵn có** (API bản đồ hoặc dữ liệu đã thu thập), không gõ tự do:
+
+| Loại điểm | Ô nhập | Dữ liệu tự điền khi chọn từ gợi ý | Dùng cho "Đi ngay" |
 |---|---|---|---|
-| **Di chuyển** | Ngày 1: Sài Gòn → Tà Xùa | Từ, đến, ghi chú ("mình bay ra Hà Nội rồi đi limousine") | Không đặt theo bài; hệ thống tự lên phương án |
-| **Chỗ ở** | Mây Homestay | Tên, ghi chú, số đêm | ✅ Nếu có trong kho (bán trực tiếp hoặc qua đối tác); không có thì gợi ý chỗ tương tự |
-| **Chơi** | Sống lưng khủng long | Tên, vị trí, giờ nên đi, giá vé tham khảo | Gợi ý (hoặc đặt nếu là vé có bán) |
-| **Ăn** | Quán thắng cố | Tên, vị trí, tầm giá | Gợi ý |
+| **Di chuyển** | Từ · Đến · Phương tiện (máy bay, tàu, xe khách, limousine, xe máy, ô tô) | Loại điểm (sân bay, ga, bến xe, điểm đến) và **địa chỉ chi tiết**, ví dụ "Bến xe Mỹ Đình · 20 Phạm Hùng, Nam Từ Liêm, Hà Nội" | Biết điểm trung chuyển của điểm đến; người xem vẫn được lên phương án từ nơi của họ |
+| **Ở** | Chỗ ở · Số đêm | Loại chỗ, địa chỉ, giá tham khảo | Ưu tiên chỗ này nếu còn phòng và vừa ngân sách |
+| **Chơi** | Điểm chơi · Tầm giá · Ghi chú | Loại điểm, địa chỉ, giá vé, khoảng cách tới chỗ ở | Gợi ý kèm "đi gì tới, bao lâu, bao nhiêu" |
+| **Ăn** | Quán · Tầm giá · Ghi chú | Loại quán, địa chỉ, tầm giá | Như trên |
+
+- Chọn từ gợi ý thì hiện ngay loại điểm và địa chỉ; gõ tên chưa có trong dữ liệu thì cảnh báo *"Chưa có trong dữ liệu, chọn từ gợi ý để hệ thống lên phương án được"*.
+- Điều kiện đăng: ít nhất **một chặng di chuyển** và **một chỗ ở** chọn từ dữ liệu, để hệ thống xác định được điểm đến.
+- Nguồn dữ liệu địa điểm (app thật): API bản đồ và tìm địa điểm; danh mục sân bay, ga, bến xe; dữ liệu chỗ ở từ đối tác; điểm chơi và quán ăn tích lũy từ chính các lộ trình người dùng (sau kiểm duyệt).
 
 Người đăng **không cần đã đi**, nhưng nội dung có tài trợ **bắt buộc** gắn nhãn "Hợp tác".
 

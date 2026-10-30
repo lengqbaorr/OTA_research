@@ -159,7 +159,7 @@ const HOSTBOOK=[{who:'Trần M.',d:'15/11',n:'2 phòng',pay:'Trả tại homesta
 
 /* Lộ trình người đăng dựng (điểm) */
 const ROUTES={
- tx:{title:'Tà Xùa 3N2Đ săn mây',author:'khoa.travel',dest:'tx',days:[
+ tx:{title:'Tà Xùa 3N2Đ săn mây',author:'khoa.travel',dest:'tx',stayId:'may',days:[
    [{t:'move',name:'Sài Gòn → Tà Xùa',note:'Mình bay ra Hà Nội rồi đi limousine lên Bắc Yên, xe ôm lên bản'},
     {t:'stay',name:'Mây Homestay',note:'Phòng view mây, nên đặt sớm'},
     {t:'eat',name:'Lẩu gà đen bản Mông',price:'250–400k/nhóm',km:0.6}],
@@ -167,7 +167,7 @@ const ROUTES={
     {t:'eat',name:'Quán thắng cố cô Sinh',price:'60–100k/người',km:1.2},
     {t:'play',name:'Cây cô đơn',price:'20k vé',km:3}],
    [{t:'move',name:'Về',note:'Xuống núi trước trưa cho kịp xe'}]]},
- pq:{title:'Phú Quốc 3N2Đ chill',author:'linh.dichoi',dest:'pq',days:[
+ pq:{title:'Phú Quốc 3N2Đ chill',author:'linh.dichoi',dest:'pq',stayId:'sx',days:[
    [{t:'move',name:'Sài Gòn → Phú Quốc',note:'Bay sáng sớm cho kịp hoàng hôn'},
     {t:'stay',name:'Sóng Xanh Resort',note:'Xin tầng cao, view hoàng hôn'},
     {t:'eat',name:'Chợ đêm thị trấn',price:'150–300k/người',km:7}],
@@ -186,7 +186,7 @@ const POSTS=[
 ];
 
 const S={tab:'home',liked:{},saved:{},sheet:null,sheetR:null,page:null,login:false,trips:[],myPost:false,
-  g:null, cp:{step:1,blur:false,sp:null,cap:'',extra:0}, paying:false,payLog:[],result:null};
+  g:null, cp:{step:1,sp:null,cap:'',video:false,items:[{day:0,t:'move'},{day:0,t:'stay',nights:2}],days:1}, paying:false,payLog:[],result:null};
 
 /* ---------- lớp LUẬT: lập phương án ---------- */
 function dayLabel(off){const [d,m]=DATES[S.g.date].l.split('/').map(Number);const x=new Date(2026,m-1,d+Math.floor(off/24));return x.getDate()+'/'+(x.getMonth()+1)}
@@ -227,12 +227,12 @@ function plan(){
     const comfort=[...o.legs,...b.legs].reduce((s,x)=>s+(x.L.m==='Máy bay'?0:x.L.m==='Limousine'?1:x.L.m.startsWith('Tàu')?2:3),0)+(isNightAny(o,b)?2:0);
     combos.push({o,b,st,tix,room,app,per,hours,comfort,sig:sig(o)+'|'+sig(b)+'|'+st.id})}
   const within=combos.filter(c=>c.per<=g.budget);
-  const posterWithin=within.filter(c=>c.st.poster); // ưu tiên đúng chỗ ở trong lộ trình nếu còn phòng và vừa ngân sách
+  const posterWithin=within.filter(c=>c.st.id===ROUTES[g.r].stayId); // ưu tiên đúng chỗ ở trong lộ trình nếu còn phòng và vừa ngân sách
   const pool=posterWithin.length?posterWithin:within.length?within:combos;
   if(!pool.length)return {plans:[],within:false,reason:outs.length?(backs.length?'no-stay':'no-back'):'no-out'};
   const minC=Math.min(...pool.map(c=>c.per)),maxC=Math.max(...pool.map(c=>c.per)),minH=Math.min(...pool.map(c=>c.hours)),maxH=Math.max(...pool.map(c=>c.hours));
   const n=(v,a,b)=>b>a?(v-a)/(b-a):0;
-  const posterBonus=c=>c.st.poster?-0.08:0;
+  const posterBonus=c=>c.st.id===ROUTES[g.r].stayId?-0.08:0;
   const by=(f)=>[...pool].sort((a,b)=>f(a)-f(b))[0];
   const cheap=by(c=>c.per+c.comfort*1000);
   const fast=by(c=>c.hours*1e6+c.per);
@@ -284,7 +284,7 @@ const srcTag=k=>`<span class="src ${SRC[k][0]}">${SRC[k][1]}</span>`;
 
 /* ---------- bảng tin ---------- */
 function feed(){
-  const list=(S.myPost?[{...POSTS[0],id:'mine',u:'khang.di',ini:'K',cap:S.cp.cap||'Lộ trình Tà Xùa của mình',why:'Bài của bạn · vừa đăng',likes:0,cmt:0}]:[]).concat(POSTS);
+  const list=(S.myPost?[S.myPost]:[]).concat(POSTS);
   return `<div class="top"><span>Khám phá</span><span class="on">Dành cho bạn</span></div><div class="feed">`+list.map(p=>`
    <section class="post"><div class="bgv" style="background:${p.bg}"></div><div class="shade"></div>
     <div class="rail"><div class="avatar">${p.ini}</div>
@@ -340,7 +340,7 @@ function go(){const g=S.g,D=DEST[g.d],R=ROUTES[g.r];const rooms=Math.ceil(g.ppl/
       <div class="it"><span class="t">${hh(pl.o.end-D.last.dur)}</span><span class="s">${D.last.m}<div class="note">~${VND(D.last.est)}/người · trả tại chỗ</div>${srcTag('tip')}</span></div>
      <div class="dh">Ở ${D.nights} đêm · từ ${dayLabel(0)}</div>
       ${D.stays.map(st=>{const left=stayLeft(st),ok=left>=rooms,on=pl.st.id===st.id;return `<div class="card ${ok?'':'off'}" style="${on?'outline:1px solid #fff':''};cursor:pointer" onclick="${ok?`S.g.stay='${st.id}';S.keepScroll=true;render()`:''}">
-        <div class="row"><div><div>${st.name}${st.poster?' <span class="xs mu">· trong lộ trình</span>':''}</div><div class="xs mu">${st.sub} · ${rooms} phòng × ${VND(stayPrice(st))}/đêm</div>${srcTag(st.src)}</div>
+        <div class="row"><div><div>${st.name}${st.id===R.stayId?' <span class="xs mu">· trong lộ trình</span>':''}</div><div class="xs mu">${st.sub} · ${rooms} phòng × ${VND(stayPrice(st))}/đêm</div>${srcTag(st.src)}</div>
         <div class="xs ${ok?'ok':'ac'}" style="text-align:right">${ok?(on?'Đã chọn':'Còn '+left+' phòng'):'Hết phòng'}</div></div></div>`}).join('')}
      <div class="dh">Chiều về</div>${pl.b.legs.map(legRow).join('')}
      <div class="dh">Gợi ý trong chuyến (theo lộ trình của @${R.author})</div>
@@ -421,24 +421,80 @@ function host(){const v=INV.may;const dates=['15/11','22/11','29/11','6/12'];
    ${HOSTBOOK.map(b=>`<div class="card"><div class="row"><div><div class="b">${b.who}${b.isNew?' <span class="src own">Mới</span>':''}</div><div class="sm mu">Nhận phòng ${b.d} · ${b.n}</div></div><span class="xs mu">${b.pay}</span></div></div>`).join('')}
    <div class="card xs mu">Hoa hồng nền tảng 12% · đối soát cuối tháng (mô phỏng)</div></div></div>`}
 
-/* ---------- đăng bài: dựng lộ trình bằng điểm ---------- */
-const EXTRA=[{t:'eat',name:'Cà phê sân mây',price:'40–60k/người'},{t:'play',name:'Đồi chè cổ thụ',price:'Miễn phí'},{t:'eat',name:'Quán cơm lam',price:'50–80k/người'}];
+/* ---------- đăng bài: một trang video + caption, rồi dựng lộ trình bằng ô có cấu trúc ----------
+   Dữ liệu địa điểm là bộ MẪU. App thật lấy từ API bản đồ / dữ liệu địa điểm đã thu thập. */
+const PLACES=[
+ {id:'sgn',n:'Sân bay Tân Sơn Nhất (SGN)',k:'hub',kind:'Sân bay',a:'Trường Sơn, Tân Bình, TP.HCM',c:'SGN'},
+ {id:'gsg',n:'Ga Sài Gòn',k:'hub',kind:'Ga tàu',a:'1 Nguyễn Thông, Quận 3, TP.HCM',c:'SGN'},
+ {id:'bmd',n:'Bến xe Miền Đông mới',k:'hub',kind:'Bến xe',a:'501 Hoàng Hữu Nam, TP. Thủ Đức, TP.HCM',c:'SGN'},
+ {id:'han',n:'Sân bay Nội Bài (HAN)',k:'hub',kind:'Sân bay',a:'Phú Minh, Sóc Sơn, Hà Nội',c:'HAN'},
+ {id:'ghn',n:'Ga Hà Nội',k:'hub',kind:'Ga tàu',a:'120 Lê Duẩn, Hoàn Kiếm, Hà Nội',c:'HAN'},
+ {id:'bxmd',n:'Bến xe Mỹ Đình',k:'hub',kind:'Bến xe',a:'20 Phạm Hùng, Nam Từ Liêm, Hà Nội',c:'HAN'},
+ {id:'dad',n:'Sân bay Đà Nẵng (DAD)',k:'hub',kind:'Sân bay',a:'Hải Châu, Đà Nẵng',c:'DAD'},
+ {id:'bxby',n:'Bến xe Bắc Yên',k:'hub',kind:'Bến xe',a:'Thị trấn Bắc Yên, Sơn La',c:'BY',dest:'tx'},
+ {id:'tx',n:'Bản Tà Xùa',k:'hub',kind:'Điểm đến',a:'Xã Tà Xùa, Bắc Yên, Sơn La',c:'BY',dest:'tx'},
+ {id:'pqc',n:'Sân bay Phú Quốc (PQC)',k:'hub',kind:'Sân bay',a:'Dương Tơ, Phú Quốc, Kiên Giang',c:'PQC',dest:'pq'},
+ {id:'may',n:'Mây Homestay',k:'stay',kind:'Homestay',a:'Xã Tà Xùa, Bắc Yên, Sơn La',dest:'tx',price:'~650k/đêm'},
+ {id:'lodge',n:'Săn Mây Lodge',k:'stay',kind:'Homestay',a:'Xã Tà Xùa, Bắc Yên, Sơn La',dest:'tx',price:'~450k/đêm'},
+ {id:'cloud',n:'Cloud House Tà Xùa',k:'stay',kind:'Bungalow',a:'Xã Tà Xùa, Bắc Yên, Sơn La',dest:'tx',price:'~950k/đêm'},
+ {id:'sx',n:'Sóng Xanh Resort',k:'stay',kind:'Resort',a:'Bãi Trường, Dương Tơ, Phú Quốc',dest:'pq',price:'~2,95tr/đêm'},
+ {id:'bb',n:'Biển Bạc Bungalow',k:'stay',kind:'Bungalow',a:'Gần Bãi Sao, An Thới, Phú Quốc',dest:'pq',price:'~1,2tr/đêm'},
+ {id:'hd',n:'Nhà Hàng Dương Homestay',k:'stay',kind:'Homestay',a:'Dương Đông, Phú Quốc',dest:'pq',price:'~600k/đêm'},
+ {id:'slkl',n:'Sống lưng khủng long',k:'play',kind:'Điểm ngắm cảnh',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'Miễn phí',km:4},
+ {id:'ccd',n:'Cây cô đơn',k:'play',kind:'Điểm check-in',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'20k vé',km:3},
+ {id:'dct',n:'Đồi chè cổ thụ',k:'play',kind:'Đồi chè',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'Miễn phí',km:5},
+ {id:'bs',n:'Bãi Sao',k:'play',kind:'Bãi biển',a:'An Thới, Phú Quốc',dest:'pq',price:'Miễn phí',km:18},
+ {id:'lg',n:'Lẩu gà đen bản Mông',k:'eat',kind:'Quán ăn',a:'Trung tâm xã Tà Xùa',dest:'tx',price:'250–400k/nhóm',km:0.6},
+ {id:'tc',n:'Quán thắng cố cô Sinh',k:'eat',kind:'Quán ăn',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'60–100k/người',km:1.2},
+ {id:'cf',n:'Cà phê sân mây',k:'eat',kind:'Cà phê',a:'Xã Tà Xùa, Bắc Yên',dest:'tx',price:'40–60k/người',km:2},
+ {id:'cd',n:'Chợ đêm Dương Đông',k:'eat',kind:'Chợ đêm',a:'Dương Đông, Phú Quốc',dest:'pq',price:'150–300k/người',km:7},
+ {id:'bq',n:'Quán bún quậy',k:'eat',kind:'Quán ăn',a:'Dương Đông, Phú Quốc',dest:'pq',price:'50–80k/người',km:6}];
+const MODES=['Máy bay','Tàu hỏa','Xe khách','Limousine','Xe máy','Ô tô riêng'];
+const findP=(n,k)=>PLACES.find(p=>p.n===n&&(!k||k.includes(p.k)));
+const datalists=()=>['hub','stay','play','eat'].map(k=>`<datalist id="dl-${k}">${PLACES.filter(p=>p.k===k).map(p=>`<option value="${p.n}">${p.kind} · ${p.a}</option>`).join('')}</datalist>`).join('');
+const TYPES=[['move','Di chuyển'],['stay','Ở'],['play','Chơi'],['eat','Ăn']];
+function setItem(i,k,v,re){S.cp.items[i][k]=v;if(k==='place'||k==='t'){const it=S.cp.items[i];const pp=findP(it.place,[it.t]);if(pp&&!it.priceEdited)it.price=pp.price}if(re){S.keepScroll=true;render()}}
+function placeInfo(name,k){const p=findP(name,k);return name?(p?`<div class="xs ok" style="margin-top:4px">${p.kind} · ${p.a}</div>`:`<div class="xs wa" style="margin-top:4px">Chưa có trong dữ liệu. Chọn từ gợi ý để hệ thống lên phương án được.</div>`):''}
+function itemBox(it,i){const typ=`<div class="seg" style="margin-bottom:8px">${TYPES.map(([k,t])=>`<button class="${it.t===k?'on':''}" onclick="setItem(${i},'t','${k}',1)">${t}</button>`).join('')}</div>`;
+  let f='';
+  if(it.t==='move')f=`<div class="lbl" style="margin-top:0">Từ</div><input type="text" list="dl-hub" placeholder="Sân bay, ga, bến xe…" value="${it.from||''}" oninput="setItem(${i},'from',this.value)" onchange="setItem(${i},'from',this.value,1)">${placeInfo(it.from,['hub'])}
+     <div class="lbl">Đến</div><input type="text" list="dl-hub" placeholder="Sân bay, ga, bến xe, điểm đến…" value="${it.to||''}" oninput="setItem(${i},'to',this.value)" onchange="setItem(${i},'to',this.value,1)">${placeInfo(it.to,['hub'])}
+     <div class="lbl">Phương tiện</div><div class="chips">${MODES.map(m=>`<button class="chip ${it.mode===m?'on':''}" onclick="setItem(${i},'mode','${m}',1)">${m}</button>`).join('')}</div>`;
+  else if(it.t==='stay')f=`<div class="lbl" style="margin-top:0">Chỗ ở</div><input type="text" list="dl-stay" placeholder="Tên khách sạn, homestay…" value="${it.place||''}" oninput="setItem(${i},'place',this.value)" onchange="setItem(${i},'place',this.value,1)">${placeInfo(it.place,['stay'])}
+     <div class="row" style="margin-top:8px"><span class="sm mu">Số đêm${it.price?' · '+it.price:''}</span><div class="step"><button onclick="setItem(${i},'nights',Math.max(1,(S.cp.items[${i}].nights||1)-1),1)">−</button><b>${it.nights||1}</b><button onclick="setItem(${i},'nights',(S.cp.items[${i}].nights||1)+1,1)">+</button></div></div>`;
+  else f=`<div class="lbl" style="margin-top:0">${it.t==='eat'?'Quán / chỗ ăn':'Điểm chơi'}</div><input type="text" list="dl-${it.t}" placeholder="${it.t==='eat'?'Tên quán…':'Tên điểm…'}" value="${it.place||''}" oninput="setItem(${i},'place',this.value)" onchange="setItem(${i},'place',this.value,1)">${placeInfo(it.place,[it.t])}
+     <div class="row" style="margin-top:8px;gap:8px"><input type="text" placeholder="Tầm giá" value="${it.price||''}" oninput="S.cp.items[${i}].price=this.value;S.cp.items[${i}].priceEdited=1" style="flex:1"><input type="text" placeholder="Ghi chú (giờ nên đi…)" value="${it.note||''}" oninput="S.cp.items[${i}].note=this.value" style="flex:1.4"></div>`;
+  return `<div class="card"><div class="row" style="margin-bottom:6px"><span class="xs mu">Điểm ${i+1}</span><button class="xs mu" onclick="S.cp.items.splice(${i},1);S.keepScroll=true;render()">Xóa</button></div>${typ}${f}</div>`}
+function cpCheck(){const it=S.cp.items;const mv=it.find(x=>x.t==='move'&&findP(x.from,['hub'])&&findP(x.to,['hub']));const st=it.find(x=>x.t==='stay'&&findP(x.place,['stay']));
+  return {mv,st,ok:!!(mv&&st)}}
+function sample(){S.cp.items=[{day:0,t:'move',from:'Sân bay Tân Sơn Nhất (SGN)',to:'Sân bay Nội Bài (HAN)',mode:'Máy bay'},{day:0,t:'move',from:'Bến xe Mỹ Đình',to:'Bến xe Bắc Yên',mode:'Limousine'},
+  {day:0,t:'stay',place:'Săn Mây Lodge',nights:2,price:'~450k/đêm'},{day:0,t:'eat',place:'Lẩu gà đen bản Mông',price:'250–400k/nhóm'},
+  {day:1,t:'play',place:'Sống lưng khủng long',price:'Miễn phí',note:'Đi 5h sáng'},{day:1,t:'eat',place:'Cà phê sân mây',price:'40–60k/người'},{day:2,t:'move',from:'Bến xe Bắc Yên',to:'Bến xe Mỹ Đình',mode:'Limousine'}];S.cp.days=3;S.keepScroll=true;render()}
 function create(){const st=S.cp.step;
-  const head=t=>`<div class="hdr"><button class="back" onclick="${st<=1?"S.page=null":"S.cp.step--"};render()">‹</button><div class="ti">${t}</div></div><div class="dots">${[1,2,3].map(i=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div>`;
-  if(st===1)return `<div class="page">${head('Video')}<div class="body">
-     <div class="thumb" style="background:linear-gradient(175deg,#495057,#868e96 40%,#dee2e6 75%,#f59f00)"><div class="blurbox ${S.cp.blur?'done':''}" style="left:60px;top:70px"></div><div class="blurbox ${S.cp.blur?'done':''}" style="left:200px;top:90px"></div><div class="lab">0:48</div></div>
-     <div class="card sm"><div class="row"><span>2 khuôn mặt người lạ</span><button class="chip ${S.cp.blur?'on':''}" onclick="S.cp.blur=true;render()">${S.cp.blur?'Đã làm mờ':'Làm mờ'}</button></div></div></div>
-     <div class="foot"><button class="big btn-ac" ${S.cp.blur?'':'disabled'} onclick="S.cp.step=2;render()">Tiếp</button></div></div>`;
-  if(st===2)return `<div class="page">${head('Kể chuyện')}<div class="body"><textarea placeholder="Viết gì đó về chuyến đi…" oninput="S.cp.cap=this.value">${S.cp.cap}</textarea>
-     <div class="lbl">Bài này có nhận tài trợ không?</div><div class="seg"><button class="${S.cp.sp===false?'on':''}" onclick="S.cp.sp=false;render()">Không</button><button class="${S.cp.sp===true?'on':''}" onclick="S.cp.sp=true;render()">Có · gắn nhãn Hợp tác</button></div>
-     <div class="xs mu" style="margin-top:8px">Không cần chứng minh đã đi. Nội dung có tài trợ bắt buộc gắn nhãn.</div></div>
-     <div class="foot"><button class="big btn-ac" ${S.cp.sp===null?'disabled':''} onclick="S.cp.step=3;render()">Tiếp</button></div></div>`;
-  const R=ROUTES.tx;const extra=EXTRA.slice(0,S.cp.extra);
-  return `<div class="page">${head('Dựng lộ trình')}<div class="body"><div class="xs mu">Chỉ cần các điểm: đi từ đâu đến đâu, ở đâu, chơi đâu, ăn đâu. Người xem bấm Đi ngay, hệ thống tự lên vé xe, máy bay và phòng theo ngân sách của họ.</div>
-     ${R.days.map((d,i)=>`<div class="dh">Ngày ${i+1}</div>`+d.map(x=>`<div class="it"><span class="t">${TL[x.t]}</span><span class="s">${x.name}${x.price?` · <span class="mu">${x.price}</span>`:''}${x.note?`<div class="note">${x.note}</div>`:''}</span></div>`).join('')
-       +(i===1?extra.map(x=>`<div class="it"><span class="t">${TL[x.t]}</span><span class="s">${x.name} · <span class="mu">${x.price}</span></span></div>`).join(''):'')).join('')}
-     <button class="mini" style="margin-top:10px" onclick="S.cp.extra=Math.min(3,S.cp.extra+1);render()">+ Thêm điểm (chơi / ăn / ở / di chuyển)</button></div>
-     <div class="foot"><button class="big btn-ac" onclick="S.myPost=true;S.page=null;S.tab='home';render();toast('Đã đăng · đang được kiểm duyệt tự động')">Đăng</button></div></div>`}
+  const head=t=>`<div class="hdr"><button class="back" onclick="${st<=1?"S.page=null":"S.cp.step--"};render()">‹</button><div class="ti">${t}</div></div><div class="dots">${[1,2].map(i=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div>`;
+  if(st===1)return `<div class="page">${head('Bài đăng mới')}<div class="body">
+     <div class="thumb" style="background:${S.cp.video?'linear-gradient(175deg,#495057,#868e96 40%,#dee2e6 75%,#f59f00)':'var(--sf)'};display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="S.cp.video=true;render()">
+       ${S.cp.video?'<div class="lab">0:48 · đã chọn</div>':'<div class="mu">Chạm để chọn video từ máy</div>'}</div>
+     <div class="lbl">Caption</div><textarea placeholder="Kể ngắn về chuyến đi…" oninput="S.cp.cap=this.value">${S.cp.cap}</textarea>
+     <div class="lbl">Bài này có nhận tài trợ không?</div><div class="seg"><button class="${S.cp.sp===false?'on':''}" onclick="S.cp.sp=false;render()">Không</button><button class="${S.cp.sp===true?'on':''}" onclick="S.cp.sp=true;render()">Có · gắn nhãn Hợp tác</button></div></div>
+     <div class="foot"><button class="big btn-ac" ${S.cp.video&&S.cp.sp!==null?'':'disabled'} onclick="S.cp.step=2;render()">Tiếp: dựng lộ trình</button></div></div>`;
+  const chk=cpCheck();const days=Math.max(S.cp.days,...S.cp.items.map(x=>x.day+1));
+  return `<div class="page">${head('Dựng lộ trình')}${datalists()}<div class="body">
+     <div class="row"><div class="xs mu" style="flex:1">Chọn địa điểm từ gợi ý để có địa chỉ chính xác. Người xem bấm Đi ngay, hệ thống tự lên vé và phòng theo ngân sách của họ.</div><button class="mini" onclick="sample()">Điền mẫu</button></div>
+     ${Array.from({length:days},(_,d)=>`<div class="dh">Ngày ${d+1}</div>`+S.cp.items.map((it,i)=>it.day===d?itemBox(it,i):'').join('')
+        +`<button class="mini" onclick="S.cp.items.push({day:${d},t:'play'});S.keepScroll=true;render()">+ Thêm điểm ngày ${d+1}</button>`).join('')}
+     <div style="margin-top:14px"><button class="mini" onclick="S.cp.days=${days+1};S.keepScroll=true;render()">+ Thêm ngày</button></div>
+     <div class="card xs" style="margin-top:14px"><div class="${chk.mv?'ok':'mu'}">${chk.mv?'✓':'○'} Có ít nhất một chặng di chuyển chọn từ dữ liệu</div><div class="${chk.st?'ok':'mu'}">${chk.st?'✓':'○'} Có chỗ ở chọn từ dữ liệu</div></div></div>
+     <div class="foot"><button class="big btn-ac" ${chk.ok?'':'disabled'} onclick="publish()">Đăng</button></div></div>`}
+function publish(){const chk=cpCheck();const stay=findP(chk.st.place,['stay']);const dest=stay.dest;const its=S.cp.items;const nDays=Math.max(...its.map(x=>x.day))+1;
+  const days=Array.from({length:nDays},(_,d)=>its.filter(x=>x.day===d).map(x=>{const pp=x.t!=='move'?findP(x.place,[x.t]):null;
+    if(x.t==='move')return {t:'move',name:`${x.from||'?'} → ${x.to||'?'}`,note:x.mode||''};
+    if(x.t==='stay')return {t:'stay',name:x.place,note:`${x.nights||1} đêm`};
+    return {t:x.t,name:x.place||'(chưa đặt tên)',price:x.price||'',note:x.note||'',km:pp&&pp.km!=null?pp.km:2}}));
+  ROUTES.mine={title:S.cp.cap||('Lộ trình '+DEST[dest].name),author:'khang.di',dest,stayId:stay.id,days};
+  S.myPost={id:'mine',r:'mine',u:'khang.di',ini:'K',cap:S.cp.cap||ROUTES.mine.title,where:stay.n+' · '+DEST[dest].name,why:'Bài của bạn · vừa đăng',likes:0,cmt:0,sponsored:S.cp.sp,
+    bg:'linear-gradient(175deg,#343a40,#495057 40%,#adb5bd 75%,#f59f00)',chaps:days.map((d,i)=>'Ngày '+(i+1)+(d[0]?' · '+d[0].name:''))};
+  S.page=null;S.tab='home';render();toast('Đã đăng · đang được kiểm duyệt tự động')}
 
 render();
 </script>
