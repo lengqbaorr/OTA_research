@@ -12,9 +12,10 @@ Tài liệu nghiên cứu và đề xuất triển khai cho dự án **"Vinpearl
 | 06 | [Luồng use case](docs/06-luong-use-case.md) | Luồng hoàn chỉnh người đăng (thông tin cần nhập, hệ thống dựng lộ trình, AI đọc video/caption để làm gì) và người xem (bảng tin → Đi y chang → xác nhận → thanh toán → sau khi đặt), xử lý giá theo thời điểm, ngoại lệ |
 | 07 | [Nghiên cứu Mindtrip & thiết kế Đi y chang](docs/07-nghien-cuu-mindtrip-va-thiet-ke-di-y-chang.md) | Tính năng Mindtrip (và Wanderlog), bài học; trình soạn chuyến đi có cấu trúc (đi gì, ở đâu, ngày 1/2/3 sáng-chiều-tối); trình bày kiểu TikTok có chương; màn Đi y chang 3 tab Lịch trình/Bản đồ/Chi phí; tính năng thêm; mô hình dữ liệu |
 | 08 | [Tính năng mở rộng](docs/08-tinh-nang-mo-rong.md) | Rà soát khoảng trống so với đề bài và persona; 30+ tính năng mở rộng cho người xem, người đăng, quản trị; thứ tự ưu tiên cho phần thi; câu hỏi cho người hướng dẫn |
+| 09 | [Xác minh đã đi thật](docs/09-xac-minh-da-di-that.md) | Khách đặt qua kênh khác (Agoda, đại lý, tại quầy) vẫn xác minh được vì Vinpearl là nguồn sự thật: liên kết mã đặt chỗ, QR tại lễ tân, mã vé, thành viên; mức "Có mặt tại chỗ"; người đi cùng; chống gian lận; mô hình dữ liệu |
 
 **Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Màn hình điện thoại giao diện tối kiểu TikTok: lướt bảng tin, xem lộ trình, Đi y chang, thanh toán giả lập, Chuyến đi, nút + để đăng bài.
 
-**Thứ tự đọc**: 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07 → 08.
+**Thứ tự đọc**: 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07 → 08 → 09.
 
 **Lưu ý**: số liệu thị trường mang tính tham khảo; phần pháp lý mang tính định hướng. Các tài liệu nghiên cứu chi tiết trước đây (01–16 cũ) vẫn còn trong lịch sử git nếu cần tra lại.
