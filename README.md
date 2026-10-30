@@ -12,7 +12,7 @@ Tài liệu nghiên cứu và đề xuất triển khai cho dự án **"Vinpearl
 | 06 | [Luồng use case](docs/06-luong-use-case.md) | Luồng hoàn chỉnh người đăng (thông tin cần nhập, hệ thống dựng lộ trình, AI đọc video/caption để làm gì) và người xem (bảng tin → Đi y chang → xác nhận → thanh toán → sau khi đặt), xử lý giá theo thời điểm, ngoại lệ |
 | 07 | [Nghiên cứu Mindtrip & thiết kế Đi y chang](docs/07-nghien-cuu-mindtrip-va-thiet-ke-di-y-chang.md) | Tính năng Mindtrip (và Wanderlog), bài học; trình soạn chuyến đi có cấu trúc (đi gì, ở đâu, ngày 1/2/3 sáng-chiều-tối); trình bày kiểu TikTok có chương; màn Đi y chang 3 tab Lịch trình/Bản đồ/Chi phí; tính năng thêm; mô hình dữ liệu |
 
-**Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Tải về và mở bằng trình duyệt, không cần cài gì. Mô phỏng 14 bước: Linh đăng bài, Khang xem và đặt y chang.
+**Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Màn hình điện thoại giao diện tối kiểu TikTok: lướt bảng tin, xem lộ trình, Đi y chang, thanh toán giả lập, Chuyến đi, nút + để đăng bài.
 
 **Thứ tự đọc**: 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07.
 
