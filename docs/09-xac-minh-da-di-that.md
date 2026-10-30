@@ -1,120 +1,131 @@
-# 09. Xác minh "đã đi thật" khi khách không đặt qua app
+# 09. Xác minh "đã đi thật" trên nền tảng độc lập
 
-> **Vấn đề**: đề bài yêu cầu *"Chỉ người đã đặt chỗ và đã đi mới đăng bài được về chỗ đó"* (A2). Nếu khách đặt phòng qua Agoda, Booking, đại lý, mua vé VinWonders tại cổng, hay đặt vé máy bay trên web hãng, thì app làm sao biết họ đã đi?
-> **Có phải tự xây cả nền tảng đặt vé máy bay, xe, phòng để track không?** Không hẳn. Tài liệu này giải thích vì sao, và đưa ra các cách xác minh không cần khách đặt qua app.
-
----
-
-## 1. Điểm mấu chốt: với dịch vụ Vinpearl, **Vinpearl là nguồn sự thật**, dù khách đặt qua kênh nào
-
-Theo kiến thức ngành ([tài liệu 01](01-kien-thuc-nganh-OTA.md), mục 2), một phòng khách sạn bán qua bất kỳ kênh nào cuối cùng đều **chảy về hệ thống của chính khách sạn**:
-
-```
-Khách đặt qua Agoda / Booking / đại lý / gọi điện / walk-in
-        │
-        ▼
-Channel Manager / CRS của Vinpearl  →  PMS (hệ thống lễ tân) của resort
-        │
-        ▼
-Khi khách đến: lễ tân check-in (có tên, giấy tờ, số phòng, ngày ở)
-```
-
-- **Phòng Vinpearl**: dù đặt ở đâu, resort vẫn có **đặt chỗ** (mã xác nhận, tên khách) và **bản ghi check-in/check-out**.
-- **Vé VinWonders**: dù mua online hay tại quầy, vé có mã và có **bản ghi quét vé tại cổng** (redemption).
-- **Sân golf, nhà hàng trong resort**: có hóa đơn hoặc lượt sử dụng trong hệ thống Vinpearl.
-
-→ **Không cần khách đặt qua app**. Chỉ cần **liên kết** lần lưu trú đó với tài khoản app, và Vinpearl tự xác nhận được từ dữ liệu của mình.
-
-Ngoại lệ duy nhất là **dịch vụ không thuộc Vinpearl** (vé máy bay đặt trên web hãng, xe khách, homestay ngoài). Mục 4 bàn riêng phần này. Riêng **vé máy bay** thì không cần dùng để xác minh "đã đi": bài đăng xác minh *chỗ* đã đến (resort, khu vui chơi), không phải chặng bay.
-
-> **Trong phạm vi dự án**: đề bài cho "dữ liệu khách hàng mô phỏng" và cấm kết nối hệ thống khách hàng thật (mục 7). Vì vậy hệ thống PMS, check-in, quét vé được **giả lập** trong dữ liệu mô phỏng. Cách làm này cần người hướng dẫn xác nhận (mục 7).
+> **Bối cảnh (cập nhật)**: đây là **đề tài mở, nền tảng của riêng đội**, không làm cho một tập đoàn khách sạn nào. Đề bài Vinpearl ([02](02-de-bai-vinpearl-cho-nguoi-tre.md)) chỉ dùng làm **tham chiếu yêu cầu**.
+> Hệ quả: nền tảng **không sở hữu dữ liệu** của khách sạn, hãng bay, nhà xe. Khách có thể đặt phòng ở Agoda, mua vé máy bay trên web hãng, nhắn Zalo đặt homestay. Câu hỏi: **làm sao biết họ đã đi thật** để cho đăng bài, mà không bắt họ đặt mọi thứ qua app?
 
 ---
 
-## 2. Các cách xác minh, xếp theo độ tin cậy
+## 1. Nguyên tắc: tách "đã đặt" và "đã có mặt", rồi cộng bằng chứng
 
-| Mức | Cách xác minh | Áp dụng khi | Độ tin cậy | Dấu hiển thị trên bài |
-|---|---|---|---|---|
-| **A1** | **Đặt qua app**, đơn đã hoàn thành | Khách đặt trong app | Rất cao, tự động | **Đã đi thật** |
-| **A2** | **Liên kết đặt chỗ từ kênh khác**: nhập *mã xác nhận đặt phòng* + *họ tên* hoặc *số điện thoại/email đã dùng khi đặt* → đối chiếu với hệ thống đặt chỗ của Vinpearl | Đặt qua Agoda, Booking, đại lý, gọi điện | Rất cao (đối chiếu với dữ liệu gốc của Vinpearl) | **Đã đi thật** |
-| **A3** | **Quét mã tại lễ tân hoặc cổng**: khi check-in, khách mở app cho lễ tân quét mã QR cá nhân (hoặc khách quét **mã QR động** trên màn hình quầy) → lần lưu trú tự gắn vào tài khoản | Walk-in, hoặc khách quên mã đặt | Rất cao (có nhân viên hoặc mã động xác nhận) | **Đã đi thật** |
-| **A4** | **Mã vé VinWonders / golf**: nhập hoặc quét mã trên vé → đối chiếu bản ghi quét vé tại cổng | Mua vé tại quầy hoặc kênh khác | Rất cao | **Đã đi thật** |
-| **A5** | **Số thành viên Pearl Club** (chương trình khách hàng thân thiết của Vinpearl) đã gắn với lần lưu trú | Khách là thành viên | Cao | **Đã đi thật** |
-| **B** | **Có mặt tại chỗ**: quay hoặc chụp **bằng camera trong app**, trong vùng định vị của chỗ đó; tốt hơn nữa là kèm quét **mã QR đặt cố định** tại sảnh hoặc điểm check-in ảnh | Không có đặt chỗ nào (ví dụ chỉ ghé chơi, đi cùng người đặt) | Trung bình (định vị có thể bị giả; QR cố định có thể bị chụp lại) | **Có mặt tại chỗ** (không phải "Đã đi thật") |
-| **C** | **Tải chứng từ lên**: email xác nhận, hóa đơn → AI đọc và đối chiếu; không đối chiếu được thì người kiểm duyệt xem | Trường hợp còn lại | Thấp đến trung bình, tốn công duyệt | Chỉ dùng để **mở khóa A2** (đọc mã từ email); không có dấu riêng |
+"Đã đi thật" = **bằng chứng có giao dịch thật** + **bằng chứng đã có mặt tại chỗ, đúng thời gian**. Không cần cả hai đến từ app của mình. Mỗi bằng chứng có độ tin cậy khác nhau, hệ thống **cộng dồn** để ra mức xác minh.
 
-**Quy tắc đăng bài**:
-- Bài **có dấu "Đã đi thật"** chỉ khi có ít nhất một trong A1–A5. Đây là mức đúng nghĩa yêu cầu A2 của đề bài ("đã đặt chỗ và đã đi").
-- Mức B (**"Có mặt tại chỗ"**) là **đề xuất mở rộng**, cho người đi cùng (bạn của người đặt phòng) được kể chuyện. ⚠️ Cần hỏi người hướng dẫn, vì đề bài nói "chỉ người đã đặt chỗ". Nếu không được phép thì bỏ mức B.
-- Người đi cùng có cách hợp lệ khác: **người đặt chỗ mời người đi cùng vào chuyến** (mục 5), và lần lưu trú hiện trong tài khoản của cả hai.
+```
+  Bằng chứng ĐÃ ĐẶT                        Bằng chứng ĐÃ CÓ MẶT
+  ─────────────────                        ───────────────────
+  • Đặt trong app                           • Quét QR tại cơ sở đối tác
+  • Email xác nhận có chữ ký số (DKIM)      • Nhà cung cấp xác nhận check-in/out
+  • Thẻ lên máy bay (mã vạch chuẩn IATA)    • Vị trí trong vùng của chỗ, đúng khoảng ngày
+  • Nhà cung cấp đối tác xác nhận           • Quay/chụp bằng camera trong app tại chỗ
+                    \                      /
+                     ▼                    ▼
+                  MỨC XÁC MINH CỦA LẦN ĐI (Stay)
+```
 
 ---
 
-## 3. Luồng "Thêm chuyến đã đi" (A2 – liên kết đặt chỗ kênh khác)
+## 2. Các nguồn bằng chứng
 
-```
-Chuyến đi của tôi → "Thêm chuyến đã đi ở nơi khác"
-  1. Chọn loại: Phòng Vinpearl / Vé VinWonders / Golf
-  2. Nhập mã xác nhận (hoặc dán email xác nhận, hoặc chụp màn hình → AI đọc mã)
-  3. Nhập họ tên + số điện thoại hoặc email đã dùng khi đặt
-  4. Hệ thống đối chiếu với dữ liệu đặt chỗ / check-in / quét vé của Vinpearl
-       ├─ Khớp, đã check-out          → thêm vào "Chuyến đi của tôi" (nguồn: Agoda…), mở nút "Kể lại chuyến đi"
-       ├─ Khớp, chưa đến ngày         → thêm vào chuyến sắp tới (để dùng "Chế độ Đang đi"); chưa cho đăng bài
-       ├─ Khớp nhưng tên/SĐT không trùng → từ chối, gợi ý quét mã tại lễ tân (A3)
-       └─ Không tìm thấy               → báo rõ; cho thử lại tối đa 5 lần/ngày
-```
+### 2.1. Bằng chứng "đã đặt"
 
-- Sau khi liên kết, lần lưu trú **trở thành một mục trong "Chuyến đi của tôi"**. Lộ trình bài đăng vẫn **lấy từ đây, không gõ lại** (đúng A2). Mục được đánh dấu nguồn: *"Đặt qua kênh khác"*.
-- Khi người khác bấm **"Đi y chang"**, mục này vẫn đặt được trong app, vì sản phẩm là của Vinpearl và giá lấy theo giá hiện tại.
-- **Vé máy bay đặt trên web hãng**: không xác minh được (không phải dữ liệu Vinpearl) và cũng không cần. Người đăng thêm vào lộ trình như **"Phương tiện tự sắp xếp"** (tuyến, khung giờ); người xem vẫn có thể đặt vé máy bay trong app vì đề bài có bán vé máy bay.
+| Nguồn | Cách làm | Vì sao tin được | Giới hạn |
+|---|---|---|---|
+| **E1 – Đặt trong app** | Như luồng đặt chỗ bình thường | Giao dịch của chính nền tảng | Chỉ áp dụng khi khách đặt ở đây |
+| **E2 – Email xác nhận có chữ ký DKIM** | Khách **chuyển tiếp** (forward) email xác nhận từ Agoda, Booking, Traveloka, hãng bay… vào một địa chỉ riêng của tài khoản, hoặc tải file email gốc (.eml) | Email từ các nền tảng lớn được **ký số DKIM** bằng khóa của tên miền gửi. Hệ thống kiểm tra chữ ký: email *thật sự* do booking.com gửi và *không bị sửa*. Ảnh chụp màn hình thì giả được, chữ ký DKIM thì không | Phải là email gốc (không phải ảnh chụp); một số nơi gửi không ký; cần trích đúng tên khách, ngày, tên chỗ |
+| **E3 – Thẻ lên máy bay** | Quét mã vạch trên thẻ lên máy bay (giấy hoặc trong ví điện thoại) | Mã vạch theo chuẩn **IATA BCBP**, chứa họ tên, mã đặt chỗ, chuyến bay, ngày bay, chặng. Đối chiếu tên với tài khoản | Không tự chứng minh đã lên máy bay; chỉ xác minh *phương tiện*, không xác minh chỗ ở |
+| **E4 – Nhà cung cấp đối tác xác nhận** | Khách sạn, homestay, nhà xe **đã ký đối tác** có cổng quản lý: bấm "khách này đã ở" hoặc đồng bộ danh sách khách đã check-out | Nguồn gốc là chính nhà cung cấp | Cần xây mạng lưới đối tác; homestay nhỏ cần giao diện cực đơn giản (xác nhận qua Zalo hoặc link) |
+| **E5 – Hóa đơn, chứng từ** | Tải ảnh hóa đơn điện tử, bill thanh toán | Hóa đơn điện tử Việt Nam có mã tra cứu trên cổng thuế (về nguyên tắc tra được tính hợp lệ) | Dễ giả nếu chỉ là ảnh; tốn công duyệt → chỉ dùng hỗ trợ, không cấp dấu một mình |
 
-### Chống gian lận cho từng cách
+### 2.2. Bằng chứng "đã có mặt"
 
-| Cách | Kiểu gian lận | Biện pháp |
-|---|---|---|
-| A2 mã xác nhận | Xin mã của người khác | Bắt khớp **tên + SĐT/email**; mỗi đặt chỗ chỉ liên kết với người có tên trong đặt chỗ, hoặc người được chủ đặt chỗ mời; báo cho chủ đặt chỗ khi có người liên kết |
-| A2 | Đoán mã hàng loạt | Giới hạn số lần thử; khóa tạm; ghi log |
-| A3 QR tại quầy | Chụp ảnh QR rồi gửi người khác | **QR động** đổi mỗi 30 giây và chỉ hiệu lực khi đang check-in; hoặc **nhân viên quét QR của khách** (không thể làm từ xa) |
-| A4 mã vé | Nhặt vé của người khác | Vé phải **đã quét tại cổng**; mỗi mã chỉ gắn một tài khoản |
-| B định vị | Giả GPS | Chỉ cho dấu yếu "Có mặt tại chỗ"; kết hợp camera trong app + khung thời gian + QR cố định; tài khoản dùng mức B nhiều mà không có A thì giảm uy tín |
-| C chứng từ | Ảnh xác nhận giả | Không cấp dấu từ chứng từ; chỉ dùng để đọc mã rồi **đối chiếu A2** |
+| Nguồn | Cách làm | Vì sao tin được | Giới hạn |
+|---|---|---|---|
+| **P1 – QR tại cơ sở đối tác** | Đối tác đặt **mã QR động** (đổi mỗi 30 giây) trên màn hình quầy, hoặc nhân viên quét QR cá nhân của khách | Phải đứng tại quầy, đúng lúc | Chỉ có ở cơ sở đối tác |
+| **P2 – Nhà cung cấp xác nhận check-in/out** | Như E4 | Nguồn gốc | Như E4 |
+| **P3 – Vị trí trong vùng, đúng khoảng ngày** | Khi khách mở app trong khoảng ngày ở (có xin phép vị trí), ghi nhận "đã ở trong vùng X km quanh chỗ" ít nhất N lần ở các thời điểm khác nhau | Rất khó trùng hợp nhiều lần đúng nơi đúng ngày | GPS có thể bị giả; cần người dùng bật vị trí; nhạy cảm riêng tư nên chỉ lưu kết quả "có/không", không lưu đường đi |
+| **P4 – Quay/chụp trong app tại chỗ** | Camera trong app ghi thời điểm và vị trí lúc quay | Gắn trực tiếp nội dung với nơi và lúc | Vẫn có thể giả vị trí; dùng làm tín hiệu cộng thêm |
 
 ---
 
-## 4. Trả lời thẳng: có phải xây cả nền tảng đặt vé máy bay, xe, phòng không?
+## 3. Mức xác minh và quyền đăng bài
 
-| Phạm vi | Câu trả lời |
+| Mức | Điều kiện | Dấu trên bài | Quyền |
+|---|---|---|---|
+| **Đã đi thật** | (E1 hoặc E2 hoặc E4) **và** (P1 hoặc P2 hoặc P3), cùng chỗ, khoảng ngày khớp | **Đã đi thật** | Đăng bài, gắn lộ trình đặt được, tính vào xu hướng với trọng số cao nhất, nhận thưởng (nếu có chương trình) |
+| **Đã đặt** | Có E1/E2/E4 nhưng **chưa** có bằng chứng có mặt (ví dụ không bật vị trí) | **Đã đặt chỗ** | Đăng bài, gắn lộ trình; trọng số thấp hơn; nhắc bổ sung bằng chứng có mặt |
+| **Có mặt tại chỗ** | Chỉ có P3/P4 (ví dụ ghé quán cà phê, điểm ngắm cảnh, đi cùng người đặt) | **Có mặt tại chỗ** | Đăng bài về *điểm đó*; lộ trình chỉ là gợi ý; không nhận thưởng |
+| **Chưa xác minh** | Không có bằng chứng | — | **Không được đăng** bài về chỗ đó (giữ đúng tinh thần "chỉ người đã đi mới đăng") |
+
+**Chặng bay (E3)** không quyết định mức của chỗ ở. Nó chỉ cho chặng bay trong lộ trình dấu **"Đã bay chặng này"**, giúp người xem tin phần "đi gì đến".
+
+---
+
+## 4. Luồng "Thêm chuyến đã đi ở nơi khác"
+
+```
+Chuyến đi → "Thêm chuyến đã đi ở nơi khác"
+ 1. Chọn cách thêm
+    ├─ Chuyển tiếp email xác nhận (khuyến nghị)
+    │     → kiểm tra chữ ký DKIM → trích tên chỗ, ngày, tên khách → so tên với tài khoản
+    ├─ Quét thẻ lên máy bay      → giải mã BCBP → chặng, ngày, tên
+    ├─ Quét QR tại cơ sở đối tác → xác minh ngay cả "đã đặt" và "đã có mặt"
+    └─ Ghi nhận có mặt tại chỗ   → cần bật vị trí, chỉ cho mức "Có mặt tại chỗ"
+ 2. Hệ thống ghép các bằng chứng cùng chỗ, cùng khoảng ngày thành một "lần đi" (Stay)
+ 3. Hiện mức xác minh + gợi ý cách nâng mức
+    ("Bật vị trí khi đang ở đó" / "Quét QR ở quầy" để lên "Đã đi thật")
+ 4. Qua ngày trả phòng → mở nút "Kể lại chuyến đi"; lộ trình lấy từ các Stay này, không gõ lại
+```
+
+Khi người khác bấm **"Đi y chang"**:
+- Mục đặt được trong app (chỗ thuộc mạng lưới đối tác hoặc bán qua app) → đặt ngay, giá thật.
+- Mục **không** bán trong app (người đăng đặt ở OTA khác, chỗ chưa là đối tác) → hiện là **"Đặt ở nơi khác"**: tên chỗ, vị trí, ghi chú của người đăng. Tùy chiến lược có thể kèm **link đối tác affiliate**, hoặc **"Mời chỗ này lên nền tảng"**. Không hiển thị giá nếu không có giá thật.
+
+---
+
+## 5. Chống gian lận
+
+| Kiểu gian lận | Biện pháp |
 |---|---|
-| **Dự án hiện tại (chỉ Vinpearl)** | **Không cần xây thêm.** App theo đề bài đã là kênh đặt chỗ của Vinpearl (A8: khách sạn, vé máy bay, vé vui chơi, combo). Khách đặt qua kênh khác thì xác minh bằng A2–A5, vì dữ liệu gốc vẫn thuộc Vinpearl. Xe khách nằm ngoài phạm vi |
-| **Bản tầm nhìn (mở nhà cung cấp ngoài như homestay Tà Xùa)** | Vẫn **không bắt buộc** mọi giao dịch đi qua app. Có thể dùng: (1) **nhà cung cấp xác nhận khách** trên cổng đối tác (chủ homestay bấm "khách này đã ở"); (2) **QR tại cơ sở** cho khách quét khi đến; (3) **nhập email xác nhận** từ OTA khác (giống cách TripIt đọc email đặt chỗ) rồi nhờ nhà cung cấp đối chiếu; (4) **mức "Có mặt tại chỗ"** cho điểm không đặt được (quán cà phê, điểm ngắm cảnh) |
-
-**Lợi ích kinh doanh của việc "liên kết đặt chỗ kênh khác"**: khách từng đặt Vinpearl qua Agoda hay Booking được **kéo về app của Vinpearl** để kể chuyện. Lần sau họ có lý do đặt trực tiếp. Đây chính là bài toán "tăng tỷ lệ khách trực tiếp, giảm phụ thuộc OTA" của ngành (tài liệu 01, mục 3).
-
----
-
-## 5. Người đi cùng (không phải người đặt)
-
-- Chủ đặt chỗ **mời người đi cùng** vào chuyến (nhập SĐT, hoặc gửi link). Người được mời chấp nhận thì lần lưu trú hiện trong tài khoản của họ, và họ được đăng bài với dấu "Đã đi thật".
-- Đây **không phải tính năng đặt chung** (mục 8): không chia tiền, không cùng đặt. Chỉ là chia sẻ quyền kể chuyện về một chuyến đã có. ⚠️ Vẫn nên hỏi người hướng dẫn.
-- Người dưới 18 tuổi đi cùng gia đình (persona 17 tuổi) được mời vào chuyến để **đăng bài**, dù không được **tự đặt**.
+| Ảnh chụp màn hình email/xác nhận giả | Không chấp nhận ảnh làm bằng chứng "đã đặt"; chỉ chấp nhận **email gốc có DKIM hợp lệ** |
+| Chuyển tiếp email của người khác | Tên khách trong email phải khớp tên tài khoản đã xác minh; hoặc người có tên trong email phải **mời** người đi cùng |
+| Dùng một email xác nhận cho nhiều tài khoản | Mỗi mã đặt chỗ chỉ gắn với một Stay; trùng thì báo người có tên trong đặt chỗ |
+| Đặt rồi hủy, vẫn lấy email xác nhận | Kiểm tra thêm email hủy (nếu có); bắt buộc bằng chứng có mặt để lên "Đã đi thật" |
+| Giả vị trí GPS | Vị trí chỉ cho mức yếu; cần nhiều lần ở thời điểm khác nhau; phát hiện dấu hiệu giả lập vị trí; tài khoản chỉ có mức "Có mặt" mà đăng nhiều thì giảm uy tín |
+| Chụp lại QR tại quầy | QR động đổi mỗi 30 giây, hoặc nhân viên quét QR của khách |
+| Chủ chỗ tạo khách giả | Đối tác xác nhận khách thì vẫn cần bằng chứng từ phía khách (vị trí, thanh toán); tỷ lệ bài/khách bất thường của một chỗ → kiểm tra |
 
 ---
 
-## 6. Bổ sung mô hình dữ liệu
+## 6. Riêng tư
 
-| Thực thể | Trường chính | Ghi chú |
+- Email chuyển tiếp: **chỉ xử lý email xác nhận** (lọc theo người gửi và nội dung); trích các trường cần thiết rồi **xóa nội dung email**. Chỉ lưu kết quả xác minh và mã đặt chỗ đã băm.
+- Vị trí: chỉ lưu kết quả "đã ở trong vùng X vào ngày Y", **không lưu đường đi**. Người dùng xem và xóa được.
+- Thẻ lên máy bay: chỉ lưu chặng, ngày, kết quả khớp tên; **không lưu mã đặt chỗ thô**.
+- Không thông tin nào ở trên hiện cho người khác (giữ nguyên quy tắc lộ trình riêng tư ở tài liệu 06).
+
+---
+
+## 7. Có cần tự xây nền tảng đặt vé máy bay, xe, phòng không?
+
+**Không bắt buộc cho việc xác minh**: email DKIM, thẻ lên máy bay, QR đối tác và vị trí đã đủ để xác minh mà khách không cần đặt qua app.
+
+**Nhưng nên có ở mức nào đó cho "Đi y chang"**, vì người xem cần bấm là đặt được. Lộ trình gợi ý:
+
+| Giai đoạn | Nguồn hàng để "Đi y chang" | Xác minh |
 |---|---|---|
-| `Stay` (lần lưu trú / sử dụng dịch vụ) | `user_id`, `product_ref`, `source` (APP / OTA_AGODA / OTA_BOOKING / AGENT / WALK_IN / GATE), `external_ref` (mã xác nhận, mã hóa), `checkin_at`, `checkout_at`, `verify_method` (A1–A5, B), `status` | Đơn trong app cũng sinh ra `Stay` → mọi nguồn dùng chung một luồng đăng bài |
-| `StayClaim` (yêu cầu liên kết) | `user_id`, `input_type` (CODE / EMAIL / QR / TICKET / MEMBER), `matched_stay_id`, `result`, `attempts`, `created_at` | Có giới hạn số lần thử, có audit |
-| `StayMember` (người đi cùng) | `stay_id`, `user_id`, `role` (OWNER / COMPANION), `invited_by`, `accepted_at` | Không có quyền thanh toán |
-| `Post.verification` | `level` (VERIFIED / PRESENT / NONE), `stay_ids[]` | Quyết định dấu hiển thị |
+| Đầu | Liên kết affiliate tới OTA và hãng bay (ghi nhận nguồn đơn, nhận hoa hồng); một nhóm nhỏ homestay/khách sạn đối tác bán trực tiếp | Email DKIM + thẻ lên máy bay + vị trí; QR tại đối tác |
+| Giữa | Bedbank/API khách sạn, đối tác vé xe, vé máy bay qua đại lý | Như trên + đối tác xác nhận check-in |
+| Sau | Mạng lưới đối tác lớn có cổng quản lý riêng | Đối tác xác nhận tự động là chính |
 
-Quy tắc đăng bài được viết lại: **được đăng về chỗ X khi tài khoản có `Stay` của chỗ X ở trạng thái đã hoàn thành, với `verify_method` thuộc A1–A5** (và B nếu người hướng dẫn cho phép, khi đó bài mang nhãn yếu hơn).
+(Xem thêm mô hình agency, merchant, affiliate ở [tài liệu 01](01-kien-thuc-nganh-OTA.md), mục 3.)
 
 ---
 
-## 7. Câu hỏi cho người hướng dẫn
+## 8. Mô hình dữ liệu
 
-1. *"Khách đặt phòng Vinpearl qua Agoda/Booking vẫn có đặt chỗ và check-in trong hệ thống của Vinpearl. Em đề xuất cho họ **liên kết** bằng mã xác nhận + tên/SĐT để được đăng bài. Dữ liệu khách hàng mô phỏng có bao gồm các lần lưu trú qua kênh khác không ạ? Nếu không, em có được tự bổ sung (gắn nhãn mô phỏng) không?"*
-2. *"Người đi cùng (không phải người đặt) có được đăng bài 'Đã đi thật' nếu được chủ đặt chỗ mời vào chuyến không ạ? Như vậy có bị coi là tính năng nhóm không?"*
-3. *"Mức 'Có mặt tại chỗ' (xác minh bằng vị trí và camera trong app, không có đặt chỗ) có được phép, hay đề bài yêu cầu bắt buộc phải có đặt chỗ ạ?"*
+| Thực thể | Trường chính |
+|---|---|
+| `Evidence` | `user_id`, `type` (APP_BOOKING / EMAIL_DKIM / BOARDING_PASS / PARTNER_CONFIRM / INVOICE / PARTNER_QR / GEO_PRESENCE / IN_APP_CAPTURE), `place_ref?`, `route?`, `date_from`, `date_to`, `name_match` (bool), `strength`, `hashed_ref`, `created_at` |
+| `Stay` | `user_id`, `place_ref`, `date_from`, `date_to`, `evidence_ids[]`, `level` (VERIFIED / BOOKED / PRESENT / NONE), `companions[]` |
+| `Post.verification` | `level`, `stay_ids[]` |
+
+Quy tắc: **được đăng về chỗ X khi có `Stay` của X với level ≠ NONE và đã qua `date_to`**. Dấu hiển thị lấy theo `level`.

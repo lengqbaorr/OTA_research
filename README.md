@@ -1,6 +1,8 @@
 # OTA Research – Vinpearl cho người trẻ
 
-Tài liệu nghiên cứu và đề xuất triển khai cho dự án **"Vinpearl cho người trẻ"** (Android app, Web OTA, Trợ lý gợi ý, Trang quản trị).
+Tài liệu nghiên cứu và đề xuất triển khai cho một **nền tảng du lịch video ngắn "xem là đi được"** (Android app, Web OTA, Trợ lý gợi ý, Trang quản trị).
+
+> **Bối cảnh**: đây là **đề tài mở, nền tảng của riêng đội**, không làm cho Vinpearl hay tập đoàn nào. Tài liệu 02 (đề bài Vinpearl) được giữ nguyên văn và dùng làm **tham chiếu yêu cầu** (persona, tiêu chí nghiệm thu, cách đo). Các ràng buộc riêng của Vinpearl như "chỉ bán dịch vụ Vinpearl" không còn bắt buộc. Tài liệu 03–08 viết trước khi làm rõ điều này nên còn nhắc Vinpearl; tài liệu 09 và bản mô phỏng đã theo bối cảnh mới.
 
 | # | Tài liệu | Nội dung |
 |---|---|---|
@@ -12,9 +14,9 @@ Tài liệu nghiên cứu và đề xuất triển khai cho dự án **"Vinpearl
 | 06 | [Luồng use case](docs/06-luong-use-case.md) | Luồng hoàn chỉnh người đăng (thông tin cần nhập, hệ thống dựng lộ trình, AI đọc video/caption để làm gì) và người xem (bảng tin → Đi y chang → xác nhận → thanh toán → sau khi đặt), xử lý giá theo thời điểm, ngoại lệ |
 | 07 | [Nghiên cứu Mindtrip & thiết kế Đi y chang](docs/07-nghien-cuu-mindtrip-va-thiet-ke-di-y-chang.md) | Tính năng Mindtrip (và Wanderlog), bài học; trình soạn chuyến đi có cấu trúc (đi gì, ở đâu, ngày 1/2/3 sáng-chiều-tối); trình bày kiểu TikTok có chương; màn Đi y chang 3 tab Lịch trình/Bản đồ/Chi phí; tính năng thêm; mô hình dữ liệu |
 | 08 | [Tính năng mở rộng](docs/08-tinh-nang-mo-rong.md) | Rà soát khoảng trống so với đề bài và persona; 30+ tính năng mở rộng cho người xem, người đăng, quản trị; thứ tự ưu tiên cho phần thi; câu hỏi cho người hướng dẫn |
-| 09 | [Xác minh đã đi thật](docs/09-xac-minh-da-di-that.md) | Khách đặt qua kênh khác (Agoda, đại lý, tại quầy) vẫn xác minh được vì Vinpearl là nguồn sự thật: liên kết mã đặt chỗ, QR tại lễ tân, mã vé, thành viên; mức "Có mặt tại chỗ"; người đi cùng; chống gian lận; mô hình dữ liệu |
+| 09 | [Xác minh đã đi thật](docs/09-xac-minh-da-di-that.md) | Nền tảng độc lập không sở hữu dữ liệu nhà cung cấp: cộng bằng chứng "đã đặt" (đặt trong app, email có chữ ký DKIM, thẻ lên máy bay, đối tác xác nhận) và "đã có mặt" (QR động tại quầy, vị trí đúng ngày, quay trong app); 3 mức Đã đi thật / Đã đặt chỗ / Có mặt tại chỗ; chống gian lận; riêng tư |
 
-**Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Màn hình điện thoại giao diện tối kiểu TikTok: lướt bảng tin, xem lộ trình, Đi y chang, thanh toán giả lập, Chuyến đi, nút + để đăng bài.
+**Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Màn hình điện thoại giao diện tối kiểu TikTok: lướt bảng tin, xem lộ trình, Đi y chang, thanh toán giả lập, Chuyến đi (có **Thêm chuyến đã đi ở nơi khác**: email xác nhận, thẻ lên máy bay, QR tại quầy, có mặt tại chỗ), nút + để đăng bài.
 
 **Thứ tự đọc**: 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07 → 08 → 09.
 

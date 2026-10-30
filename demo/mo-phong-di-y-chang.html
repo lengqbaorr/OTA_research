@@ -119,15 +119,15 @@ const DATES=[{l:'15/11',f:1.00,vwOut:true},{l:'22/11',f:0.82},{l:'29/11',f:0.90}
 const ORI={SGN:{n:'Sài Gòn',c:'SGN',p:1290000,o:'07:45',r:'18:30'},HAN:{n:'Hà Nội',c:'HAN',p:1650000,o:'07:30',r:'18:00'},DAD:{n:'Đà Nẵng',c:'DAD',p:0}};
 const HOTEL=2950000,VW=950000,SAF=650000,USUAL=0.9;
 const POSTS=[
- {id:'pq',u:'linh.dichoi',ini:'L',cap:'Phú Quốc 3N2Đ chill hết nấc',where:'Vinpearl Resort Phú Quốc',why:'32 người lưu trong 24h',likes:1240,cmt:86,season:'Hè 2026',
-  bg:'linear-gradient(160deg,#0b7285,#1864ab 45%,#e67700)',chaps:['Ngày 1 · Bay đến Phú Quốc','Ngày 1 · Vinpearl Resort','Ngày 2 · VinWonders','Ngày 2 · Sunset Town','Ngày 3 · Bay về'],itin:true},
- {id:'nt',u:'khoa.travel',ini:'K',cap:'Nha Trang 2 ngày quẩy VinWonders',where:'VinWonders Nha Trang',why:'5 người đã đi theo tuần này',likes:860,cmt:41,season:'Thu 2026',
-  bg:'linear-gradient(170deg,#5f3dc4,#c2255c 55%,#f08c00)',chaps:['Ngày 1 · Cáp treo','Ngày 1 · VinWonders','Ngày 2 · Biển'],itin:false},
- {id:'ha',u:'mai.slow',ini:'M',cap:'Hội An mùa mưa vẫn đẹp',where:'Vinpearl Resort Hội An',why:'Đang được bàn tán ở Hội An',likes:530,cmt:22,season:'Đông 2025',
-  bg:'linear-gradient(165deg,#2b8a3e,#5c940d 50%,#e8590c)',chaps:['Ngày 1 · Phố cổ','Ngày 2 · Resort'],itin:false}
+ {id:'pq',u:'linh.dichoi',ini:'L',cap:'Phú Quốc 3N2Đ chill hết nấc',where:'Sóng Xanh Resort Phú Quốc',why:'32 người lưu trong 24h',likes:1240,cmt:86,season:'Hè 2026',lv:'Đã đi thật',
+  bg:'linear-gradient(160deg,#0b7285,#1864ab 45%,#e67700)',chaps:['Ngày 1 · Bay đến Phú Quốc','Ngày 1 · Sóng Xanh Resort','Ngày 2 · Công viên Đảo Ngọc','Ngày 2 · Phố Hoàng Hôn','Ngày 3 · Bay về'],itin:true},
+ {id:'tx',u:'khoa.travel',ini:'K',cap:'Săn mây Tà Xùa 2N1Đ, xe giường nằm từ Hà Nội',where:'Mây Homestay Tà Xùa',why:'5 người đã đi theo tuần này',likes:860,cmt:41,season:'Thu 2026',lv:'Đã đặt chỗ',
+  bg:'linear-gradient(175deg,#495057,#868e96 40%,#dee2e6 75%,#f59f00)',chaps:['Ngày 1 · Xe khách lên Bắc Yên','Ngày 1 · Mây Homestay','Ngày 2 · Sống lưng khủng long'],itin:false},
+ {id:'ha',u:'mai.slow',ini:'M',cap:'Góc cà phê view sông, Hội An mùa mưa',where:'Cà phê Hiên Nhà, Hội An',why:'Đang được bàn tán ở Hội An',likes:530,cmt:22,season:'Đông 2025',lv:'Có mặt tại chỗ',
+  bg:'linear-gradient(165deg,#2b8a3e,#5c940d 50%,#e8590c)',chaps:['Phố cổ','Hiên Nhà'],itin:false}
 ];
 const S={tab:'home',liked:{},saved:{},sheet:null,page:null,origin:'SGN',date:1,ppl:2,inc:{fly:true,hotel:true,vw:true,sun:true},vwAlt:false,ftab:'plan',
-  policy:'keep',login:false,paid:false,paying:false,trips:[],cp:{step:0,blur:false,sp:null,cap:'',sun:true,note:true},myPost:false};
+  policy:'keep',login:false,stays:[],claim:{m:null,shown:0},paid:false,paying:false,trips:[],cp:{step:0,blur:false,sp:null,cap:'',sun:true,note:true},myPost:false};
 
 function calc(){
   const d=DATES[S.date],o=ORI[S.origin],rooms=Math.ceil(S.ppl/2),fOk=o.p>0;
@@ -160,6 +160,7 @@ function render(){
   if(S.page==='pay') h+=pay();
   if(S.page==='done') h+=done();
   if(S.page==='create') h+=create();
+  if(S.page==='claim') h+=claim();
   $('#app').innerHTML=h;
   if(S.tab==='home'&&!S.page) animate();
 }
@@ -182,7 +183,7 @@ function feed(){
     <div class="meta">
       <div class="chap" data-chaps='${JSON.stringify(p.chaps)}'>${p.chaps[0]}</div>
       <div class="tagp">${p.where}</div>
-      <div><span class="author">@${p.u}</span><span class="vf">Đã đi thật · ${p.season}</span></div>
+      <div><span class="author">@${p.u}</span><span class="vf" style="${p.lv==='Có mặt tại chỗ'?'color:#ccc':p.lv==='Đã đặt chỗ'?'color:#9fd3ff':''}">${p.lv} · ${p.season}</span></div>
       <div class="cap">${p.cap}</div>
       <div class="why">${p.why}${p.itin?' · Từ ~'+fromPrice()+'/người':''}</div>
     </div>
@@ -204,13 +205,13 @@ function itinSheet(){return `<div class="dim" onclick="if(event.target===this){S
   <div class="row"><div class="b">Lộ trình 3 ngày 2 đêm</div><span class="xs ok">Đã đi thật</span></div>
   <div class="dh">Ngày 1</div>
   <div class="it"><span class="t">Sáng</span><span class="s">Bay đến Phú Quốc<div class="note">Chặng bay đổi theo nơi bạn ở</div></span></div>
-  <div class="it"><span class="t">Chiều</span><span class="s">Vinpearl Resort Phú Quốc · Deluxe hướng biển · 2 đêm<div class="note">"Xin tầng cao, view hoàng hôn đỉnh"</div></span></div>
-  <div class="it"><span class="t">Tối</span><span class="s">Sunset Town<div class="note">Gợi ý ghé · không đặt trong app</div></span></div>
+  <div class="it"><span class="t">Chiều</span><span class="s">Sóng Xanh Resort Phú Quốc · Deluxe hướng biển · 2 đêm<div class="note">"Xin tầng cao, view hoàng hôn đỉnh"</div></span></div>
+  <div class="it"><span class="t">Tối</span><span class="s">Phố Hoàng Hôn<div class="note">Gợi ý ghé · không đặt trong app</div></span></div>
   <div class="dh">Ngày 2</div>
-  <div class="it"><span class="t">Cả ngày</span><span class="s">VinWonders Phú Quốc<div class="note">"Vào lúc 9h cho vắng"</div></span></div>
+  <div class="it"><span class="t">Cả ngày</span><span class="s">Công viên Đảo Ngọc<div class="note">"Vào lúc 9h cho vắng"</div></span></div>
   <div class="dh">Ngày 3</div>
   <div class="it"><span class="t">Tối</span><span class="s">Bay về</span></div>
-  <div class="card sm" style="margin-top:12px"><div class="b" style="margin-bottom:4px">14 người đã đi nói gì</div><div>View biển đẹp, phòng sạch</div><div class="mu">Cuối tuần VinWonders khá đông</div></div>
+  <div class="card sm" style="margin-top:12px"><div class="b" style="margin-bottom:4px">14 người đã đi nói gì</div><div>View biển đẹp, phòng sạch</div><div class="mu">Cuối tuần Công viên Đảo Ngọc khá đông</div></div>
   <button class="big btn-ac" style="margin-top:6px" onclick="S.sheet=null;openFollow()">Đi y chang</button></div></div>`}
 
 function openFollow(){S.page='follow';S.paid=false;render()}
@@ -223,12 +224,12 @@ function follow(){
    <div class="card ${S.inc.fly&&c.fOk?'':'off'}"><div class="row"><div><div>${c.fOk?`${c.o.c} → PQC · ${c.o.o}`:'Chuyến bay đến PQC'}</div>
      <div class="xs mu">${c.fOk?`Khứ hồi · ${VND(c.fp)}/người/chiều`:''}</div></div>${T('fly')}</div>
      ${c.fOk?'':`<div class="alert">Chưa có chặng bay từ ${c.o.n} tới Phú Quốc. Bỏ mục bay hoặc chọn nơi đi khác.</div>`}</div>
-   <div class="card ${S.inc.hotel?'':'off'}"><div class="row"><div><div>Vinpearl Resort Phú Quốc</div><div class="xs mu">Deluxe hướng biển · ${c.rooms} phòng · 2 đêm · ${VND(c.hn)}/đêm</div></div>${T('hotel')}</div>
+   <div class="card ${S.inc.hotel?'':'off'}"><div class="row"><div><div>Sóng Xanh Resort Phú Quốc</div><div class="xs mu">Deluxe hướng biển · ${c.rooms} phòng · 2 đêm · ${VND(c.hn)}/đêm</div></div>${T('hotel')}</div>
      <div class="note">"Xin tầng cao, view hoàng hôn đỉnh" — Linh</div></div>
-   <div class="card ${S.inc.sun?'':'off'}"><div class="row"><div><div>Sunset Town</div><div class="xs mu">Gợi ý ghé · không tính tiền</div></div>${T('sun')}</div></div>
+   <div class="card ${S.inc.sun?'':'off'}"><div class="row"><div><div>Phố Hoàng Hôn</div><div class="xs mu">Gợi ý ghé · không tính tiền</div></div>${T('sun')}</div></div>
    <div class="dh">Ngày 2 · ${day(1)}</div>
-   <div class="card ${S.inc.vw&&!c.vwOut?'':'off'}"><div class="row"><div><div>${S.vwAlt?'Vinpearl Safari':'VinWonders Phú Quốc'}</div><div class="xs mu">${c.vwOut?'Hết vé ngày này':`${S.ppl} vé · ${VND(c.vp)}/vé`}</div></div>${T('vw')}</div>
-     ${c.vwOut&&S.inc.vw?`<div class="alert">VinWonders hết vé ngày ${day(1)}.<div class="acts"><button onclick="S.date=1;render()">Đổi ngày</button><button onclick="S.vwAlt=true;render()">Thay bằng Safari</button><button onclick="S.inc.vw=false;render()">Bỏ mục</button></div></div>`:''}</div>
+   <div class="card ${S.inc.vw&&!c.vwOut?'':'off'}"><div class="row"><div><div>${S.vwAlt?'Safari Đảo Ngọc':'Công viên Đảo Ngọc'}</div><div class="xs mu">${c.vwOut?'Hết vé ngày này':`${S.ppl} vé · ${VND(c.vp)}/vé`}</div></div>${T('vw')}</div>
+     ${c.vwOut&&S.inc.vw?`<div class="alert">Công viên Đảo Ngọc hết vé ngày ${day(1)}.<div class="acts"><button onclick="S.date=1;render()">Đổi ngày</button><button onclick="S.vwAlt=true;render()">Thay bằng Safari</button><button onclick="S.inc.vw=false;render()">Bỏ mục</button></div></div>`:''}</div>
    <div class="dh">Ngày 3 · ${day(2)}</div>
    <div class="card ${S.inc.fly&&c.fOk?'':'off'}"><div>${c.fOk?`PQC → ${c.o.c} · ${c.o.r}`:'Chuyến bay về'}</div><div class="xs mu">Đi cùng vé khứ hồi</div></div>`;
   const cost=`<div class="card">
@@ -243,7 +244,7 @@ function follow(){
     <path d="M40 220 Q100 120 160 140 T280 60" fill="none" stroke="#555" stroke-dasharray="4 5"/>
     <circle cx="40" cy="220" r="6" fill="#fff"/><text x="52" y="224" fill="#aaa" font-size="11">Sân bay PQC</text>
     <rect x="118" y="114" width="84" height="22" rx="11" fill="#fff"/><text x="160" y="129" fill="#000" font-size="11" text-anchor="middle" font-weight="600">${VND(c.hn)}</text>
-    <circle cx="215" cy="110" r="5" fill="#888"/><text x="224" y="114" fill="#aaa" font-size="11">Sunset Town</text>
+    <circle cx="215" cy="110" r="5" fill="#888"/><text x="224" y="114" fill="#aaa" font-size="11">Phố Hoàng Hôn</text>
     <rect x="232" y="36" width="78" height="22" rx="11" fill="${c.vwOut?'#555':'#fe2c55'}"/><text x="271" y="51" fill="#fff" font-size="11" text-anchor="middle" font-weight="600">${c.vwOut?'Hết vé':VND(c.vp)}</text>
    </svg></div><div class="xs mu">Giá trên bản đồ là giá thật cho ngày đã chọn.</div>`;
   return `<div class="page">
@@ -276,9 +277,9 @@ function pay(){
     <div class="card sm">Chỗ được giữ đến <b>${hh}</b></div>
     <div class="card">
      ${S.inc.fly&&c.fOk?`<div class="line"><span>${c.o.c} ⇄ PQC · ${S.ppl} khách</span><span>${VND(c.fly)}</span></div>`:''}
-     ${S.inc.hotel?`<div class="line"><span>Vinpearl Resort · ${c.rooms} phòng</span><span>${VND(c.hotel)}</span></div>`:''}
-     ${S.inc.vw&&!c.vwOut?`<div class="line"><span>${S.vwAlt?'Safari':'VinWonders'} · ${S.ppl} vé</span><span>${VND(c.vw)}</span></div>`:''}
-     ${S.inc.vw&&c.vwOut?`<div class="line mu"><span>VinWonders</span><span>Hết vé · không tính</span></div>`:''}
+     ${S.inc.hotel?`<div class="line"><span>Sóng Xanh Resort · ${c.rooms} phòng</span><span>${VND(c.hotel)}</span></div>`:''}
+     ${S.inc.vw&&!c.vwOut?`<div class="line"><span>${S.vwAlt?'Safari':'Công viên Đảo Ngọc'} · ${S.ppl} vé</span><span>${VND(c.vw)}</span></div>`:''}
+     ${S.inc.vw&&c.vwOut?`<div class="line mu"><span>Công viên Đảo Ngọc</span><span>Hết vé · không tính</span></div>`:''}
      <div class="hr"></div><div class="line b"><span>Tổng</span><span>${VND(c.total)}</span></div></div>
     <div class="lbl">Phương thức</div>
     <div class="seg"><button class="on">QR ngân hàng</button><button>Thẻ</button><button>Ví</button></div>
@@ -296,10 +297,15 @@ function done(){return `<div class="page"><div class="body"><div class="center" 
    <div class="card"><div class="row"><span>Spa tại resort</span><span class="sm mu">Thêm</span></div></div>
    <div class="card"><div class="row"><span>Tour 4 đảo</span><span class="sm mu">Thêm</span></div></div></div>
    <div class="foot"><button class="big btn-w" onclick="S.page=null;S.tab='trips';render()">Xem chuyến đi</button></div></div>`}
+function lvColor(l){return l==='Đã đi thật'?'ok':l==='Đã đặt chỗ'?'':'mu'}
 function trips(){return `<div class="page" style="z-index:1"><div class="hdr"><div class="ti" style="margin-right:0">Chuyến đi</div></div><div class="body">
    ${S.trips.map(t=>`<div class="card"><div class="b">${t.t}</div><div class="sm mu">${t.s}</div><div class="xs mu" style="margin-top:4px">${t.from}</div></div>`).join('')}
-   <div class="card"><div class="row"><div><div class="b">Nha Trang · tháng 8</div><div class="sm mu">Đã đi · 2 người</div></div>
+   ${S.stays.map((s,i)=>`<div class="card"><div class="row"><div><div class="b">${s.place}</div><div class="sm mu">${s.dates} · ${s.src}</div>
+      <div class="xs ${lvColor(s.lv)}" style="margin-top:4px">${s.lv}${s.fly?' · Đã bay chặng '+s.fly:''}</div></div>
+      ${s.lv!=='Chưa xác minh'?`<button class="chip on" onclick="S.page='create';S.cp.step=1;render()">Kể lại</button>`:''}</div></div>`).join('')}
+   <div class="card"><div class="row"><div><div class="b">Biển Nhớ Resort Nha Trang · tháng 8</div><div class="sm mu">Đặt trong app · 2 người</div><div class="xs ok" style="margin-top:4px">Đã đi thật</div></div>
      <button class="chip on" onclick="S.page='create';S.cp.step=1;render()">Kể lại</button></div></div>
+   <button class="big" style="background:var(--sf2);margin-top:6px" onclick="S.page='claim';S.claim={m:null,shown:0,done:false};render()">+ Thêm chuyến đã đi ở nơi khác</button>
    <div class="lbl">Đã lưu</div>
    ${Object.keys(S.saved).filter(k=>S.saved[k]).map(k=>{const p=POSTS.find(x=>x.id===k);return p?`<div class="card sm">${p.cap}<div class="xs mu">@${p.u}</div></div>`:''}).join('')||'<div class="sm mu">Chưa lưu bài nào</div>'}
   </div></div>`}
@@ -320,8 +326,8 @@ function create(){
      <div class="card sm"><div class="row"><span>2 khuôn mặt người lạ</span><button class="chip ${S.cp.blur?'on':''}" onclick="S.cp.blur=true;render()">${S.cp.blur?'Đã làm mờ':'Làm mờ'}</button></div></div>
      <div class="lbl">Gắn điểm dừng vào video</div>
      <div class="it"><span class="t">0:00</span><span class="s">Ngày 1 · Cáp treo</span></div>
-     <div class="it"><span class="t">0:15</span><span class="s">Ngày 1 · VinWonders Nha Trang</span></div>
-     <div class="it"><span class="t">0:31</span><span class="s">Ngày 2 · Vinpearl Resort</span></div></div>
+     <div class="it"><span class="t">0:15</span><span class="s">Ngày 1 · Công viên biển Nha Trang</span></div>
+     <div class="it"><span class="t">0:31</span><span class="s">Ngày 2 · Biển Nhớ Resort</span></div></div>
      <div class="foot"><button class="big btn-ac" ${S.cp.blur?'':'disabled'} onclick="S.cp.step=2;render()">Tiếp</button></div></div>`;
   if(st===2) return `<div class="page">${head('Kể chuyện')}<div class="body">
      <textarea placeholder="Viết gì đó về chuyến đi…" oninput="S.cp.cap=this.value">${S.cp.cap}</textarea>
@@ -332,13 +338,55 @@ function create(){
   if(st===3) return `<div class="page">${head('Lộ trình')}<div class="body">
      <div class="xs mu">Phần đã đặt được điền tự động. Bạn chỉ chọn hiện hay ẩn và thêm ghi chú.</div>
      <div class="dh">Ngày 1</div>
-     <div class="it"><span class="t">Sáng</span><span class="s">Cáp treo Vinpearl<div class="note">Đã đặt qua app</div></span></div>
-     <div class="it"><span class="t">Chiều</span><span class="s">VinWonders Nha Trang<div class="note">Đã đặt qua app</div></span></div>
-     <div class="it"><span class="t">Tối</span><span class="s">Vinpearl Resort Nha Trang · 1 đêm<div class="note">Đã đặt qua app</div></span></div>
+     <div class="it"><span class="t">Sáng</span><span class="s">Cáp treo vượt biển<div class="note">Đã đặt qua app</div></span></div>
+     <div class="it"><span class="t">Chiều</span><span class="s">Công viên biển Nha Trang<div class="note">Đã đặt qua app</div></span></div>
+     <div class="it"><span class="t">Tối</span><span class="s">Biển Nhớ Resort Nha Trang · 1 đêm<div class="note">Đã đặt qua app</div></span></div>
      <div class="it"><span class="t">Tối</span><span class="s">Chợ đêm<div class="note">Gợi ý của bạn · không đặt trong app</div></span><div class="tog ${S.cp.sun?'on':''}" onclick="S.cp.sun=!S.cp.sun;render()"></div></div>
      <div class="card sm" style="margin-top:14px"><div class="b" style="margin-bottom:4px">Không bao giờ hiện cho người khác</div><div class="mu">Ngày đi, số tiền đã trả, mã đặt chỗ, người đi cùng</div></div></div>
      <div class="foot"><button class="big btn-ac" onclick="publish()">Đăng</button></div></div>`;
 }
+/* ---------- xác minh chuyến đã đi ở nơi khác ---------- */
+const CLAIMS={
+ email:{t:'Chuyển tiếp email xác nhận',d:'Agoda, Booking, Traveloka hoặc email từ chỗ ở',
+   checks:['Nhận email từ no-reply@agoda.com','Chữ ký số DKIM hợp lệ · email gốc, không bị sửa','Tên khách khớp tài khoản: NGUYEN VAN KHANG','Mây Homestay Tà Xùa · 08/11–09/11'],
+   stay:{place:'Mây Homestay Tà Xùa',dates:'08/11–09/11',src:'Đặt qua Agoda',lv:'Đã đặt chỗ'},up:true},
+ bp:{t:'Quét thẻ lên máy bay',d:'Mã vạch trên thẻ giấy hoặc trong ví điện thoại',
+   checks:['Đọc mã vạch chuẩn IATA BCBP','Hành khách: NGUYEN VAN KHANG · khớp tài khoản','Chặng SGN → HAN · 07/11'],
+   fly:'SGN → HAN'},
+ qr:{t:'Quét QR tại quầy',d:'Chỉ có ở chỗ là đối tác của nền tảng',
+   checks:['Mã QR động của Sóng Xanh Resort · còn hiệu lực','Nhân viên quầy xác nhận check-in'],
+   stay:{place:'Sóng Xanh Resort Phú Quốc',dates:'14/11–16/11',src:'Đặt tại quầy',lv:'Đã đi thật'}},
+ geo:{t:'Ghi nhận có mặt tại chỗ',d:'Bật vị trí khi đang ở đó. Dấu yếu hơn',
+   checks:['Vị trí trong vùng 200m quanh Cà phê Hiên Nhà','Ghi nhận 3 lần vào các giờ khác nhau, ngày 02/11'],
+   stay:{place:'Cà phê Hiên Nhà, Hội An',dates:'02/11',src:'Không có đặt chỗ',lv:'Có mặt tại chỗ'}}
+};
+function claim(){
+  const c=S.claim, m=c.m&&CLAIMS[c.m];
+  const back=`<div class="hdr"><button class="back" onclick="${c.m?"S.claim={m:null,shown:0,done:false}":"S.page=null"};render()">‹</button><div class="ti">Thêm chuyến đã đi</div></div>`;
+  if(!m) return `<div class="page">${back}<div class="body">
+    <div class="sm mu">Không cần đặt qua app. Chọn một cách để chứng minh bạn đã đi.</div>
+    ${Object.keys(CLAIMS).map(k=>`<div class="card" onclick="startClaim('${k}')" style="cursor:pointer"><div class="b">${CLAIMS[k].t}</div><div class="sm mu">${CLAIMS[k].d}</div></div>`).join('')}
+    <div class="xs mu" style="margin-top:10px">Ảnh chụp màn hình không được dùng làm bằng chứng. Nội dung email bị xóa sau khi kiểm tra.</div></div></div>`;
+  const intro = c.m==='email'?`<div class="card"><div class="sm mu">Chuyển tiếp email xác nhận tới</div><div class="b">khang.di@verify.diychang.app</div></div>`
+             : c.m==='geo'?`<div class="card sm mu">Chỉ lưu kết quả "có mặt trong vùng", không lưu đường đi.</div>`:'';
+  const done=c.shown>=m.checks.length;
+  return `<div class="page">${back}<div class="body"><div class="b" style="font-size:17px">${m.t}</div>${intro}
+    ${m.checks.slice(0,c.shown).map(x=>`<div class="line"><span>${x}</span><span class="ok">✓</span></div>`).join('')}
+    ${!done?`<div class="line mu"><span>Đang kiểm tra…</span></div>`:''}
+    ${done&&m.stay?`<div class="card" style="margin-top:12px"><div class="b">${m.stay.place}</div><div class="sm mu">${m.stay.dates} · ${m.stay.src}</div>
+        <div class="sm ${lvColor(c.lv)}" style="margin-top:4px">Mức xác minh: <b>${c.lv}</b></div>
+        ${c.lv==='Đã đặt chỗ'?`<div class="alert">Đã có bằng chứng đặt chỗ. Thêm bằng chứng có mặt (vị trí khi đang ở đó, hoặc QR tại quầy) để lên <b>Đã đi thật</b>.<div class="acts"><button onclick="S.claim.lv='Đã đi thật';render()">Mô phỏng: đã ở trong vùng 3 lần</button></div></div>`:''}
+        ${c.lv==='Có mặt tại chỗ'?`<div class="xs mu" style="margin-top:6px">Được đăng bài về điểm này; lộ trình chỉ là gợi ý; không nhận thưởng.</div>`:''}</div>`:''}
+    ${done&&m.fly?`<div class="card" style="margin-top:12px"><div class="b">Chặng ${m.fly}</div><div class="sm mu">Gắn vào chuyến Tà Xùa: phần "đi gì đến" có dấu <b>Đã bay chặng này</b></div></div>`:''}
+    </div>${done?`<div class="foot"><button class="big btn-ac" onclick="saveClaim()">Lưu vào Chuyến đi</button></div>`:''}</div>`;
+}
+function startClaim(k){S.claim={m:k,shown:0,lv:CLAIMS[k].stay?CLAIMS[k].stay.lv:null};render();
+  const tick=()=>{if(S.page!=='claim'||S.claim.m!==k)return; if(S.claim.shown<CLAIMS[k].checks.length){S.claim.shown++;render();setTimeout(tick,550)}}; setTimeout(tick,550)}
+function saveClaim(){const m=CLAIMS[S.claim.m];
+  if(m.stay) S.stays.unshift({...m.stay,lv:S.claim.lv});
+  if(m.fly){const tx=S.stays.find(s=>s.place.includes('Tà Xùa')); if(tx) tx.fly=m.fly; else S.stays.unshift({place:'Chuyến bay '+m.fly,dates:'07/11',src:'Vé đặt trên web hãng',lv:'Chưa xác minh',fly:m.fly});}
+  S.page=null;S.tab='trips';render();toast('Đã thêm vào Chuyến đi')}
+
 function publish(){S.myPost=true;S.page=null;S.tab='home';render();toast('Đã đăng · đang được kiểm duyệt tự động')}
 
 render();
