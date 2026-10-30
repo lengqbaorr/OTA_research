@@ -16,9 +16,10 @@ Tài liệu nghiên cứu và đề xuất triển khai cho một **nền tảng
 | 08 | [Tính năng mở rộng](docs/08-tinh-nang-mo-rong.md) | Rà soát khoảng trống so với đề bài và persona; 30+ tính năng mở rộng cho người xem, người đăng, quản trị; thứ tự ưu tiên cho phần thi; câu hỏi cho người hướng dẫn |
 | 09 | [Xác minh đã đi thật](docs/09-xac-minh-da-di-that.md) | Nền tảng độc lập không sở hữu dữ liệu nhà cung cấp: cộng bằng chứng "đã đặt" (đặt trong app, email có chữ ký DKIM, thẻ lên máy bay, đối tác xác nhận) và "đã có mặt" (QR động tại quầy, vị trí đúng ngày, quay trong app); 3 mức Đã đi thật / Đã đặt chỗ / Có mặt tại chỗ; chống gian lận; riêng tư |
 | 10 | [Diagram workflow](docs/10-diagram-workflow.md) | 10 sơ đồ Mermaid: toàn cảnh vòng lặp, xác minh đã đi, người đăng, người xem và Đi y chang, giữ chỗ & thanh toán (kèm trình tự hệ thống), kiểm duyệt & chống seeding, xu hướng & thưởng, nguồn hàng, kiến trúc. Bản trình bày: [demo/workflow-diagram.html](demo/workflow-diagram.html) |
+| 11 | [Tóm tắt & đánh giá](docs/11-tom-tat-va-danh-gia.md) | Ý tưởng trong một câu, 5 thành phần cốt lõi, so sánh với TikTok GO, Trip.com, OTA, Mindtrip và các startup; 7 lý do sự kết hợp này chưa xuất hiện; đánh giá mức độ mới, khả thi, điểm mạnh/yếu; thông điệp trình bày |
 
 **Mô phỏng tương tác**: [demo/mo-phong-di-y-chang.html](demo/mo-phong-di-y-chang.html). Mở bằng trình duyệt, không cần cài gì. Giao diện tối kiểu TikTok, minh họa **hai mô hình nguồn hàng** trong màn "Đi y chang": lộ trình **Tà Xùa** dùng hàng **nền tảng tự cung cấp** (homestay, nhà xe đối tác, có màn quản lý cho chủ nhà ở Tôi → Chế độ đối tác; chọn trả trước hoặc trả tại homestay); lộ trình **Phú Quốc** dùng **API đối tác Traveloka** (mô phỏng tìm → kiểm tra lại → đặt, có nút xem luồng API) và **link affiliate** cho vé máy bay. Ngoài ra có tab Chuyến đi với "Thêm chuyến đã đi ở nơi khác" và nút + để đăng bài.
 
-**Thứ tự đọc**: 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07 → 08 → 09 → 10.
+**Thứ tự đọc**: 11 (tóm tắt) → 05 (nhìn tổng quan) → 02 → 01 → 03 → 04 → 06 → 07 → 08 → 09 → 10.
 
 **Lưu ý**: số liệu thị trường mang tính tham khảo; phần pháp lý mang tính định hướng. Các tài liệu nghiên cứu chi tiết trước đây (01–16 cũ) vẫn còn trong lịch sử git nếu cần tra lại.
