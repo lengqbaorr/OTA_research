@@ -1,5 +1,7 @@
 # 12. Đánh giá tính khả thi (Feasibility Study): ý tưởng Social-to-Booking
 
+> ⚠️ **Lưu ý (cập nhật sau khi nhận đề bài chính thức)**: đánh giá này áp dụng cho ý tưởng OTA độc lập ở tài liệu 11, viết *trước* khi có [đề bài "Vinpearl cho người trẻ"](../de-bai/01-tai-lieu-dac-ta-san-pham.md). **Không áp dụng trực tiếp** cho dự án hiện tại. Kế hoạch và rủi ro theo đề bài xem tại [tài liệu 16](16-cach-tiep-can-va-ke-hoach.md).
+
 > **Mục tiêu**: không chứng minh ý tưởng "chắc chắn thành công". Mục tiêu là trả lời *"với phạm vi nào thì ý tưởng khả thi ở mức chấp nhận được (~70–80%)?"*, *"cần những điều kiện gì?"* và *"khi nào nên dừng?"*.
 >
 > **Lưu ý phương pháp**: điểm số và chi phí dưới đây là **ước lượng định hướng**, dựa trên hiểu biết chung về ngành (tài liệu 01–11). Chúng chưa được kiểm chứng bằng khảo sát thị trường hay báo giá thật. Mọi con số tiền đều là giả định để có thứ tự độ lớn, cần thay bằng số thật ở giai đoạn Pha 0.

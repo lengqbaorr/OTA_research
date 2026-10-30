@@ -1,5 +1,7 @@
 # 11. Ý tưởng "Social-to-Booking": từ nội dung mạng xã hội đến chuyến đi đã đặt
 
+> ⚠️ **Lưu ý (cập nhật sau khi nhận đề bài chính thức)**: tài liệu này được viết *trước* khi có [đề bài "Vinpearl cho người trẻ"](../de-bai/01-tai-lieu-dac-ta-san-pham.md). Phần lấy nội dung từ TikTok/Instagram/Threads bên ngoài, affiliate OTA khác, homestay ký trực tiếp, concierge người thật và thứ tự kênh **nằm ngoài phạm vi đề bài**. Ý tưởng "nội dung → một chạm đặt chỗ", "trí tuệ cộng đồng" và "gửi ảnh chụp màn hình" vẫn được dùng, dưới dạng A11, B1, B2. Xem đối chiếu chi tiết tại [tài liệu 13, mục 5](13-phan-tich-de-bai-vinpearl.md).
+
 > Góc nhìn: Solution Architect / SWE ở mức khái niệm. Mục tiêu là làm rõ ý tưởng, cân nhắc các phương án và chọn hướng hợp lý nhất. Tài liệu chưa đi vào chi tiết công nghệ cụ thể.
 >
 > Phạm vi đầu vào **không chỉ là video TikTok**. Hệ thống nhận *mọi nội dung du lịch trên mạng xã hội*:
