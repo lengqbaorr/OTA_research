@@ -14,6 +14,9 @@ Người dùng đăng video kèm **lộ trình dạng điểm** (đi từ đâu,
 - [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): giao diện điện thoại kiểu TikTok. Lướt video → Đi ngay (nơi đi, ngày, số người, ngân sách, ưu tiên, hoặc gõ tự do) → 3 phương án → đặt và thanh toán giả lập; nút + để đăng bài và dựng lộ trình; Tôi → Chế độ đối tác. Không cần mạng.
 - [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow trên nền tối để trình bày. Cần mạng để tải thư viện vẽ.
 
+**Tài liệu làm việc nhóm**:
+- [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công nghiên cứu 10 module cho 7 người, sơ đồ module, khung báo cáo chung, ranh giới giữa module, các điểm cần chốt.
+
 **Thứ tự đọc**: 03 → 02 → 01.
 
 Các tài liệu nghiên cứu chi tiết trước đây (khảo sát thị trường, Mindtrip, xác minh đã đi, tính năng mở rộng…) đã được gộp vào 03; bản gốc vẫn còn trong lịch sử git.
