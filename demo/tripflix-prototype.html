@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<title>Tripflix Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: phone prototype on the left (the product), a quiet briefing panel on the right that explains what the current screen demonstrates. Single dark "night travel" look, deliberately one theme. */
+:root{
+  color-scheme: dark;
+  --ink:#0c141c;          /* page ground: deep harbour night */
+  --ink-2:#121e29;        /* panels */
+  --ink-3:#1a2a37;        /* raised surfaces */
+  --line:#24394a;
+  --fg:#e9eef2;
+  --fg-dim:#9fb1bf;
+  --fg-faint:#6c8394;
+  --sand:#f2b84b;         /* primary action: "Đi tương tự" */
+  --sand-ink:#2a1c03;
+  --lagoon:#43d1c6;       /* Verified / booked through Tripflix */
+  --coral:#ff7a66;        /* likes, warnings */
+  --violet:#a89cff;       /* AI */
+  --font-ui:"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--sand);outline-offset:2px}
+input,select{font:inherit;color:var(--fg)}
+.page{display:flex;gap:32px;align-items:flex-start;justify-content:center;max-width:1180px;margin:0 auto;padding-block:24px 40px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.stage{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px;position:sticky;top:calc(env(safe-area-inset-top, 0px) + 16px)}
+.phone{width:390px;max-width:100%;height:min(800px, calc(100vh - 80px));min-height:620px;border-radius:44px;padding:10px;background:linear-gradient(160deg,#2b3d4c,#0f1820 60%);box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 0 0 1px #3a5163}
+.screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:#000;display:flex;flex-direction:column}
+.stage-hint{color:var(--fg-faint);font-size:12px;text-align:center;max-width:390px}
+.stage-hint kbd{font-family:var(--font-mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--fg-dim)}
+
+/* status bar */
+.status{position:absolute;inset:0 0 auto;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600;z-index:30;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.status .sim{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:rgba(0,0,0,.45);padding:2px 7px;border-radius:999px;color:var(--fg-dim)}
+
+/* views */
+.views{position:relative;flex:1;min-height:0}
+.view{position:absolute;inset:0;display:flex;flex-direction:column}
+.view[hidden]{display:none!important}
+
+/* feed */
+.feed{position:absolute;inset:0;overflow:hidden;touch-action:none}
+.track{height:100%;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion: reduce){.track{transition:none}}
+.slide{position:relative;height:100%;overflow:hidden}
+.slide canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.slide .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,0) 48%,rgba(0,0,0,.78) 100%)}
+.progress{position:absolute;top:40px;left:16px;right:16px;height:2px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;z-index:2}
+.progress i{display:block;height:100%;width:0;background:rgba(255,255,255,.85)}
+.reason{position:absolute;top:52px;left:16px;z-index:2;font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:rgba(12,20,28,.55);backdrop-filter:blur(6px);color:var(--fg)}
+.rail{position:absolute;right:10px;bottom:120px;display:flex;flex-direction:column;gap:16px;align-items:center;z-index:3}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.rail svg{width:30px;height:30px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.rail .on svg{color:var(--coral)}
+.rail .saved svg{color:var(--sand)}
+.rail .ai svg{color:var(--violet)}
+.avatar{width:42px;height:42px;border-radius:50%;border:2px solid #fff;display:grid;place-items:center;font-weight:800;font-size:15px;color:#0c141c}
+.info{position:absolute;left:14px;right:78px;bottom:66px;z-index:3;display:flex;flex-direction:column;gap:7px}
+.who{display:flex;align-items:center;gap:6px;font-weight:700;font-size:15px}
+.badge-v{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:#062b28;background:var(--lagoon);padding:2px 7px 2px 5px;border-radius:999px}
+.badge-v svg{width:12px;height:12px}
+.badge-self{font-size:10.5px;font-weight:600;color:var(--fg-dim);background:rgba(255,255,255,.12);padding:2px 7px;border-radius:999px}
+.cap{font-size:13.5px;line-height:1.4;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.tags{color:#cfe3ff;font-weight:600}
+.itn-chip{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);padding:6px 10px;border-radius:10px}
+.itn-chip svg{width:15px;height:15px}
+.go-btn{position:absolute;left:14px;right:14px;bottom:12px;z-index:3;height:44px;border-radius:12px;background:var(--sand);color:var(--sand-ink);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 18px rgba(242,184,75,.25)}
+.go-btn svg{width:18px;height:18px}
+.feed-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--fg-dim);padding:40px;text-align:center}
+
+/* bottom nav */
+.nav{flex:0 0 auto;height:58px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;background:#05090d;border-top:1px solid #111c25;z-index:20}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--fg-faint);font-weight:600}
+.nav button.active{color:var(--fg)}
+.nav svg{width:22px;height:22px}
+.nav .plus span{width:44px;height:30px;border-radius:9px;background:var(--fg);color:#05090d;display:grid;place-items:center}
+.nav .plus svg{width:20px;height:20px}
+
+/* generic app surfaces */
+.app{position:absolute;inset:0;background:var(--ink);display:flex;flex-direction:column;padding-top:40px}
+.app-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px 10px}
+.app-h h2{font-family:var(--font-display);font-weight:700;font-size:22px;margin:0;text-wrap:balance}
+.app-b{flex:1;min-height:0;overflow-y:auto;padding:0 16px 20px;display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--fg-dim)}
+.faint{color:var(--fg-faint);font-size:12px}
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.row{display:flex;align-items:center;gap:10px}
+.btn{height:40px;padding:0 14px;border-radius:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--sand);color:var(--sand-ink)}
+.btn.ghost{background:var(--ink-3);border:1px solid var(--line)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.pill.ok{background:rgba(67,209,198,.16);color:var(--lagoon)}
+.pill.self{background:rgba(255,255,255,.08);color:var(--fg-dim)}
+.pill.equiv{background:rgba(242,184,75,.15);color:var(--sand)}
+.pill.warn{background:rgba(255,122,102,.16);color:var(--coral)}
+.pill.ai{background:rgba(168,156,255,.16);color:var(--violet)}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:55;display:flex;align-items:flex-end}
+.scrim[hidden]{display:none!important}
+.sheet{width:100%;max-height:82%;background:var(--ink);border-radius:20px 20px 0 0;display:flex;flex-direction:column;border-top:1px solid var(--line);animation:up .28s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.sheet{animation:none}}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;gap:8px}
+.sheet-h h3{margin:0;font-size:16px;font-weight:800}
+.sheet-b{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.sheet-f{padding:10px 16px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.x{width:32px;height:32px;border-radius:50%;background:var(--ink-3);display:grid;place-items:center}
+.x svg{width:16px;height:16px}
+
+/* itinerary */
+.day{font-family:var(--font-display);font-style:italic;font-size:15px;color:var(--sand);margin-top:4px}
+.item{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line)}
+.ico{width:34px;height:34px;border-radius:10px;background:var(--ink-3);display:grid;place-items:center;color:var(--fg-dim)}
+.ico svg{width:18px;height:18px}
+.item .t{font-weight:700;font-size:13.5px}
+.item .d{font-size:12px;color:var(--fg-dim)}
+.item .r{text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.rule{font-size:12px;color:var(--fg-dim);background:var(--ink-2);border:1px dashed var(--line);border-radius:12px;padding:10px}
+
+/* comments + AI summary */
+.sum{border:1px solid rgba(168,156,255,.35);background:linear-gradient(180deg,rgba(168,156,255,.10),rgba(168,156,255,.02));border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.sum h4{margin:0;font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px}
+.sum h4 svg{width:16px;height:16px;color:var(--violet)}
+.sum .grp{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-faint);margin-top:2px}
+.pt{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;text-align:left;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.04);font-size:13px}
+.pt.sel{outline:1px solid var(--violet);background:rgba(168,156,255,.12)}
+.pt .n{flex:0 0 auto;font-size:11.5px;color:var(--fg-dim)}
+.pt.good .k{color:var(--lagoon)} .pt.bad .k{color:var(--coral)} .pt.gap .k{color:var(--sand)}
+.gapbox{border-left:3px solid var(--sand);padding-left:9px}
+.cmt{display:grid;grid-template-columns:32px 1fr;gap:9px;padding:8px;border-radius:10px}
+.cmt.hl{background:rgba(168,156,255,.12)}
+.cmt .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:#0c141c}
+.cmt .nm{font-size:12px;font-weight:700;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cmt .tx{font-size:13.5px}
+.compose{display:flex;gap:8px}
+.compose input{flex:1;min-width:0;height:40px;border-radius:10px;background:var(--ink-2);border:1px solid var(--line);padding:0 12px}
+
+/* flow overlay (Đi tương tự, đăng bài, đăng nhập) */
+.flow{position:absolute;inset:0;z-index:50;background:var(--ink);display:flex;flex-direction:column;padding-top:40px}
+.flow[hidden]{display:none!important}
+.steps{display:flex;gap:6px;padding:0 16px 10px}
+.steps i{flex:1;height:3px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--sand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:700;color:var(--fg-dim)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:8px 11px;border-radius:10px;background:var(--ink-2);border:1px solid var(--line);font-size:13px;font-weight:600}
+.seg button.on{border-color:var(--sand);background:rgba(242,184,75,.12);color:var(--sand)}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:36px;height:36px;border-radius:10px;background:var(--ink-3);border:1px solid var(--line);font-size:18px;font-weight:700}
+.total{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:16px}
+.total .num{font-size:18px;color:var(--sand)}
+.line{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.line:last-child{border-bottom:0}
+.line.off{opacity:.45}
+.line .t{font-weight:700;font-size:13.5px}
+.line .d{font-size:12px;color:var(--fg-dim)}
+.line .p{text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end;font-size:13px}
+.link{color:var(--sand);font-weight:700;font-size:12px}
+.notice{font-size:12.5px;border-radius:10px;padding:9px 11px;background:rgba(255,122,102,.12);color:#ffc2b8;border:1px solid rgba(255,122,102,.3)}
+.notice.info{background:rgba(67,209,198,.10);color:#bff3ee;border-color:rgba(67,209,198,.3)}
+.done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:30px 10px}
+.done .big{width:64px;height:64px;border-radius:50%;background:rgba(67,209,198,.16);color:var(--lagoon);display:grid;place-items:center}
+.done .big svg{width:32px;height:32px}
+.done h3{font-family:var(--font-display);font-size:22px;margin:0}
+
+/* compare */
+.cmp{overflow-x:auto}
+.cmp table{border-collapse:collapse;width:100%;min-width:420px;font-size:12.5px}
+.cmp th,.cmp td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp th{font-size:11px;color:var(--fg-faint);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.cmp td.cur{color:var(--fg-dim)}
+.delta-neg{color:var(--lagoon)} .delta-pos{color:var(--coral)}
+
+/* assistant */
+.chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:13.5px}
+.msg.me{align-self:flex-end;background:var(--sand);color:var(--sand-ink);border-bottom-right-radius:4px;font-weight:600}
+.msg.bot{align-self:flex-start;background:var(--ink-2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.wide{max-width:100%;width:100%}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:0 14px 8px}
+.chips button{flex:0 0 auto;font-size:12px;font-weight:600;padding:7px 10px;border-radius:999px;background:var(--ink-2);border:1px solid var(--line)}
+.mini-posts{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.mini{flex:0 0 112px;height:150px;border-radius:12px;position:relative;overflow:hidden;text-align:left}
+.mini .sw{position:absolute;inset:0}
+.mini .mt{position:absolute;left:7px;right:7px;bottom:7px;font-size:11px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.mini .mv{position:absolute;top:6px;left:6px}
+.composer{display:flex;gap:8px;padding:8px 14px 12px;border-top:1px solid var(--line)}
+.composer input{flex:1;min-width:0;height:42px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line);padding:0 12px}
+.composer button{width:42px;height:42px;border-radius:12px;background:var(--sand);color:var(--sand-ink);display:grid;place-items:center}
+.composer svg{width:18px;height:18px}
+
+/* search + me */
+.search-in{height:42px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line);padding:0 12px;width:100%}
+.res{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;text-align:left;padding:6px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line)}
+.res .sw{width:64px;height:84px;border-radius:9px}
+.acct{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;text-align:left;padding:10px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line)}
+.acct .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#0c141c}
+.trip{display:flex;flex-direction:column;gap:4px}
+.toast{position:absolute;left:16px;right:16px;bottom:76px;z-index:60;background:#f3f6f8;color:#0c141c;font-weight:600;font-size:13px;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast[hidden]{display:none!important}
+
+/* panel */
+.panel{flex:1;min-width:0;max-width:560px;display:flex;flex-direction:column;gap:18px;padding-top:8px}
+.panel h1{font-family:var(--font-display);font-weight:700;font-size:34px;line-height:1.08;margin:0;text-wrap:balance}
+.panel h1 em{font-style:italic;color:var(--sand)}
+.lede{color:var(--fg-dim);max-width:62ch;margin:0}
+.box{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--ink-2);display:flex;flex-direction:column;gap:10px}
+.box h2{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-faint);font-weight:700}
+.now-t{font-family:var(--font-display);font-size:20px;font-weight:700;margin:0}
+.now-p{margin:0;color:var(--fg-dim);max-width:62ch}
+.feat{display:inline-flex;font-family:var(--font-mono);font-size:11px;padding:2px 7px;border-radius:6px;background:var(--ink-3);border:1px solid var(--line);color:var(--fg-dim)}
+.quick{display:flex;flex-wrap:wrap;gap:8px}
+.quick button{padding:8px 12px;border-radius:10px;background:var(--ink-3);border:1px solid var(--line);font-weight:600;font-size:13px}
+.quick button:hover{border-color:var(--sand)}
+.role-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.role-row select{height:38px;border-radius:10px;background:var(--ink-3);border:1px solid var(--line);padding:0 10px}
+pre.code{margin:0;font-family:var(--font-mono);font-size:11.5px;line-height:1.55;color:#c9d6e0;background:#0a1118;border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+pre.code b{color:var(--sand);font-weight:600}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;font-size:13px}
+.foot{color:var(--fg-faint);font-size:12px}
+
+@media (max-width: 900px){
+  .page{flex-direction:column;align-items:center}
+  .stage{position:static}
+  .panel{max-width:100%}
+}
+@media (max-width: 440px){
+  .phone{width:100%;border-radius:30px;padding:6px;height:min(760px, calc(100vh - 40px))}
+  .screen{border-radius:26px}
+}
+</style>
+
+<div class="page">
+  <section class="stage" aria-label="Màn hình ứng dụng Tripflix mô phỏng">
+    <div class="phone">
+      <div class="screen" id="screen">
+        <div class="status"><span>9:41</span><span class="sim">dữ liệu mô phỏng</span></div>
+        <div class="views">
+          <div class="view" id="v-feed"><div class="feed" id="feed"><div class="track" id="track"></div></div></div>
+          <div class="view" id="v-search" hidden></div>
+          <div class="view" id="v-assistant" hidden></div>
+          <div class="view" id="v-me" hidden></div>
+        </div>
+        <nav class="nav" id="nav">
+          <button data-nav="feed" class="active"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Trang chủ</button>
+          <button data-nav="search"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Tìm</button>
+          <button data-nav="upload" class="plus" aria-label="Đăng video"><span><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span></button>
+          <button data-nav="assistant"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg>Trợ lý</button>
+          <button data-nav="me"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Tôi</button>
+        </nav>
+        <div class="scrim" id="scrim" hidden></div>
+        <div class="flow" id="flow" hidden></div>
+        <div class="toast" id="toast" role="status" hidden></div>
+      </div>
+    </div>
+    <p class="stage-hint">Vuốt, cuộn chuột hoặc <kbd>↑</kbd> <kbd>↓</kbd> để lướt video. Mọi nội dung, giá và người dùng là mô phỏng.</p>
+  </section>
+
+  <aside class="panel">
+    <div>
+      <h1>Tripflix: lướt video, <em>đi tương tự</em></h1>
+    </div>
+    <p class="lede">Bản prototype theo scope tinh gọn (docs/04). Feed video dọc là lõi. Video có lộ trình thì đặt trọn gói được. Huy hiệu Verified cho bài có đặt qua Tripflix. AI tóm tắt bình luận và trả lời trong chatbot.</p>
+
+    <div class="box" aria-live="polite">
+      <h2>Màn hình đang xem</h2>
+      <p class="now-t" id="now-t"></p>
+      <p class="now-p" id="now-p"></p>
+      <div class="quick" id="now-feat"></div>
+    </div>
+
+    <div class="box">
+      <h2>Thử nhanh</h2>
+      <div class="quick">
+        <button data-quick="itinerary">Xem lộ trình video</button>
+        <button data-quick="comments">Người đi rồi nói gì</button>
+        <button data-quick="go">Đi tương tự</button>
+        <button data-quick="upload">Đăng video + lộ trình</button>
+        <button data-quick="assistant">Hỏi trợ lý</button>
+        <button data-quick="unverified">Video không Verified</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Đăng nhập bằng accounts.json</h2>
+      <div class="role-row">
+        <label for="role-sel" class="muted">Đang dùng:</label>
+        <select id="role-sel"></select>
+      </div>
+      <pre class="code" id="perm-code"></pre>
+    </div>
+
+    <div class="box">
+      <h2>Ký hiệu</h2>
+      <div class="legend">
+        <span class="badge-v"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Verified</span><span>Có chỗ ở hoặc phương tiện đặt qua Tripflix và chuyến đã hoàn tất</span>
+        <span class="pill ok">Đặt qua Tripflix</span><span>Mục lộ trình khớp đơn của chính người đăng</span>
+        <span class="pill self">Tự chia sẻ</span><span>Người đăng tự nhập, không qua dịch vụ của app</span>
+        <span class="pill equiv">Gợi ý tương đương</span><span>Khi "Đi tương tự", hệ thống tìm dịch vụ cùng điểm đến thay cho mục tự nhập</span>
+        <span class="pill ai">AI</span><span>Do AI tóm tắt hoặc gợi ý, luôn kèm nguồn</span>
+      </div>
+    </div>
+    <p class="foot">Trợ lý trong bản mô phỏng chạy bằng luật để minh họa luồng. Bản thật dùng LLM nhỏ và 4 công cụ (xem reports/Chatbot agent tối giản).</p>
+  </aside>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3C6.5 3 2 6.8 2 11.5c0 2.5 1.3 4.8 3.4 6.3L4.6 22l4.6-2.3c.9.2 1.8.3 2.8.3 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path fill="currentColor" d="M6 2h12a1 1 0 0 1 1 1v19l-7-4.5L5 22V3a1 1 0 0 1 1-1z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path fill="currentColor" d="M14 4l8 7.5-8 7.5v-4.5c-5.5 0-9 1.6-12 5.5 1-5.6 4.4-10 12-11z"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.4"/></symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24"><path fill="currentColor" d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5v5.5L8 20v1.5l3.5-1 3.5 1V20l-2-1.5V13z"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><path fill="currentColor" d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-1 1.7V21h-3v-2H7v2H4v-2.3A2 2 0 0 1 3 17V5a2 2 0 0 1 2-2zm0 3v5h14V6zm2 8a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm10 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path fill="currentColor" d="M2 5h2v8h7V8h7a4 4 0 0 1 4 4v8h-2v-3H4v3H2zm5 1.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path fill="currentColor" d="M3 6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6zm11 1v2h2V7zm0 4v2h2v-2zm0 4v2h2v-2z"/></symbol>
+    <symbol id="i-food" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2h1.5v7.5A2.5 2.5 0 0 1 7 11.8V22H5V11.8A2.5 2.5 0 0 1 3.5 9.5V2H5v6h.5V2H7v6h.5V2zm9.5 0C19 2 21 4.7 21 8.5V13h-3v9h-2V2z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path fill="currentColor" d="M3 11 21 3l-8 18-2.5-7.5z"/></symbol>
+  </defs>
+</svg>
+
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const vnd = n => n.toLocaleString('vi-VN') + ' đ';
+const tr = n => (n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1}) + ' tr';
+const ico = id => `<svg viewBox="0 0 24 24"><use href="#i-${id}"/></svg>`;
+const unaccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
+const fmtK = n => n >= 1000 ? (n/1000).toLocaleString('vi-VN',{maximumFractionDigits:1}) + 'K' : String(n);
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- mock data (mô phỏng) ---------- */
+const ACCOUNTS = [
+  { id:'guest', username:null, role:null, label:'Khách (chưa đăng nhập)' },
+  { id:'u_linh', username:'linh', role:'user', birth_year:2001, handle:'linh.di', color:'#f2b84b', label:'linh · người dùng, 25 tuổi' },
+  { id:'u_be', username:'be', role:'user', birth_year:2010, handle:'be.ham.di', color:'#ff9db0', label:'be · người dùng, 16 tuổi' },
+  { id:'u_mod', username:'mod', role:'moderator', birth_year:1998, handle:'mod', color:'#a89cff', label:'mod · kiểm duyệt' },
+  { id:'u_admin', username:'admin', role:'admin', birth_year:1995, handle:'admin', color:'#43d1c6', label:'admin · quản trị' }
+];
+const DEST = {
+  nhatrang:{ name:'Nha Trang', aliases:['nha trang','nhatrang','nt','cam ranh'] },
+  dalat:{ name:'Đà Lạt', aliases:['da lat','dalat','dl'] },
+  phuquoc:{ name:'Phú Quốc', aliases:['phu quoc','phuquoc','pq','dao ngoc'] },
+  hoian:{ name:'Hội An', aliases:['hoi an','hoian','pho co'] }
+};
+const ORIGINS = { SGN:'TP.HCM', HAN:'Hà Nội' };
+const ROUTES = {
+  'SGN-nhatrang':{ flight:750000, fcode:'VN1347 · 06:10, đến Cam Ranh', bus:280000, bname:'Xe giường nằm 22:00, đến 05:30' },
+  'HAN-nhatrang':{ flight:1890000, fcode:'VN1555 · 07:00, đến Cam Ranh', bus:null },
+  'SGN-dalat':{ flight:990000, fcode:'VJ367 · 08:30, đến Liên Khương', bus:320000, bname:'Xe giường nằm 23:00, đến 05:00' },
+  'HAN-dalat':{ flight:1600000, fcode:'VN1561 · 09:15, đến Liên Khương', bus:null },
+  'SGN-phuquoc':{ flight:1250000, fcode:'VN1825 · 07:40', bus:null },
+  'HAN-phuquoc':{ flight:2100000, fcode:'VN1233 · 06:30', bus:null },
+  'SGN-hoian':{ flight:1050000, fcode:'VN124 · 08:00, đến Đà Nẵng', bus:null },
+  'HAN-hoian':{ flight:1350000, fcode:'VN163 · 07:30, đến Đà Nẵng', bus:null }
+};
+const HOTELS = {
+  'h-nt-bay':{ dest:'nhatrang', name:'Vinpearl Resort Nha Trang Bay', price:2600000, star:5, rating:4.6, near:'1,2 km tới VinWonders', used:37 },
+  'h-nt':{ dest:'nhatrang', name:'Vinpearl Resort Nha Trang', price:2100000, star:5, rating:4.5, near:'0,8 km tới VinWonders', used:21 },
+  'h-nt-beach':{ dest:'nhatrang', name:'Vinpearl Beachfront Nha Trang', price:1700000, star:5, rating:4.3, near:'7,0 km tới VinWonders', used:9 },
+  'h-nt-condo':{ dest:'nhatrang', name:'Condotel Biển Trần Phú', price:1150000, star:4, rating:4.0, near:'6,5 km tới VinWonders', used:3 },
+  'h-pq':{ dest:'phuquoc', name:'Vinpearl Resort & Spa Phú Quốc', price:2900000, star:5, rating:4.7, near:'Sát biển Bãi Dài', used:28 },
+  'h-pq-2':{ dest:'phuquoc', name:'VinHolidays Fiesta Phú Quốc', price:1500000, star:4, rating:4.2, near:'2,5 km tới VinWonders', used:12 },
+  'h-ha':{ dest:'hoian', name:'Vinpearl Resort & Spa Hội An', price:2400000, star:5, rating:4.6, near:'15 phút tới phố cổ', used:16 },
+  'h-ha-2':{ dest:'hoian', name:'Nhà Cổ Boutique Hội An', price:950000, star:3, rating:4.4, near:'Trong phố cổ', used:6 },
+  'h-dl':{ dest:'dalat', name:'Đồi Thông Lodge', price:850000, star:3, rating:4.2, near:'4 km tới hồ Xuân Hương', used:5 },
+  'h-dl-2':{ dest:'dalat', name:'Hồ Xuân Hương Boutique', price:1250000, star:4, rating:4.4, near:'Sát hồ Xuân Hương', used:4 }
+};
+const TICKETS = {
+  't-vw-nt':{ dest:'nhatrang', name:'VinWonders Nha Trang', price:950000 },
+  't-vw-pq':{ dest:'phuquoc', name:'VinWonders Phú Quốc', price:950000 },
+  't-safari':{ dest:'phuquoc', name:'Vinpearl Safari Phú Quốc', price:650000 },
+  't-show-ha':{ dest:'hoian', name:'Show Ký ức Hội An', price:600000 }
+};
+const DATES = [
+  { id:'d1', label:'T6 06/11', factor:1.1 },
+  { id:'d2', label:'T6 13/11', factor:1.1, soldOut:['t-vw-nt'] },
+  { id:'d3', label:'T5 19/11', factor:1.0 },
+  { id:'d4', label:'T6 27/11', factor:1.1 }
+];
+
+const POSTS = [
+  { id:'pst_x91a', handle:'linh.di', color:'#f2b84b', dest:'nhatrang', origin:'SGN', scene:'beach', days:3, nights:2,
+    title:'Nha Trang 3N2Đ chill', caption:'Biển Nha Trang tháng 11 trong veo, resort view vịnh, hoàng hôn đẹp xỉu.', tags:['nhatrang','chill','bien'],
+    reason:'Được lưu nhiều trong 24 giờ qua', likes:12400, comments:46, saves:2100, go:37, reports:0,
+    items:[
+      { day:1, type:'flight', leg:'out', kind:'service', booked:true },
+      { day:1, type:'hotel', kind:'service', pid:'h-nt-bay', nights:2, booked:true, tip:'Xin phòng tầng cao để có view vịnh' },
+      { day:2, type:'ticket', kind:'service', pid:'t-vw-nt', booked:true, tip:'Đi cáp treo lúc hoàng hôn' },
+      { day:2, type:'food', kind:'manual', name:'Bún chả cá chợ Đầm', tip:'Quán đầu dãy, 35k một tô' },
+      { day:3, type:'flight', leg:'back', kind:'service', booked:true }
+    ] },
+  { id:'pst_d2la', handle:'minh.phuot', color:'#9fd88a', dest:'dalat', origin:'SGN', scene:'mountain', days:2, nights:1,
+    title:'Đà Lạt 2N1Đ săn mây', caption:'Săn mây Cầu Đất lúc 5h sáng, lạnh mà đáng. Lộ trình tự đi, không qua app.', tags:['dalat','sanmay','phuot'],
+    reason:'Mới đăng, đang lên nhanh', likes:5300, comments:18, saves:880, go:4, reports:1,
+    items:[
+      { day:1, type:'bus', leg:'out', kind:'manual', name:'Xe giường nằm tự đặt ở bến' },
+      { day:1, type:'hotel', kind:'manual', name:'Homestay đồi thông của bạn', nights:1 },
+      { day:2, type:'place', kind:'manual', name:'Săn mây đồi chè Cầu Đất', tip:'Thuê xe máy đi lúc 4h30' },
+      { day:2, type:'food', kind:'manual', name:'Bánh căn Nhà Chung' },
+      { day:2, type:'bus', leg:'back', kind:'manual', name:'Xe giường nằm về chiều' }
+    ] },
+  { id:'pst_p4q', handle:'an.an', color:'#7cc7ff', dest:'phuquoc', origin:'HAN', scene:'island', days:4, nights:3,
+    title:'Phú Quốc 4N3Đ cả nhà', caption:'Cả nhà 4 người đi Phú Quốc, bé mê Safari nhất. Biển Bãi Dài xanh như ảnh.', tags:['phuquoc','giadinh','safari'],
+    reason:'Nhiều người bấm Đi tương tự', likes:9100, comments:31, saves:1500, go:52, reports:0,
+    items:[
+      { day:1, type:'flight', leg:'out', kind:'service', booked:true },
+      { day:1, type:'hotel', kind:'service', pid:'h-pq', nights:3, booked:true },
+      { day:2, type:'ticket', kind:'service', pid:'t-safari', booked:true, tip:'Đi buổi sáng, thú hoạt động nhiều' },
+      { day:3, type:'ticket', kind:'service', pid:'t-vw-pq', booked:false },
+      { day:3, type:'food', kind:'manual', name:'Chợ đêm Dinh Cậu' },
+      { day:4, type:'flight', leg:'back', kind:'service', booked:true }
+    ] },
+  { id:'pst_h0a', handle:'hoa.hoian', color:'#ffb27a', dest:'hoian', origin:'SGN', scene:'lantern', days:2, nights:1,
+    title:'Hội An 2N1Đ đèn lồng', caption:'Thả đèn hoa đăng sông Hoài, tối thứ Bảy phố cổ lung linh. Ở resort qua app, còn lại tự đi.', tags:['hoian','phoco','denlong'],
+    reason:'Hợp với gu "chill" của bạn', likes:7600, comments:22, saves:1300, go:11, reports:0,
+    items:[
+      { day:1, type:'flight', leg:'out', kind:'manual', name:'Vé máy bay tự săn' },
+      { day:1, type:'hotel', kind:'service', pid:'h-ha', nights:1, booked:true },
+      { day:1, type:'ticket', kind:'service', pid:'t-show-ha', booked:false },
+      { day:2, type:'place', kind:'manual', name:'Thả đèn hoa đăng sông Hoài' },
+      { day:2, type:'flight', leg:'back', kind:'manual', name:'Vé máy bay tự săn' }
+    ] }
+];
+
+const COMMENTS = {
+  pst_x91a: [
+    { id:'c1', who:'thao.vy', tag:'tripflix', t:'Biển trong thật sự, hoàng hôn ở bãi riêng đẹp y video.' },
+    { id:'c2', who:'quoc.bui', tag:null, t:'Đẹp quá, tháng sau mình đi thử.' },
+    { id:'c3', who:'nga.nguyen', tag:'tripflix', t:'Hồ bơi cuối tuần đông lắm, nên xuống lúc 7h sáng.' },
+    { id:'c4', who:'hieu.tran', tag:'tripflix', t:'Phòng nhỏ hơn trong video nha, view vịnh chỉ có ở tầng 5 trở lên.' },
+    { id:'c5', who:'mai.ly', tag:'self', t:'Tuần trước mình ở đây, nhân viên dễ thương, check-in nhanh.' },
+    { id:'c6', who:'tung.lam', tag:'tripflix', t:'Đồ ăn trong resort đắt, ra ngoài ăn rẻ hơn nhiều.' },
+    { id:'c7', who:'yen.do', tag:'tripflix', t:'Hoàng hôn ở bãi riêng là đỉnh nhất chuyến đi.' },
+    { id:'c8', who:'khoa.pham', tag:'self', t:'Mình đi rồi, phòng tầng thấp không thấy biển đâu, khác video.' },
+    { id:'c9', who:'ha.trinh', tag:'tripflix', t:'Nhân viên thân thiện, có hỗ trợ giữ đồ khi đến sớm.' },
+    { id:'c10', who:'duc.anh', tag:null, t:'Giá bao nhiêu vậy bạn?' },
+    { id:'c11', who:'lan.chi', tag:'tripflix', t:'Hồ bơi đông thật, chiều thứ Bảy gần như không có ghế.' },
+    { id:'c12', who:'bao.ngoc', tag:'self', t:'Buffet sáng ngon nhưng đồ ăn gọi thêm thì đắt.' }
+  ],
+  pst_d2la: [
+    { id:'d1', who:'son.le', tag:'self', t:'Săn mây phải đi tầm 4h, trễ là hết.' },
+    { id:'d2', who:'my.tran', tag:null, t:'Lạnh không bạn?' }
+  ],
+  pst_p4q: [
+    { id:'p1', who:'hung.vo', tag:'tripflix', t:'Safari bé nhà mình mê, nên đi sáng sớm.' },
+    { id:'p2', who:'thu.ha', tag:'tripflix', t:'Biển đẹp, nhưng tháng 11 có hôm sóng to không tắm được.' }
+  ],
+  pst_h0a: [
+    { id:'h1', who:'kim.anh', tag:'tripflix', t:'Phố cổ tối thứ Bảy đông, đi thuyền lúc 18h là đẹp nhất.' }
+  ]
+};
+const SUMMARIES = {
+  pst_x91a: {
+    used:46, tripflix:8, self:4,
+    pros:[ { t:'Biển trong, hoàng hôn đẹp như video', ids:['c1','c7'] }, { t:'Nhân viên thân thiện, check-in nhanh', ids:['c5','c9'] } ],
+    cons:[ { t:'Hồ bơi đông vào cuối tuần', ids:['c3','c11'] }, { t:'Đồ ăn trong resort đắt', ids:['c6','c12'] } ],
+    gaps:[ { claim:'Video: phòng rộng, view vịnh', real:'Phòng nhỏ hơn; view vịnh chỉ ở tầng cao', ids:['c4','c8'] } ]
+  }
+};
+
+/* ---------- state ---------- */
+const S = {
+  user:null, view:'feed', idx:0, hidden:new Set(), liked:new Set(), saved:new Set(),
+  trips:{ u_linh:[ { title:'Nha Trang · Vinpearl Resort Nha Trang Bay', when:'Tháng 10/2026', status:'Đã hoàn tất' }, { title:'Bay TP.HCM ⇄ Cam Ranh', when:'Tháng 10/2026', status:'Đã hoàn tất' }, { title:'VinWonders Nha Trang × 2', when:'Tháng 10/2026', status:'Đã hoàn tất' } ] },
+  chat:[], plan:null, go:null, upload:null, pending:null, sheet:null, sumSel:null
+};
+function visiblePosts(){ return POSTS.filter(p => !S.hidden.has(p.id)); }
+function curPost(){ return visiblePosts()[S.idx]; }
+function age(u){ return u ? 2026 - u.birth_year : null; }
+
+/* ---------- if-else permissions (the whole "auth" of the demo) ---------- */
+function can(action){
+  const r = S.user && S.user.role;
+  if (!r) return ['view','chat','go_view'].includes(action);          // khách
+  if (r === 'user') return ['view','chat','go_view','interact','post','pay'].includes(action);
+  if (r === 'moderator') return ['view','chat','go_view','interact','moderate'].includes(action); // không xem thanh toán
+  if (r === 'admin') return true;
+  return false;
+}
+function renderPermCode(){
+  const u = S.user;
+  $('#perm-code').innerHTML =
+`<b>// user hiện tại</b>
+${esc(JSON.stringify(u ? { username:u.username, role:u.role, birth_year:u.birth_year } : null))}
+
+<b>if</b> (!role)            → xem, hỏi trợ lý
+<b>else if</b> (role=='user') → + đăng, tương tác, đặt
+  <b>if</b> (tuổi &lt; 18)      → chặn bước thanh toán
+<b>else if</b> (role=='moderator') → + ẩn/hiện bài
+                       (không xem thanh toán)
+<b>else if</b> (role=='admin') → tất cả`;
+}
+
+/* ---------- canvas "videos" ---------- */
+const PAL = { beach:['#2b1b4a','#ff7a59'], mountain:['#8fa9b3','#2f4a4b'], island:['#6fd3f0','#0a6f8f'], lantern:['#0d1330','#ff9f43'] };
+function drawScene(ctx, w, h, t, kind){
+  ctx.clearRect(0,0,w,h);
+  if (kind === 'beach'){
+    let g = ctx.createLinearGradient(0,0,0,h*0.62); g.addColorStop(0,'#2b1b4a'); g.addColorStop(.6,'#ff7a59'); g.addColorStop(1,'#ffc06b');
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h*0.62);
+    const sy = h*0.52 + Math.sin(t*0.4)*3, sr = w*0.13;
+    let sg = ctx.createRadialGradient(w*0.62,sy,0,w*0.62,sy,sr*3); sg.addColorStop(0,'rgba(255,214,130,.55)'); sg.addColorStop(1,'rgba(255,214,130,0)');
+    ctx.fillStyle = sg; ctx.fillRect(0,0,w,h*0.62);
+    ctx.fillStyle = '#ffd98a'; ctx.beginPath(); ctx.arc(w*0.62,sy,sr,0,Math.PI*2); ctx.fill();
+    g = ctx.createLinearGradient(0,h*0.6,0,h); g.addColorStop(0,'#3a3a6a'); g.addColorStop(1,'#0b1a2e');
+    ctx.fillStyle = g; ctx.fillRect(0,h*0.6,w,h*0.4);
+    for (let i=0;i<9;i++){ const y = h*0.62 + i*10 + i*i*2, a = .55 - i*.05;
+      ctx.fillStyle = `rgba(255,205,120,${Math.max(a,0)*(.6+.4*Math.sin(t*2+i))})`; const ww = sr*(1.4 - i*.1);
+      ctx.fillRect(w*0.62 - ww/2 + Math.sin(t+i)*6, y, ww, 2.2); }
+    ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.lineWidth = 1.2;
+    for (let i=0;i<14;i++){ const y = h*0.63 + i*i*1.7; ctx.beginPath();
+      for (let x=0;x<=w;x+=8){ ctx.lineTo(x, y + Math.sin(x*0.03 + t*(1+i*.05) + i)*(1+i*.25)); } ctx.stroke(); }
+    ctx.fillStyle = '#120b1e'; ctx.beginPath(); ctx.moveTo(0,h*0.62); ctx.quadraticCurveTo(w*0.18,h*0.585,w*0.32,h*0.62); ctx.fill();
+  } else if (kind === 'mountain'){
+    let g = ctx.createLinearGradient(0,0,0,h); g.addColorStop(0,'#c9d6d6'); g.addColorStop(.55,'#8fa9b3'); g.addColorStop(1,'#33504f');
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    const layers = [ ['#6f8d8e',0.42,26,0.004], ['#4e6b6a',0.54,34,0.006], ['#2f4a4b',0.66,30,0.009], ['#1b2e30',0.8,22,0.013] ];
+    layers.forEach(([c,base,amp,f],li) => {
+      ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0,h);
+      for (let x=0;x<=w;x+=6){ const y = h*base - Math.abs(Math.sin(x*f*3 + li))*amp - Math.sin(x*f*7 + li*2)*amp*.4; ctx.lineTo(x,y); }
+      ctx.lineTo(w,h); ctx.fill();
+      if (li===3){ for (let x=8;x<w;x+=17){ const y = h*base - Math.abs(Math.sin(x*f*3 + li))*amp - Math.sin(x*f*7 + li*2)*amp*.4;
+        ctx.beginPath(); ctx.moveTo(x-6,y+4); ctx.lineTo(x,y-22-(x%5)*2); ctx.lineTo(x+6,y+4); ctx.fill(); } }
+      const fx = ((t*12*(li+1)) % (w+200)) - 200; ctx.fillStyle = 'rgba(240,245,245,.22)';
+      ctx.beginPath(); ctx.ellipse(fx, h*base - amp*.6, 160, 18, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse((fx+w*0.6)%(w+200)-100, h*base - amp*.2, 130, 14, 0, 0, Math.PI*2); ctx.fill();
+    });
+  } else if (kind === 'island'){
+    let g = ctx.createLinearGradient(0,0,0,h*0.46); g.addColorStop(0,'#58c4ea'); g.addColorStop(1,'#c4f1f7');
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h*0.46);
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    for (let i=0;i<4;i++){ const cx = ((t*8*(i+1)*0.6 + i*130) % (w+160)) - 80, cy = 70 + i*38;
+      ctx.beginPath(); ctx.ellipse(cx,cy,46,13,0,0,Math.PI*2); ctx.ellipse(cx+26,cy-8,30,12,0,0,Math.PI*2); ctx.fill(); }
+    g = ctx.createLinearGradient(0,h*0.46,0,h*0.8); g.addColorStop(0,'#1bc0c9'); g.addColorStop(1,'#0a6f8f');
+    ctx.fillStyle = g; ctx.fillRect(0,h*0.46,w,h*0.34);
+    for (let i=0;i<40;i++){ const x = (i*53.3 + t*10) % w, y = h*0.48 + (i*37 % (h*0.3));
+      ctx.fillStyle = `rgba(255,255,255,${.25+.25*Math.sin(t*3+i)})`; ctx.fillRect(x,y,6,1.5); }
+    const bx = (t*14) % (w+60) - 30, by = h*0.6 + Math.sin(t*1.5)*2;
+    ctx.fillStyle = '#f6efe2'; ctx.beginPath(); ctx.moveTo(bx-16,by); ctx.lineTo(bx+16,by); ctx.lineTo(bx+11,by+6); ctx.lineTo(bx-11,by+6); ctx.fill();
+    ctx.fillRect(bx-1,by-16,2,16); ctx.beginPath(); ctx.moveTo(bx+1,by-15); ctx.lineTo(bx+12,by-3); ctx.lineTo(bx+1,by-3); ctx.fill();
+    ctx.fillStyle = '#f3dfb3'; ctx.beginPath(); ctx.moveTo(0,h); ctx.lineTo(0,h*0.8); ctx.quadraticCurveTo(w*0.5,h*0.74 + Math.sin(t*1.2)*3,w,h*0.82); ctx.lineTo(w,h); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0,h*0.8);
+    ctx.quadraticCurveTo(w*0.5,h*0.74 + Math.sin(t*1.2)*3,w,h*0.82); ctx.stroke();
+  } else {
+    let g = ctx.createLinearGradient(0,0,0,h); g.addColorStop(0,'#0d1330'); g.addColorStop(.55,'#27224d'); g.addColorStop(1,'#0b0f22');
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#120f22';
+    const roofs = [[0,.5,.2],[.18,.46,.16],[.32,.52,.2],[.5,.44,.18],[.66,.49,.17],[.82,.45,.2]];
+    roofs.forEach(([x,y,ww]) => { ctx.fillRect(w*x, h*y, w*ww, h*(0.63-y)); ctx.beginPath(); ctx.moveTo(w*x - 6, h*y); ctx.lineTo(w*(x+ww/2), h*y - 18); ctx.lineTo(w*(x+ww)+6, h*y); ctx.fill();
+      ctx.fillStyle = 'rgba(255,190,90,.55)'; ctx.fillRect(w*(x+ww*0.3), h*(y+0.04), 6, 9); ctx.fillRect(w*(x+ww*0.62), h*(y+0.05), 6, 9); ctx.fillStyle = '#120f22'; });
+    g = ctx.createLinearGradient(0,h*0.63,0,h); g.addColorStop(0,'#1a2550'); g.addColorStop(1,'#070a18');
+    ctx.fillStyle = g; ctx.fillRect(0,h*0.63,w,h*0.37);
+    const cols = ['#ff5d5d','#ffb347','#ffd166','#ff7aa8'];
+    for (let i=0;i<10;i++){ const x = w*(0.06 + i*0.098), y = h*(0.24 + (i%3)*0.06) + Math.sin(t*1.3 + i)*4, c = cols[i%4];
+      let lg = ctx.createRadialGradient(x,y,0,x,y,28); lg.addColorStop(0,c+'cc'); lg.addColorStop(1,c+'00'); ctx.fillStyle = lg; ctx.fillRect(x-30,y-30,60,60);
+      ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x,y,8,10,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(255,190,110,${.18 + .12*Math.sin(t*2+i)})`; ctx.beginPath(); ctx.ellipse(x + Math.sin(t+i)*2, h*0.72 + (i%3)*14, 5, 12, 0, 0, Math.PI*2); ctx.fill(); }
+    for (let i=0;i<6;i++){ const x = (i*71 + t*9) % w, y = h*0.8 + (i%3)*18 + Math.sin(t+i)*2;
+      ctx.fillStyle = '#ffcf7a'; ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+      let fg = ctx.createRadialGradient(x,y,0,x,y,14); fg.addColorStop(0,'rgba(255,207,122,.5)'); fg.addColorStop(1,'rgba(255,207,122,0)'); ctx.fillStyle = fg; ctx.fillRect(x-14,y-14,28,28); }
+  }
+}
+function sizeCanvas(cv){
+  const r = cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.max(1, Math.round(r.width*d)); cv.height = Math.max(1, Math.round(r.height*d));
+  const ctx = cv.getContext('2d'); ctx.setTransform(d,0,0,d,0,0); return ctx;
+}
+let t0 = performance.now();
+function frame(now){
+  const t = (now - t0)/1000;
+  if (S.view === 'feed'){
+    const slides = document.querySelectorAll('.slide');
+    slides.forEach((sl, i) => {
+      if (Math.abs(i - S.idx) > 1) return;
+      const cv = sl.querySelector('canvas'); if (!cv._ctx){ cv._ctx = sizeCanvas(cv); cv._static = false; }
+      if (i !== S.idx && cv._static) return;
+      const r = cv.getBoundingClientRect();
+      drawScene(cv._ctx, r.width, r.height, i === S.idx ? t : 0, cv.dataset.scene);
+      cv._static = i !== S.idx;
+      if (i === S.idx){ const pr = sl.querySelector('.progress i'); if (pr) pr.style.width = ((t % 15)/15*100) + '%'; }
+    });
+  }
+  if (!reduced) requestAnimationFrame(frame);
+}
+
+/* ---------- feed ---------- */
+function verified(p){ return p.items.some(i => i.booked && ['hotel','flight','bus'].includes(i.type)); }
+function itemName(p, it){
+  if (it.kind === 'manual') return it.name;
+  if (it.type === 'hotel') return HOTELS[it.pid].name;
+  if (it.type === 'ticket') return TICKETS[it.pid].name;
+  const r = ROUTES[p.origin + '-' + p.dest];
+  return (it.leg === 'out' ? 'Bay ' + ORIGINS[p.origin] + ' → ' + DEST[p.dest].name : 'Bay ' + DEST[p.dest].name + ' → ' + ORIGINS[p.origin]);
+}
+function itemIcon(type){ return { flight:'plane', bus:'bus', hotel:'bed', ticket:'ticket', food:'food', place:'pin' }[type] || 'pin'; }
+function renderFeed(){
+  const list = visiblePosts();
+  if (S.idx >= list.length) S.idx = Math.max(0, list.length - 1);
+  const track = $('#track');
+  if (!list.length){ track.innerHTML = '<div class="feed-empty">Chưa có video nào đang hiện.</div>'; return; }
+  track.innerHTML = list.map(p => {
+    const v = verified(p);
+    return `<article class="slide" data-post="${p.id}">
+      <canvas data-scene="${p.scene}" aria-hidden="true"></canvas><div class="shade"></div>
+      <div class="progress"><i></i></div>
+      <div class="reason">${esc(p.reason)}</div>
+      <div class="rail">
+        <button data-act="profile" aria-label="Trang của ${esc(p.handle)}"><span class="avatar" style="background:${p.color}">${esc(p.handle[0].toUpperCase())}</span></button>
+        <button data-act="like" class="${S.liked.has(p.id)?'on':''}" aria-label="Thích">${ico('heart')}<span>${fmtK(p.likes + (S.liked.has(p.id)?1:0))}</span></button>
+        <button data-act="comments" aria-label="Bình luận">${ico('chat')}<span>${fmtK(p.comments)}</span></button>
+        <button data-act="save" class="${S.saved.has(p.id)?'saved':''}" aria-label="Lưu">${ico('bookmark')}<span>${fmtK(p.saves + (S.saved.has(p.id)?1:0))}</span></button>
+        <button data-act="share" aria-label="Chia sẻ">${ico('share')}<span>Chia sẻ</span></button>
+        <button data-act="ask" class="ai" aria-label="Hỏi trợ lý về video này">${ico('spark')}<span>Hỏi AI</span></button>
+      </div>
+      <div class="info">
+        <div class="who">@${esc(p.handle)} ${v ? `<span class="badge-v">${ico('check')}Verified</span>` : `<span class="badge-self">Lộ trình tự chia sẻ</span>`}</div>
+        <div class="cap">${esc(p.caption)} <span class="tags">${p.tags.map(t=>'#'+esc(t)).join(' ')}</span></div>
+        <button class="itn-chip" data-act="itinerary">${ico('route')} Lộ trình ${p.days}N${p.nights}Đ · ${p.items.length} mục · ${esc(DEST[p.dest].name)}</button>
+      </div>
+      <button class="go-btn" data-act="go">${ico('route')} Đi tương tự</button>
+    </article>`;
+  }).join('');
+  document.querySelectorAll('.slide canvas').forEach(cv => cv._ctx = null);
+  moveFeed(S.idx, true);
+  if (reduced) requestAnimationFrame(frame);
+}
+function moveFeed(i, instant){
+  const n = visiblePosts().length; if (!n) return;
+  S.idx = Math.max(0, Math.min(n-1, i));
+  const track = $('#track');
+  if (instant){ track.style.transition = 'none'; requestAnimationFrame(() => track.style.transition = ''); }
+  track.style.transform = `translateY(${-S.idx*100}%)`;
+  t0 = performance.now();
+  if (reduced) setTimeout(() => requestAnimationFrame(frame), 50);
+  setNow('feed');
+}
+let wheelLock = 0;
+$('#feed').addEventListener('wheel', e => { e.preventDefault(); const now = Date.now(); if (now - wheelLock < 600 || Math.abs(e.deltaY) < 12) return; wheelLock = now; moveFeed(S.idx + (e.deltaY > 0 ? 1 : -1)); }, { passive:false });
+let ty = null;
+$('#feed').addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive:true });
+$('#feed').addEventListener('touchend', e => { if (ty === null) return; const dy = e.changedTouches[0].clientY - ty; ty = null; if (Math.abs(dy) > 45) moveFeed(S.idx + (dy < 0 ? 1 : -1)); });
+document.addEventListener('keydown', e => {
+  if (S.view !== 'feed' || !$('#scrim').hidden || !$('#flow').hidden) return;
+  if (['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'ArrowDown'){ e.preventDefault(); moveFeed(S.idx+1); }
+  if (e.key === 'ArrowUp'){ e.preventDefault(); moveFeed(S.idx-1); }
+});
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){ const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600); }
+
+/* ---------- login (accounts.json) ---------- */
+function requireLogin(action, then){
+  if (can(action)) { then(); return; }
+  if (S.user){ toast('Tài khoản ' + S.user.username + ' không có quyền làm việc này.'); return; }
+  S.pending = then; openLogin();
+}
+function openLogin(){
+  if (!$('#scrim').hidden) closeSheet();
+  const f = $('#flow'); f.hidden = false;
+  f.innerHTML = `<div class="app-h"><button class="x" data-flow="close" aria-label="Đóng">${ico('x')}</button><h2>Đăng nhập</h2><span></span></div>
+  <div class="app-b"><p class="muted">Bản demo đọc tài khoản từ <span class="num">accounts.json</span>. Chọn một tài khoản để tiếp tục, xong sẽ quay lại đúng chỗ đang làm.</p>
+  ${ACCOUNTS.filter(a=>a.role).map(a => `<button class="acct" data-login="${a.id}"><span class="av" style="background:${a.color}">${a.username[0].toUpperCase()}</span><span><b>${esc(a.username)}</b><br><span class="faint">${esc(a.label)}</span></span>${ico('back').replace('<svg','<svg style="width:16px;height:16px;transform:rotate(180deg)"')}</button>`).join('')}</div>`;
+  setNow('login');
+}
+function login(id){
+  const a = ACCOUNTS.find(x => x.id === id);
+  S.user = a.role ? a : null; $('#role-sel').value = id; renderPermCode();
+  if (S.view === 'me') renderMe();
+  if (S.view === 'assistant') renderAssistant();
+}
+
+/* ---------- sheet: itinerary + comments ---------- */
+function openSheet(html){ const sc = $('#scrim'); sc.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`; sc.hidden = false; }
+function closeSheet(){ $('#scrim').hidden = true; S.sheet = null; setNow(S.view); }
+$('#scrim').addEventListener('click', e => { if (e.target.id === 'scrim') closeSheet(); });
+
+function openItinerary(p){
+  S.sheet = 'itinerary';
+  const days = [...new Set(p.items.map(i => i.day))];
+  openSheet(`<div class="sheet-h"><h3>${esc(p.title)}</h3><button class="x" data-sheet="close" aria-label="Đóng">${ico('x')}</button></div>
+  <div class="sheet-b">
+    <div class="row">${verified(p) ? `<span class="badge-v">${ico('check')}Verified</span>` : `<span class="badge-self">Lộ trình tự chia sẻ</span>`}<span class="faint">@${esc(p.handle)} · xuất phát ${esc(ORIGINS[p.origin])}</span></div>
+    ${days.map(d => `<div class="day">Ngày ${d}</div>` + p.items.filter(i => i.day === d).map(it => `
+      <div class="item"><span class="ico">${ico(itemIcon(it.type))}</span>
+        <div><div class="t">${esc(itemName(p,it))}</div><div class="d">${it.type==='hotel' ? (it.nights + ' đêm') : ''}${it.tip ? (it.type==='hotel'?' · ':'') + 'Mẹo: ' + esc(it.tip) : ''}</div></div>
+        <div class="r">${it.booked ? '<span class="pill ok">Đặt qua Tripflix</span>' : it.kind === 'service' ? '<span class="pill self">Có trên app</span>' : '<span class="pill self">Tự chia sẻ</span>'}</div>
+      </div>`).join('')).join('')}
+    <div class="rule"><b>Quy tắc Verified:</b> có ít nhất một mục chỗ ở hoặc phương tiện khớp đơn đã hoàn tất của chính người đăng. Lộ trình không hiện ngày đi, giá đã trả hay mã đặt chỗ.</div>
+  </div>
+  <div class="sheet-f"><button class="btn primary block" data-act="go">${ico('route').replace('<svg','<svg style="width:18px;height:18px"')} Đi tương tự</button></div>`);
+  setNow('itinerary');
+}
+
+function openComments(p){
+  S.sheet = 'comments';
+  const cs = COMMENTS[p.id] || [], sm = SUMMARIES[p.id];
+  const tagHtml = t => t === 'tripflix' ? '<span class="pill ok">Đã đi · Tripflix</span>' : t === 'self' ? '<span class="pill self">Tự nhận đã đi</span>' : '';
+  const travelers = cs.filter(c => c.tag).length;
+  const pt = (cls, k, o, key) => `<button class="pt ${cls} ${S.sumSel===key?'sel':''}" data-sum="${key}"><span><span class="k">${k}</span> ${esc(o.t || o.real)}</span><span class="n">${o.ids.length} người</span></button>`;
+  const sumHtml = sm ? `<div class="sum">
+      <h4>${ico('spark')} Người đi rồi nói gì <span class="pill ai">AI tóm tắt</span></h4>
+      <div class="faint">Từ ${sm.used} bình luận · ${sm.tripflix + sm.self} người đã đi (${sm.tripflix} đặt qua Tripflix). Bấm một ý để xem bình luận gốc.</div>
+      <div class="grp">Khen</div>${sm.pros.map((o,i) => pt('good','+',o,'p'+i)).join('')}
+      <div class="grp">Chê</div>${sm.cons.map((o,i) => pt('bad','−',o,'c'+i)).join('')}
+      <div class="grp">Video và thực tế</div>${sm.gaps.map((o,i) => `<div class="gapbox"><div class="faint">${esc(o.claim)}</div>${pt('gap','!',o,'g'+i)}</div>`).join('')}
+    </div>` : `<div class="sum"><h4>${ico('spark')} Người đi rồi nói gì <span class="pill ai">AI</span></h4><div class="faint">Chưa đủ người đi rồi để tóm tắt (cần ít nhất 5 bình luận và 2 người đã đi; hiện có ${travelers} người đã đi).</div></div>`;
+  let selIds = [];
+  if (sm && S.sumSel){ const g = S.sumSel[0], i = +S.sumSel.slice(1); selIds = (g==='p'?sm.pros:g==='c'?sm.cons:sm.gaps)[i].ids; }
+  const shown = selIds.length ? cs.filter(c => selIds.includes(c.id)) : cs;
+  openSheet(`<div class="sheet-h"><h3>${fmtK(p.comments)} bình luận</h3><button class="x" data-sheet="close" aria-label="Đóng">${ico('x')}</button></div>
+  <div class="sheet-b">${sumHtml}
+    ${selIds.length ? `<div class="row"><span class="faint">Đang lọc ${selIds.length} bình luận làm căn cứ</span><button class="link" data-sum="">Bỏ lọc</button></div>` : ''}
+    ${shown.map(c => `<div class="cmt ${selIds.includes(c.id)?'hl':''}"><span class="av" style="background:hsl(${(c.who.length*47)%360} 70% 72%)">${esc(c.who[0].toUpperCase())}</span><div><div class="nm">${esc(c.who)} ${tagHtml(c.tag)}</div><div class="tx">${esc(c.t)}</div></div></div>`).join('')}
+    <div class="faint">Bản mô phỏng hiện ${cs.length} bình luận tiêu biểu.</div>
+  </div>
+  <div class="sheet-f"><form class="compose" data-form="comment"><input id="cmt-in" placeholder="${S.user ? 'Viết bình luận…' : 'Đăng nhập để bình luận'}" aria-label="Viết bình luận"><button class="btn primary" type="submit">Gửi</button></form></div>`);
+  setNow('comments');
+}
+
+/* ---------- pricing: Đi tương tự ---------- */
+function buildPackage(p, o){
+  const date = DATES.find(d => d.id === o.date), rooms = Math.ceil(o.pax/2), route = ROUTES[o.origin + '-' + p.dest] || {};
+  const lines = [];
+  // chặng đi
+  const outItem = p.items.find(i => i.leg === 'out');
+  const transport = (leg) => {
+    const it = p.items.find(i => i.leg === leg);
+    const exact = it && it.kind === 'service' && it.type === 'flight' && o.origin === p.origin;
+    let mode = it && it.type === 'bus' && route.bus ? 'bus' : 'flight';
+    if (mode === 'flight' && !route.flight) mode = 'bus';
+    const unit = mode === 'bus' ? route.bus : route.flight;
+    const from = leg === 'out' ? ORIGINS[o.origin] : DEST[p.dest].name, to = leg === 'out' ? DEST[p.dest].name : ORIGINS[o.origin];
+    lines.push({ key:'tr-'+leg, icon: mode === 'bus' ? 'bus' : 'plane', title:(mode==='bus'?'Xe ':'Bay ') + from + ' → ' + to,
+      detail:(mode==='bus'?route.bname:route.fcode) + ' · ' + o.pax + ' người', price:unit*o.pax,
+      tag: exact ? 'exact' : 'equiv', note: exact ? '' : (it && it.kind === 'service' ? 'Đổi theo nơi xuất phát của bạn' : 'Thay cho: ' + (it ? it.name : 'chặng đi')) });
+  };
+  transport('out');
+  p.items.filter(i => !i.leg).forEach((it, k) => {
+    if (it.type === 'hotel'){
+      const hid = (o.hotel) || (it.kind === 'service' ? it.pid : cheapestHotel(p.dest));
+      const h = HOTELS[hid], price = Math.round(h.price * it.nights * rooms * date.factor / 1000) * 1000;
+      lines.push({ key:'hotel', icon:'bed', title:h.name, detail:it.nights + ' đêm · ' + rooms + ' phòng' + (date.factor > 1 ? ' · giá cuối tuần' : ''), price,
+        tag: o.hotel && o.hotel !== it.pid ? 'changed' : it.kind === 'service' ? 'exact' : 'equiv', note: it.kind === 'manual' && !o.hotel ? 'Thay cho: ' + it.name : '', swap:true, hid });
+    } else if (it.type === 'ticket'){
+      const tk = TICKETS[it.pid], sold = (date.soldOut || []).includes(it.pid);
+      lines.push({ key:'tk-'+k, icon:'ticket', title:tk.name, detail:'Vé người lớn × ' + o.pax, price:tk.price*o.pax, tag: sold ? 'sold' : 'exact', note: sold ? 'Hết vé ngày ' + date.label + ', đã bỏ khỏi gói' : '' });
+    } else {
+      lines.push({ key:'self-'+k, icon:itemIcon(it.type), title:it.name, detail:it.tip || 'Tự túc tại điểm đến', price:0, tag:'self' });
+    }
+  });
+  transport('back');
+  lines.forEach(l => { l.off = l.tag === 'sold' || (o.off || []).includes(l.key); });
+  const total = lines.reduce((s,l) => s + (l.off ? 0 : l.price), 0);
+  return { lines, total, rooms, date };
+}
+function cheapestHotel(dest){ return Object.entries(HOTELS).filter(([,h]) => h.dest === dest).sort((a,b) => a[1].price - b[1].price)[0][0]; }
+const TAGTXT = { exact:'<span class="pill ok">Đúng như video</span>', equiv:'<span class="pill equiv">Gợi ý tương đương</span>', changed:'<span class="pill equiv">Đã đổi</span>', self:'<span class="pill self">Tự túc</span>', sold:'<span class="pill warn">Hết chỗ</span>' };
+
+function openGo(p, preset){
+  S.go = Object.assign({ post:p.id, step:1, date:'d4', pax:2, origin:'SGN', off:[], hotel:null, payMethod:'qr' }, preset || {});
+  renderGo();
+}
+function renderGo(){
+  const g = S.go, p = POSTS.find(x => x.id === g.post), f = $('#flow'); f.hidden = false;
+  const head = (title, back) => `<div class="app-h"><button class="x" data-flow="${back ? 'back' : 'close'}" aria-label="${back?'Quay lại':'Đóng'}">${ico(back?'back':'x')}</button><h2>${title}</h2><span></span></div>
+    <div class="steps"><i class="${g.step>=1?'on':''}"></i><i class="${g.step>=2?'on':''}"></i><i class="${g.step>=3?'on':''}"></i></div>`;
+  if (g.step === 1){
+    f.innerHTML = head('Đi tương tự') + `<div class="app-b">
+      <div class="card"><div class="row"><span class="avatar" style="background:${p.color};width:34px;height:34px;font-size:13px;border-width:0">${p.handle[0].toUpperCase()}</span><div><b>${esc(p.title)}</b><div class="faint">theo lộ trình của @${esc(p.handle)}</div></div></div></div>
+      <div class="field"><label>Ngày đi</label><div class="seg">${DATES.map(d => `<button data-go-date="${d.id}" class="${g.date===d.id?'on':''}">${d.label}</button>`).join('')}</div></div>
+      <div class="field"><label>Số người</label><div class="stepper"><button data-go-pax="-1" aria-label="Bớt một người">−</button><b class="num" style="font-size:18px">${g.pax}</b><button data-go-pax="1" aria-label="Thêm một người">+</button><span class="faint">${Math.ceil(g.pax/2)} phòng</span></div></div>
+      <div class="field"><label>Đi từ</label><div class="seg">${Object.entries(ORIGINS).map(([k,v]) => `<button data-go-origin="${k}" class="${g.origin===k?'on':''}">${v}</button>`).join('')}</div></div>
+      <div class="notice info">Giá là giá hiện tại của Traveloka lõi (mô phỏng), không phải giá người đăng đã trả.</div>
+    </div><div class="sheet-f"><button class="btn primary block" data-go-next="2">Xem gói trọn gói</button></div>`;
+    setNow('go1');
+  } else if (g.step === 2){
+    const pk = buildPackage(p, g);
+    const sold = pk.lines.filter(l => l.tag === 'sold');
+    f.innerHTML = head('Xác nhận trọn gói', true) + `<div class="app-b">
+      <div class="faint">${esc(pk.date.label)} · ${g.pax} người · từ ${esc(ORIGINS[g.origin])}</div>
+      ${sold.length ? `<div class="notice">${esc(sold.map(s => s.title).join(', '))} hết chỗ ngày ${esc(pk.date.label)}. Mục đã được bỏ khỏi gói; chọn ngày khác nếu muốn giữ.</div>` : ''}
+      <div class="card" style="padding:4px 12px">${pk.lines.map(l => `<div class="line ${l.off?'off':''}">
+        <span class="ico">${ico(l.icon)}</span>
+        <div><div class="t">${esc(l.title)}</div><div class="d">${esc(l.detail)}${l.note ? ' · ' + esc(l.note) : ''}</div><div style="margin-top:4px">${TAGTXT[l.tag]}</div></div>
+        <div class="p"><span class="num">${l.price ? vnd(l.price) : '—'}</span>
+          ${l.swap ? `<button class="link" data-swap="go">Đổi</button>` : ''}
+          ${l.price && l.tag !== 'sold' ? `<button class="link" data-toggle-line="${l.key}">${l.off ? 'Thêm lại' : 'Bỏ'}</button>` : ''}</div>
+      </div>`).join('')}</div>
+      <div class="total"><span>Tổng</span><span class="num">${vnd(pk.total)}</span></div>
+      <div class="faint">Ăn uống và tham quan tự do không tính tiền. Thanh toán một lần cho cả gói; mục nào lỗi lúc thanh toán sẽ được hoàn riêng.</div>
+    </div><div class="sheet-f"><button class="btn primary block" data-go-next="3" ${pk.total ? '' : 'disabled'}>Tiếp tục thanh toán</button></div>`;
+    setNow('go2');
+  } else if (g.step === 3){
+    const pk = buildPackage(p, g), teen = S.user && age(S.user) < 18;
+    f.innerHTML = head('Thanh toán giả lập', true) + `<div class="app-b">
+      <div class="total"><span>Cần thanh toán</span><span class="num">${vnd(pk.total)}</span></div>
+      ${teen ? `<div class="notice">Tài khoản <b>${esc(S.user.username)}</b> chưa đủ 18 tuổi nên không tự đặt chỗ được. Nhờ người lớn đặt giúp nhé.</div>` : ''}
+      ${S.user && S.user.role === 'moderator' ? `<div class="notice">Tài khoản kiểm duyệt không dùng chức năng thanh toán.</div>` : ''}
+      <div class="field"><label>Phương thức</label><div class="seg">
+        ${[['qr','QR ngân hàng'],['card','Thẻ'],['wallet','Ví điện tử']].map(([k,v]) => `<button data-pay="${k}" class="${g.payMethod===k?'on':''}">${v}</button>`).join('')}</div></div>
+      <div class="notice info">Giữ chỗ 10 phút. Bấm nhiều lần cũng chỉ tạo một đơn (Idempotency-Key). Không thu tiền thật.</div>
+    </div><div class="sheet-f"><button class="btn primary block" data-go-pay ${teen || g.paying || (S.user && S.user.role==='moderator') ? 'disabled' : ''}>${g.paying ? 'Đang thanh toán…' : 'Thanh toán ' + vnd(pk.total)}</button></div>`;
+    setNow(teen ? 'teen' : 'go3');
+  } else {
+    f.innerHTML = `<div class="app-b"><div class="done"><div class="big">${ico('check')}</div><h3>Đã đặt xong</h3>
+      <p class="muted">Mã đơn <span class="num">TF-${g.code}</span>. Chuyến đi đã vào mục <b>Chuyến đi của tôi</b>.</p>
+      <p class="faint">Sau khi đi xong, bạn có thể đăng video kể lại; các mục đặt qua Tripflix sẽ có dấu tick và bài được huy hiệu Verified.</p>
+      <button class="btn primary" data-flow="close">Về feed</button><button class="btn ghost" data-nav="me">Xem chuyến đi của tôi</button></div></div>`;
+    setNow('done');
+  }
+}
+
+/* ---------- compare (dùng chung cho Đi tương tự và trợ lý) ---------- */
+function openCompare(dest, curHid, nights, rooms, factor, onPick){
+  const others = Object.entries(HOTELS).filter(([id,h]) => h.dest === dest && id !== curHid).sort((a,b) => a[1].price - b[1].price).slice(0,3);
+  const cur = HOTELS[curHid], cost = h => Math.round(h.price * nights * rooms * factor / 1000) * 1000;
+  const cols = [[curHid, cur, true], ...others.map(([id,h]) => [id, h, false])];
+  S.sheet = 'compare';
+  openSheet(`<div class="sheet-h"><h3>So sánh chỗ ở</h3><button class="x" data-sheet="close" aria-label="Đóng">${ico('x')}</button></div>
+  <div class="sheet-b"><div class="faint">${nights} đêm · ${rooms} phòng · cùng điểm đến ${esc(DEST[dest].name)}, còn phòng ngày đã chọn</div>
+  <div class="cmp"><table><thead><tr><th></th>${cols.map(([,h,c]) => `<th>${c ? 'Đang chọn' : 'Lựa chọn'}</th>`).join('')}</tr></thead><tbody>
+    <tr><td class="faint">Tên</td>${cols.map(([,h,c]) => `<td class="${c?'cur':''}"><b>${esc(h.name)}</b></td>`).join('')}</tr>
+    <tr><td class="faint">Giá</td>${cols.map(([,h]) => `<td class="num">${tr(cost(h))}</td>`).join('')}</tr>
+    <tr><td class="faint">Chênh</td>${cols.map(([,h,c]) => { const d = cost(h) - cost(cur); return `<td class="num ${d<0?'delta-neg':d>0?'delta-pos':''}">${c ? '—' : (d<0?'−':'+') + tr(Math.abs(d))}</td>`; }).join('')}</tr>
+    <tr><td class="faint">Sao · điểm</td>${cols.map(([,h]) => `<td class="num">${h.star}★ · ${h.rating.toLocaleString('vi-VN')}</td>`).join('')}</tr>
+    <tr><td class="faint">Vị trí</td>${cols.map(([,h]) => `<td>${esc(h.near)}</td>`).join('')}</tr>
+    <tr><td class="faint">Có trong lộ trình người đã đi</td>${cols.map(([,h]) => `<td class="num">${h.used}</td>`).join('')}</tr>
+    <tr><td></td>${cols.map(([id,,c]) => `<td>${c ? '' : `<button class="btn primary" style="height:32px;font-size:12px" data-pick="${id}">Chọn</button>`}</td>`).join('')}</tr>
+  </tbody></table></div>
+  <div class="faint">Hàng cuối đếm số lộ trình đã đăng có dùng chỗ ở này, dữ liệu riêng của Tripflix.</div></div>`);
+  S._onPick = onPick;
+  setNow('compare');
+}
+
+/* ---------- upload ---------- */
+function openUpload(){
+  requireLogin('post', () => {
+    S.upload = { step:1, scene:'beach', caption:'', dest:'nhatrang', items:[] };
+    renderUpload();
+  });
+}
+function renderUpload(){
+  const u = S.upload, f = $('#flow'); f.hidden = false;
+  const head = (title, back) => `<div class="app-h"><button class="x" data-flow="${back?'uback':'close'}" aria-label="${back?'Quay lại':'Đóng'}">${ico(back?'back':'x')}</button><h2>${title}</h2><span></span></div>
+    <div class="steps"><i class="on"></i><i class="${u.step>=2?'on':''}"></i><i class="${u.step>=3?'on':''}"></i></div>`;
+  const myTrips = (S.trips[S.user.id] || []).length;
+  const hasV = u.items.some(i => i.booked && ['hotel','flight','bus'].includes(i.type));
+  if (u.step === 1){
+    f.innerHTML = head('Đăng video') + `<div class="app-b">
+      <div class="field"><label>Chọn video (mẫu)</label><div class="seg">${Object.keys(PAL).map(k => `<button data-up-scene="${k}" class="${u.scene===k?'on':''}" style="width:64px;height:84px;padding:0;background:linear-gradient(160deg,${PAL[k][0]},${PAL[k][1]})" aria-label="Video mẫu ${k}"></button>`).join('')}</div></div>
+      <div class="field"><label for="up-cap">Caption</label><input id="up-cap" class="search-in" value="${esc(u.caption)}" placeholder="Kể ngắn về chuyến đi, thêm #hashtag"></div>
+      <div class="field"><label>Điểm đến</label><div class="seg">${Object.entries(DEST).map(([k,d]) => `<button data-up-dest="${k}" class="${u.dest===k?'on':''}">${d.name}</button>`).join('')}</div></div>
+      <div class="faint">Video được chuyển sang HLS 360p/720p ở máy chủ sau khi tải lên.</div>
+    </div><div class="sheet-f"><button class="btn primary block" data-up-next="2">Tiếp: dựng lộ trình</button></div>`;
+    setNow('upload1');
+  } else if (u.step === 2){
+    const mine = [ { type:'hotel', kind:'service', pid:'h-nt-bay', nights:2, booked:true, label:'Vinpearl Resort Nha Trang Bay · 2 đêm' }, { type:'flight', leg:'out', kind:'service', booked:true, label:'Bay TP.HCM → Nha Trang' }, { type:'ticket', kind:'service', pid:'t-vw-nt', booked:true, label:'VinWonders Nha Trang × 2' } ];
+    f.innerHTML = head('Dựng lộ trình', true) + `<div class="app-b">
+      ${u.items.length ? u.items.map((it,i) => `<div class="item"><span class="ico">${ico(itemIcon(it.type))}</span><div><div class="t">${esc(it.label)}</div><div class="d">Ngày ${it.day}</div></div><div class="r">${it.booked ? '<span class="pill ok">Đặt qua Tripflix</span>' : '<span class="pill self">Tự chia sẻ</span>'}<button class="link" data-up-del="${i}">Xóa</button></div></div>`).join('') : '<div class="faint">Chưa có mục nào. Thêm từ chuyến đã đặt hoặc tự nhập.</div>'}
+      <div class="card"><b>Thêm từ Chuyến đi của tôi</b><div class="faint" style="margin:2px 0 8px">${myTrips ? 'Đơn đã hoàn tất của ' + esc(S.user.username) : 'Tài khoản này chưa có đơn nào hoàn tất'}</div>
+        <div class="seg">${myTrips ? mine.map((m,i) => `<button data-up-mine="${i}">${esc(m.label)}</button>`).join('') : ''}</div></div>
+      <form class="card" data-form="manual"><b>Tự nhập địa điểm</b>
+        <div class="seg" style="margin:8px 0">${[['hotel','Chỗ ở'],['bus','Xe'],['food','Ăn uống'],['place','Tham quan']].map(([k,v]) => `<button type="button" data-up-mtype="${k}" class="${(u.mtype||'place')===k?'on':''}">${v}</button>`).join('')}</div>
+        <div class="compose"><input id="up-manual" placeholder="Ví dụ: Bún chả cá chợ Đầm" aria-label="Tên địa điểm"><button class="btn ghost" type="submit">Thêm</button></div></form>
+      <div class="notice ${hasV ? 'info' : ''}">${hasV ? 'Có mục chỗ ở/phương tiện đặt qua Tripflix → bài sẽ có huy hiệu <b>Verified</b>.' : 'Chưa có mục chỗ ở/phương tiện đặt qua Tripflix → bài hiện "Lộ trình tự chia sẻ". Vẫn đăng được.'}</div>
+    </div><div class="sheet-f"><button class="btn primary block" data-up-next="3" ${u.items.length ? '' : 'disabled'}>Xem trước</button></div>`;
+    S._mine = mine;
+    setNow('upload2');
+  } else {
+    f.innerHTML = head('Xem trước', true) + `<div class="app-b">
+      <div class="res" style="grid-template-columns:96px 1fr"><span class="sw" style="width:96px;height:128px;background:linear-gradient(160deg,${PAL[u.scene][0]},${PAL[u.scene][1]})"></span>
+        <div><div class="who" style="font-size:14px">@${esc(S.user.handle)} ${hasV ? `<span class="badge-v">${ico('check')}Verified</span>` : '<span class="badge-self">Lộ trình tự chia sẻ</span>'}</div>
+        <div class="cap" style="margin-top:4px">${esc(u.caption || 'Chuyến đi ' + DEST[u.dest].name)}</div><div class="faint" style="margin-top:4px">${u.items.length} mục lộ trình · ${esc(DEST[u.dest].name)}</div></div></div>
+      <div class="rule">Người khác <b>không</b> thấy: ngày bạn đi, giá bạn đã trả, mã đặt chỗ, người đi cùng.</div>
+      <div class="faint">Bài qua sàng lọc tự động trước khi lên feed.</div>
+    </div><div class="sheet-f"><button class="btn primary block" data-up-post>Đăng</button></div>`;
+    setNow('upload3');
+  }
+}
+
+/* ---------- assistant (rule-based in this mock) ---------- */
+function parseAsk(text){
+  const u = unaccent(text);
+  let dest = null; for (const [k,d] of Object.entries(DEST)) if (d.aliases.some(a => new RegExp('(^|\\W)' + a + '(\\W|$)').test(u))) dest = k;
+  const pm = u.match(/(\d+)\s*(nguoi|dua|ng|ban)\b/); const pax = pm ? Math.min(10, +pm[1]) : null;
+  const bm = u.match(/(\d+(?:[.,]\d+)?)\s*(cu|trieu|tr|m|lit)\b/) || u.match(/(\d+)\s*(k)\b/);
+  let budget = null; if (bm) budget = parseFloat(bm[1].replace(',','.')) * (bm[2] === 'k' ? 1e3 : 1e6);
+  const perPerson = /(moi nguoi|\/nguoi|1 nguoi)/.test(u);
+  const out = /(code|lap trinh|bai tap|hack|vu khi|chung khoan|crypto)/.test(u);
+  const origin = /(ha noi|hanoi|hn)\b/.test(u) ? 'HAN' : 'SGN';
+  return { dest, pax, budget, perPerson, out, origin };
+}
+function botReply(text){
+  const q = parseAsk(text);
+  if (q.out) return [{ role:'bot', text:'Mình chỉ giúp được chuyện đi chơi thôi nè. Bạn muốn đi đâu, mấy người, tầm bao nhiêu tiền?' }];
+  if (!q.dest && !S.plan) return [{ role:'bot', text:'Bạn muốn đi đâu nè? Ví dụ Nha Trang, Phú Quốc, Đà Lạt, Hội An.' }];
+  const dest = q.dest || POSTS.find(p => p.id === S.plan.post).dest, pax = q.pax || 2;
+  const cands = visiblePosts().filter(p => p.dest === dest);
+  if (!cands.length) return [{ role:'bot', text:'Chưa có lộ trình nào đang hiện cho ' + DEST[dest].name + '. Thử điểm đến khác nhé.' }];
+  const priced = cands.map(p => ({ p, pk: buildPackage(p, { date:'d4', pax, origin:q.origin, off:[] }) }));
+  const limit = q.budget ? (q.perPerson ? q.budget*pax : q.budget) : Infinity;
+  const fit = priced.filter(x => x.pk.total <= limit).sort((a,b) => (verified(b.p) - verified(a.p)) || (b.p.saves - a.p.saves));
+  const best = (fit[0] || priced.sort((a,b) => a.pk.total - b.pk.total)[0]);
+  S.plan = { post: best.p.id, pax, origin:q.origin, date:'d4', hotel:null, off:[] };
+  const assume = `Giả định: đi ${DATES[3].label}, từ ${ORIGINS[q.origin]}, ${pax} người` + (q.budget ? `, ngân sách ${tr(limit)} cho cả nhóm` : '') + '.';
+  const intro = fit.length
+    ? `Có ${fit.length} lộ trình người đã đi hợp với bạn. Mình chọn của @${best.p.handle}${verified(best.p) ? ' (Verified)' : ''}: ${best.p.title}, tổng khoảng ${tr(best.pk.total)} cho ${pax} người.`
+    : `Chưa có lộ trình ${DEST[dest].name} nào dưới ${tr(limit)}. Gần nhất là của @${best.p.handle}, khoảng ${tr(best.pk.total)} cho ${pax} người. Có thể bỏ bớt mục hoặc đổi chỗ ở rẻ hơn.`;
+  return [{ role:'bot', text: intro + ' ' + assume }, { role:'bot', kind:'plan' }, { role:'bot', kind:'videos', dest }];
+}
+function planCard(){
+  if (!S.plan) return '';
+  const p = POSTS.find(x => x.id === S.plan.post), pk = buildPackage(p, S.plan);
+  return `<div class="msg bot wide"><div class="row" style="justify-content:space-between"><b>${esc(p.title)}</b>${verified(p) ? `<span class="badge-v">${ico('check')}Verified</span>` : '<span class="badge-self">Tự chia sẻ</span>'}</div>
+    <div class="faint">${esc(pk.date.label)} · ${S.plan.pax} người · lộ trình của @${esc(p.handle)}</div>
+    ${pk.lines.map(l => `<div class="line ${l.off?'off':''}"><span class="ico">${ico(l.icon)}</span><div><div class="t">${esc(l.title)}</div><div class="d">${esc(l.detail)}</div><div style="margin-top:3px">${TAGTXT[l.tag]}</div></div><div class="p"><span class="num">${l.price ? tr(l.price) : '—'}</span>${l.swap ? '<button class="link" data-swap="chat">Đổi</button>' : ''}</div></div>`).join('')}
+    <div class="total" style="margin-top:6px"><span>Tổng</span><span class="num">${vnd(pk.total)}</span></div>
+    <div class="row" style="margin-top:8px;gap:8px"><button class="btn primary" style="flex:1" data-chat-go>Đi tương tự với lộ trình này</button><button class="btn ghost" data-chat-video="${p.id}">Xem video</button></div></div>`;
+}
+function renderAssistant(){
+  const v = $('#v-assistant');
+  v.innerHTML = `<div class="app"><div class="app-h"><h2>Trợ lý</h2><span class="pill ai">AI · mô phỏng</span></div>
+    <div class="chat" id="chat">${S.chat.length ? '' : `<div class="msg bot">Chào bạn, mình gợi ý lộ trình từ video người đã đi. Cho mình biết đi đâu, mấy người, tầm bao nhiêu tiền nhé.</div>`}
+    ${S.chat.map(m => m.role === 'me' ? `<div class="msg me">${esc(m.text)}</div>` : m.kind === 'plan' ? planCard() : m.kind === 'videos' ? `<div class="msg bot wide"><div class="faint" style="margin-bottom:6px">Video có lộ trình ở ${esc(DEST[m.dest].name)}</div><div class="mini-posts">${visiblePosts().filter(p => p.dest === m.dest).map(p => `<button class="mini" data-chat-video="${p.id}"><span class="sw" style="background:linear-gradient(160deg,${PAL[p.scene][0]},${PAL[p.scene][1]})"></span>${verified(p)?`<span class="mv badge-v">${ico('check')}Verified</span>`:''}<span class="mt">@${esc(p.handle)}<br>${esc(p.title)}</span></button>`).join('') || '<span class="faint">Không còn video đang hiện.</span>'}</div></div>` : `<div class="msg bot">${esc(m.text)}</div>`).join('')}
+    </div>
+    <div class="chips">${['đi nha trang 2 đứa tầm 12 củ','phú quốc 4 người 50 triệu từ hà nội','đà lạt 2 người 3 củ','giải bài tập toán giúp mình'].map(c => `<button data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <form class="composer" data-form="chat"><input id="chat-in" placeholder="Ví dụ: đi nha trang 2 đứa tầm 12 củ" aria-label="Nhắn cho trợ lý"><button type="submit" aria-label="Gửi">${ico('send')}</button></form></div>`;
+  const c = $('#chat'); c.scrollTop = c.scrollHeight;
+}
+function ask(text){
+  if (!text.trim()) return;
+  S.chat.push({ role:'me', text });
+  botReply(text).forEach(m => { if (m.kind === 'plan') S.chat = S.chat.filter(x => x.kind !== 'plan'); S.chat.push(m); });
+  renderAssistant(); setNow('assistant');
+}
+
+/* ---------- search ---------- */
+function renderSearch(q=''){
+  const u = unaccent(q.trim());
+  const res = visiblePosts().filter(p => !u || unaccent([p.caption, p.title, p.tags.join(' '), DEST[p.dest].name, DEST[p.dest].aliases.join(' ')].join(' ')).includes(u));
+  $('#v-search').innerHTML = `<div class="app"><div class="app-h"><h2>Tìm</h2></div><div class="app-b">
+    <input class="search-in" id="search-in" value="${esc(q)}" placeholder="Tìm không dấu: nha trang, san may, phoco…" aria-label="Tìm video">
+    <div class="seg">${['nha trang','san may','gia dinh','chill'].map(s => `<button data-search="${s}">${s}</button>`).join('')}</div>
+    ${res.length ? res.map(p => `<button class="res" data-chat-video="${p.id}"><span class="sw" style="background:linear-gradient(160deg,${PAL[p.scene][0]},${PAL[p.scene][1]})"></span><span><b>${esc(p.title)}</b><br><span class="faint">@${esc(p.handle)} · ${verified(p) ? 'Verified' : 'Tự chia sẻ'}</span><br><span class="faint">${p.tags.map(t => '#'+t).join(' ')}</span></span></button>`).join('') : `<div class="faint">Không có video khớp "${esc(q)}". Thử từ khác hoặc hỏi trợ lý.</div>`}
+  </div></div>`;
+}
+
+/* ---------- me ---------- */
+function renderMe(){
+  const v = $('#v-me'), u = S.user;
+  if (!u){ v.innerHTML = `<div class="app"><div class="app-h"><h2>Tôi</h2></div><div class="app-b"><p class="muted">Bạn đang xem với tư cách khách: xem video, xem lộ trình và hỏi trợ lý được. Đăng nhập để thích, bình luận, đăng bài và đặt chỗ.</p>
+    ${ACCOUNTS.filter(a=>a.role).map(a => `<button class="acct" data-login="${a.id}"><span class="av" style="background:${a.color}">${a.username[0].toUpperCase()}</span><span><b>${esc(a.username)}</b><br><span class="faint">${esc(a.label)}</span></span><span class="faint">Đăng nhập</span></button>`).join('')}</div></div>`; setNow('me'); return; }
+  if (u.role === 'moderator' || u.role === 'admin'){
+    v.innerHTML = `<div class="app"><div class="app-h"><h2>Kiểm duyệt</h2><span class="pill self">${esc(u.role)}</span></div><div class="app-b">
+      <p class="faint">Ẩn một bài là bài biến mất khỏi feed, tìm kiếm và trợ lý. Mỗi thao tác được ghi lại: ai, lúc nào, vì sao.</p>
+      ${POSTS.map(p => `<div class="card row" style="justify-content:space-between"><div><b>${esc(p.title)}</b><div class="faint">@${esc(p.handle)} · ${p.reports} báo cáo · ${S.hidden.has(p.id) ? 'đang ẩn' : 'đang hiện'}</div></div>
+        <button class="btn ${S.hidden.has(p.id) ? 'primary' : 'ghost'}" data-mod="${p.id}">${S.hidden.has(p.id) ? 'Hiện lại' : 'Ẩn'}</button></div>`).join('')}
+      ${u.role === 'moderator' ? '<div class="notice">Vai trò kiểm duyệt không xem được thông tin thanh toán.</div>' : '<div class="notice info">Quản trị viên xem được cả danh sách đơn (không hiện trong bản mô phỏng).</div>'}
+      <button class="btn ghost" data-logout>Đăng xuất</button></div></div>`; setNow('mod'); return; }
+  const trips = S.trips[u.id] || [];
+  v.innerHTML = `<div class="app"><div class="app-h"><h2>@${esc(u.handle)}</h2><span class="faint">${age(u)} tuổi</span></div><div class="app-b">
+    <div class="day">Chuyến đi của tôi</div>
+    ${trips.length ? trips.map(t => `<div class="card trip"><b>${esc(t.title)}</b><span class="faint">${esc(t.when)} · ${esc(t.status)}</span></div>`).join('') : '<div class="faint">Chưa có chuyến nào. Bấm "Đi tương tự" trên một video để đặt.</div>'}
+    <div class="day">Bài đã lưu</div>
+    ${[...S.saved].length ? [...S.saved].map(id => { const p = POSTS.find(x => x.id === id); return `<button class="res" data-chat-video="${p.id}"><span class="sw" style="background:linear-gradient(160deg,${PAL[p.scene][0]},${PAL[p.scene][1]})"></span><span><b>${esc(p.title)}</b><br><span class="faint">@${esc(p.handle)}</span></span></button>`; }).join('') : '<div class="faint">Chưa lưu bài nào.</div>'}
+    <button class="btn ghost" data-logout>Đăng xuất</button></div></div>`;
+  setNow('me');
+}
+
+/* ---------- navigation ---------- */
+function showView(name){
+  if (name === 'upload'){ openUpload(); return; }
+  S.view = name;
+  ['feed','search','assistant','me'].forEach(n => $('#v-' + n).hidden = n !== name);
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  if (name === 'search') renderSearch();
+  if (name === 'assistant') renderAssistant();
+  if (name === 'me') renderMe();
+  if (name === 'feed'){ renderFeed(); if (!reduced) {} }
+  setNow(name);
+}
+function closeFlow(){ $('#flow').hidden = true; $('#flow').innerHTML = ''; setNow(S.view); }
+function jumpToPost(id){
+  closeSheet(); closeFlow();
+  const i = visiblePosts().findIndex(p => p.id === id); showView('feed'); if (i >= 0) moveFeed(i, true);
+}
+
+/* ---------- side panel narration ---------- */
+const NOW = {
+  feed:['Feed video dọc', 'Video tự phát, vuốt để sang video kế. Mỗi video có lý do vì sao đang được quan tâm, huy hiệu Verified hoặc "Lộ trình tự chia sẻ", chip lộ trình và nút Đi tương tự.', ['F1 feed','F3 Verified','F5 tương tác']],
+  itinerary:['Lộ trình gắn với video', 'Từng mục có dấu "Đặt qua Tripflix" hoặc "Tự chia sẻ". Lộ trình chỉ lưu ngày tương đối, không lộ ngày đi hay giá người đăng đã trả.', ['F2 lộ trình','F3 Verified']],
+  comments:['Người đi rồi nói gì', 'AI gom bình luận thành khen, chê và "Video và thực tế". Ai đã đi được xác định bằng đơn đặt (luật), không do AI đoán. Bấm một ý để lọc đúng các bình luận làm căn cứ.', ['F6 tóm tắt bình luận']],
+  go1:['Đi tương tự: chọn ngày, số người', 'Chọn ngày, số người, nơi xuất phát. Số phòng tự tính theo số người. Thử ngày 13/11 để thấy trường hợp hết vé.', ['F4 đặt trọn gói']],
+  go2:['Xác nhận trọn gói', 'Mục dịch vụ đặt đúng như video; mục tự nhập được thay bằng dịch vụ tương đương; ăn uống, tham quan là tự túc. Đổi chỗ ở để thấy bảng so sánh; bỏ hoặc thêm từng mục.', ['F4 đặt trọn gói','Traveloka lõi (mock)']],
+  go3:['Thanh toán giả lập', 'Một lần thanh toán cho cả gói, giữ chỗ 10 phút, chống bấm hai lần. Đổi sang tài khoản 16 tuổi để thấy bị chặn.', ['F4','if-else: tuổi < 18']],
+  teen:['Chặn người dưới 18 tuổi', 'Tài khoản be (16 tuổi) xem và chọn được, nhưng không qua được bước thanh toán. Quy tắc nằm trong một câu if ở server.', ['if-else: tuổi < 18']],
+  done:['Đặt xong', 'Đơn vào "Chuyến đi của tôi" và ghi lại video nguồn. Sau chuyến đi, người dùng đăng lại video thì các mục này có dấu tick và bài được Verified.', ['F4','F3']],
+  upload1:['Đăng video', 'Chọn video, viết caption, chọn điểm đến. Máy chủ chuyển video sang HLS để phát mượt trên mạng yếu.', ['F2 đăng bài']],
+  upload2:['Dựng lộ trình tự do', 'Thêm mục từ "Chuyến đi của tôi" (có tick) hoặc tự nhập địa điểm. Khung dưới cùng áp quy tắc Verified ngay khi bạn thêm, xóa mục.', ['F2 lộ trình','F3 Verified']],
+  upload3:['Xem trước khi đăng', 'Thấy đúng những gì người khác sẽ thấy, kèm nhắc thông tin riêng tư không bao giờ hiện.', ['F2']],
+  assistant:['Trợ lý', 'Nói đi đâu, mấy người, bao nhiêu tiền. Trợ lý chọn lộ trình từ video có sẵn, tính lại giá, nói rõ giả định, kèm video. Bấm "Đổi" để so sánh chỗ ở; trợ lý không tự đặt, chỉ dẫn sang Đi tương tự.', ['F7 chatbot']],
+  compare:['So sánh lựa chọn thay thế', 'Cùng điểm đến, còn chỗ. Bảng do máy tính sẵn: giá, chênh lệch, hạng sao, vị trí và số lộ trình người đã đi có dùng chỗ này.', ['F4','F7']],
+  search:['Tìm kiếm', 'Tìm không dấu trên caption, hashtag và điểm đến. Bản tối giản, chưa tìm theo nghĩa.', ['F10 tìm kiếm']],
+  me:['Tôi', 'Khách thấy danh sách tài khoản mẫu để đăng nhập. Người dùng thấy Chuyến đi của tôi và bài đã lưu.', ['accounts.json']],
+  mod:['Kiểm duyệt', 'Ẩn một bài là bài biến mất khỏi feed, tìm kiếm và trợ lý. Kiểm duyệt viên không xem thanh toán.', ['F9 quản trị','if-else: moderator']],
+  login:['Đăng nhập bằng file JSON', 'Không có hệ thống tài khoản thật. Server đọc accounts.json, cấp token, mọi quyền là các câu if-else theo role.', ['accounts.json']]
+};
+function setNow(key){
+  const flowOpen = !$('#flow').hidden, sheetOpen = !$('#scrim').hidden;
+  if (flowOpen && !['go1','go2','go3','teen','done','upload1','upload2','upload3','login','compare'].includes(key)) return;
+  if (!flowOpen && sheetOpen && !['itinerary','comments','compare'].includes(key)) return;
+  const n = NOW[key] || NOW[S.view] || NOW.feed;
+  $('#now-t').textContent = n[0]; $('#now-p').textContent = n[1];
+  $('#now-feat').innerHTML = n[2].map(x => `<span class="feat">${esc(x)}</span>`).join('');
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset, p = curPost();
+  if (d.nav){ closeFlow(); closeSheet(); showView(d.nav); return; }
+  if (d.quick){
+    closeFlow(); closeSheet();
+    if (d.quick === 'assistant'){ showView('assistant'); if (!S.chat.length) ask('đi nha trang 2 đứa tầm 12 củ'); return; }
+    if (d.quick === 'upload'){ if (!S.user || S.user.role !== 'user') login('u_linh'); showView('feed'); openUpload(); return; }
+    showView('feed');
+    if (d.quick === 'unverified'){ const i = visiblePosts().findIndex(x => !verified(x)); if (i >= 0) moveFeed(i, true); return; }
+    const i = visiblePosts().findIndex(x => x.id === 'pst_x91a'); if (i >= 0) moveFeed(i, true);
+    const cp = curPost();
+    if (d.quick === 'itinerary') openItinerary(cp);
+    if (d.quick === 'comments'){ S.sumSel = null; openComments(cp); }
+    if (d.quick === 'go') openGo(cp);
+    return;
+  }
+  if (d.act && p){
+    if (d.act === 'like') requireLogin('interact', () => { S.liked.has(p.id) ? S.liked.delete(p.id) : S.liked.add(p.id); renderFeed(); });
+    if (d.act === 'save') requireLogin('interact', () => { S.saved.has(p.id) ? S.saved.delete(p.id) : S.saved.add(p.id); renderFeed(); toast(S.saved.has(p.id) ? 'Đã lưu vào mục Tôi' : 'Đã bỏ lưu'); });
+    if (d.act === 'share') toast('Đã sao chép link: tripflix.vn/v/' + p.id + ' (mở thẳng vào app nếu đã cài)');
+    if (d.act === 'comments'){ S.sumSel = null; openComments(p); }
+    if (d.act === 'itinerary') openItinerary(p);
+    if (d.act === 'go'){ closeSheet(); openGo(p); }
+    if (d.act === 'ask'){ showView('assistant'); ask('đi ' + DEST[p.dest].name.toLowerCase() + ' 2 người giống video của @' + p.handle); }
+    if (d.act === 'profile') toast('@' + p.handle + ' · ' + POSTS.filter(x => x.handle === p.handle).length + ' video');
+    return;
+  }
+  if (d.sheet === 'close'){ closeSheet(); return; }
+  if (d.sum !== undefined){ S.sumSel = d.sum || null; openComments(curPost()); return; }
+  if (d.flow === 'close'){ closeFlow(); if (d.nav) showView(d.nav); return; }
+  if (d.flow === 'back'){ S.go.step = Math.max(1, S.go.step - 1); renderGo(); return; }
+  if (d.flow === 'uback'){ S.upload.step = Math.max(1, S.upload.step - 1); renderUpload(); return; }
+  if (d.login){ login(d.login); closeFlow(); const then = S.pending; S.pending = null; if (then) then(); else if (S.view === 'me') renderMe(); toast('Đã đăng nhập: ' + S.user.username); return; }
+  if (d.logout !== undefined){ login('guest'); renderMe(); return; }
+  if (d.goDate){ S.go.date = d.goDate; renderGo(); return; }
+  if (d.goPax){ S.go.pax = Math.max(1, Math.min(8, S.go.pax + (+d.goPax))); renderGo(); return; }
+  if (d.goOrigin){ S.go.origin = d.goOrigin; renderGo(); return; }
+  if (d.goNext){ const step = +d.goNext; if (step === 3){ requireLogin('go_view', () => { S.go.step = 3; renderGo(); }); } else { S.go.step = step; renderGo(); } return; }
+  if (d.toggleLine){ const k = d.toggleLine, o = S.go.off; S.go.off = o.includes(k) ? o.filter(x => x !== k) : [...o, k]; renderGo(); return; }
+  if (d.pay){ S.go.payMethod = d.pay; renderGo(); return; }
+  if (d.goPay !== undefined){
+    requireLogin('pay', () => {
+      if (age(S.user) < 18){ renderGo(); return; }
+      S.go.paying = true; renderGo();
+      setTimeout(() => {
+        const g = S.go, pp = POSTS.find(x => x.id === g.post), pk = buildPackage(pp, g);
+        g.code = Math.random().toString(36).slice(2,6).toUpperCase(); g.step = 4; g.paying = false;
+        (S.trips[S.user.id] = S.trips[S.user.id] || []).unshift({ title:pp.title + ' · ' + g.pax + ' người · ' + vnd(pk.total), when:pk.date.label, status:'Đã thanh toán (giả lập)' });
+        pp.go++; renderGo();
+      }, 900);
+    });
+    return;
+  }
+  if (d.swap){
+    const ctx = d.swap === 'go' ? S.go : S.plan, pp = POSTS.find(x => x.id === ctx.post), pk = buildPackage(pp, ctx), hl = pk.lines.find(l => l.key === 'hotel');
+    const it = pp.items.find(i => i.type === 'hotel');
+    openCompare(pp.dest, hl.hid, it.nights, pk.rooms, pk.date.factor, id => {
+      ctx.hotel = id; closeSheet();
+      if (d.swap === 'go') renderGo();
+      else { S.chat.push({ role:'bot', text:'Đã đổi sang ' + HOTELS[id].name + '. Tổng mới ở thẻ dưới; bấm "Đi tương tự" để kiểm tra giá lần cuối và giữ chỗ.' }); S.chat = S.chat.filter(x => x.kind !== 'plan'); S.chat.push({ role:'bot', kind:'plan' }); renderAssistant(); }
+      toast('Đã đổi chỗ ở');
+    });
+    return;
+  }
+  if (d.pick){ S._onPick && S._onPick(d.pick); return; }
+  if (d.chatGo !== undefined){ const pl = S.plan, pp = POSTS.find(x => x.id === pl.post); openGo(pp, { date:pl.date, pax:pl.pax, origin:pl.origin, hotel:pl.hotel, step:2 }); return; }
+  if (d.chatVideo){ jumpToPost(d.chatVideo); return; }
+  if (d.chip){ ask(d.chip); return; }
+  if (d.search){ renderSearch(d.search); return; }
+  if (d.mod){ S.hidden.has(d.mod) ? S.hidden.delete(d.mod) : S.hidden.add(d.mod); if (S.plan && S.hidden.has(S.plan.post)){ S.plan = null; S.chat = S.chat.filter(x => x.kind !== 'plan'); } renderMe(); toast(S.hidden.has(d.mod) ? 'Đã ẩn: biến mất khỏi feed, tìm kiếm và trợ lý' : 'Đã hiện lại'); S.idx = 0; return; }
+  if (d.upScene){ S.upload.scene = d.upScene; S.upload.caption = $('#up-cap').value; renderUpload(); return; }
+  if (d.upDest){ S.upload.dest = d.upDest; S.upload.caption = $('#up-cap').value; renderUpload(); return; }
+  if (d.upNext){ if (S.upload.step === 1) S.upload.caption = $('#up-cap').value; S.upload.step = +d.upNext; renderUpload(); return; }
+  if (d.upMine){ const m = S._mine[+d.upMine]; S.upload.items.push(Object.assign({ day: m.type === 'ticket' ? 2 : 1 }, m)); renderUpload(); return; }
+  if (d.upMtype){ S.upload.mtype = d.upMtype; renderUpload(); return; }
+  if (d.upDel){ S.upload.items.splice(+d.upDel, 1); renderUpload(); return; }
+  if (d.upPost !== undefined){
+    const u = S.upload, items = u.items.map(i => Object.assign({}, i, { name: i.name || i.label }));
+    const post = { id:'pst_new' + Date.now().toString(36), handle:S.user.handle, color:S.user.color, dest:u.dest, origin:'SGN', scene:u.scene,
+      days: Math.max(...items.map(i => i.day)), nights: Math.max(1, Math.max(...items.map(i => i.day)) - 1), title:'Chuyến ' + DEST[u.dest].name + ' của @' + S.user.handle,
+      caption: u.caption || 'Chuyến đi ' + DEST[u.dest].name, tags:[unaccent(DEST[u.dest].name).replace(/\s/g,'')], reason:'Mới đăng', likes:0, comments:0, saves:0, go:0, reports:0, items };
+    if (!items.some(i => i.leg === 'out')) items.unshift({ day:1, type:'flight', leg:'out', kind:'manual', name:'Tự đi tới ' + DEST[u.dest].name });
+    if (!items.some(i => i.leg === 'back')) items.push({ day:post.days, type:'flight', leg:'back', kind:'manual', name:'Tự về' });
+    POSTS.unshift(post); closeFlow(); showView('feed'); moveFeed(0, true); toast('Đã đăng. Video đang ở đầu feed.');
+    return;
+  }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target.dataset.form;
+  if (f === 'chat'){ const i = $('#chat-in'); const v = i.value; i.value = ''; ask(v); }
+  if (f === 'comment'){ const val = ($('#cmt-in') || {}).value || ''; const p = curPost(); requireLogin('interact', () => { if (!val.trim()){ openComments(p); return; } (COMMENTS[p.id] = COMMENTS[p.id] || []).push({ id:'n'+Date.now(), who:S.user.handle, tag:null, t:val.trim() }); p.comments++; openComments(p); toast('Đã gửi bình luận'); }); }
+  if (f === 'manual'){ const i = $('#up-manual'); if (!i.value.trim()) return; const t = S.upload.mtype || 'place'; S.upload.items.push({ day: S.upload.items.length > 2 ? 2 : 1, type:t, kind:'manual', label:i.value.trim(), name:i.value.trim(), nights: t === 'hotel' ? 1 : undefined }); renderUpload(); }
+});
+document.addEventListener('input', e => { if (e.target.id === 'search-in'){ const v = e.target.value; renderSearch(v); const el = $('#search-in'); el.focus(); el.setSelectionRange(v.length, v.length); } });
+
+/* role select in panel */
+$('#role-sel').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('');
+$('#role-sel').addEventListener('change', e => { login(e.target.value); if (S.view === 'feed') renderFeed(); if (S.go && !$('#flow').hidden && S.go.step === 3) renderGo(); toast(S.user ? 'Đang dùng: ' + S.user.username : 'Đang xem với tư cách khách'); });
+window.addEventListener('resize', () => document.querySelectorAll('.slide canvas').forEach(cv => cv._ctx = null));
+
+renderPermCode();
+showView('feed');
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

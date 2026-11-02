@@ -17,6 +17,7 @@
 - [reports/Chatbot agent tối giản Tripflix.md](<reports/Chatbot agent tối giản Tripflix.md>): bản tối giản cho demo 4 tuần: nói đi đâu, mấy người, bao nhiêu tiền → gợi ý lộ trình lấy từ lộ trình người đã đi đăng (không quét video) kèm video; đổi từng mục có bảng so sánh; 4 công cụ, ~15 bảng có sẵn, nút bấm thay câu nói, chuyển sang Đặt y chang để đặt.
 
 **Trình bày**:
+- [demo/tripflix-prototype.html](demo/tripflix-prototype.html): **prototype tương tác theo scope tinh gọn (docs/04)**: feed video dọc, lộ trình + Verified, tóm tắt bình luận, Đi tương tự tới thanh toán giả lập, đăng video, trợ lý, phân quyền accounts.json. Mở trực tiếp bằng trình duyệt.
 - [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow Tripflix (cần mạng để tải thư viện vẽ).
 - [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): bản mô phỏng **thử nghiệm ý tưởng "Đi ngay"** trước khi chốt hướng. Không phải giao diện Tripflix đã chốt; giữ lại làm tham khảo cho hướng phát triển (03, mục 16).
 
