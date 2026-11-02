@@ -44,7 +44,7 @@ sequenceDiagram
   API->>API: Chuẩn hóa bằng luật: 8 củ = 8.000.000, 2 người, Nha Trang
   API->>LLM: Câu hỏi, kết quả chuẩn hóa, 4 công cụ
   LLM-->>API: Gọi find_itineraries
-  API->>DB: Lọc bài theo điểm đến, số ngày, từ khóa caption và hashtag
+  API->>DB: Tìm trong bảng index theo điểm đến, số ngày, từ khóa caption và hashtag
   API->>API: Tính giá cho 2 người, chấm điểm, lấy top 3
   API->>LLM: 3 lộ trình kèm giá
   LLM-->>API: Gọi get_itinerary cho lộ trình tốt nhất
@@ -57,15 +57,196 @@ sequenceDiagram
 
 ---
 
-## 4. Dữ liệu cần dùng
+## 4. Kiến trúc: lớp index và lớp agent
 
-Chỉ khoảng **15 bảng**, tất cả đã có trong thiết kế lớn. Không cần bảng mới.
+Agent hỏi đáp nào cũng gồm hai đường chạy tách nhau. TikTok cũng vậy (xem cách họ làm Search Highlights: tìm video trước, LLM tóm tắt sau):
+
+| Đường | Chạy khi nào | Làm gì | Yêu cầu |
+|---|---|---|---|
+| **Đường index (nền)** | Khi bài được đăng, sửa, ẩn, xóa; khi sản phẩm đổi trạng thái | Biến mỗi bài + lộ trình thành **một dòng tìm kiếm phẳng**, đã chuẩn hóa không dấu, có sẵn bộ lọc | Cập nhật trong vài giây; bài ẩn phải biến mất ngay |
+| **Đường hỏi đáp (trực tuyến)** | Mỗi câu người dùng gõ hoặc nút bấm | Hiểu câu → tìm trong index → tính giá → LLM viết lời → kiểm tra → trả thẻ | 2–4 giây, không bịa |
+
+Điểm then chốt: **LLM không tìm kiếm, không tính toán**. LLM chỉ chọn gọi công cụ nào và viết lời. Chất lượng gợi ý do **index và hàm xếp hạng** quyết định.
+
+### 4.1. Sơ đồ thành phần
+
+```mermaid
+flowchart LR
+  subgraph CLIENT["App Android và Web"]
+    UI["Màn trợ lý: ô chat, thẻ lộ trình, nút Đổi, bảng so sánh"]
+  end
+  subgraph BACKEND["Backend Tripflix, một khối, chia module"]
+    GW["Cổng API: đăng nhập, anon_id, giới hạn lượt"]
+    subgraph AI["Module AI"]
+      PARSE["Bộ chuẩn hóa bằng luật: tiếng lóng, tên điểm đến, số người, tiền"]
+      ROUTER["Bộ điều phối: nút bấm gọi thẳng công cụ, câu chữ thì qua LLM"]
+      LOOP["Vòng lặp agent tối đa 4 vòng"]
+      TOOLS["4 công cụ"]
+      GUARD["Kiểm tra: ID có thật, bỏ phần bịa, dựng thẻ"]
+      COST["Ghi token và chi phí"]
+    end
+    subgraph SEARCH["Module Search"]
+      IDX[("Bảng index itinerary_search_docs")]
+      LEX[("Từ điển: alias điểm đến, tiếng lóng")]
+      INDEXER["Worker cập nhật index"]
+    end
+    subgraph BOOKING["Module Booking"]
+      PRICE["Hàm tính giá theo ngày và số người"]
+      CAND["Tìm sản phẩm thay thế"]
+    end
+    OUTBOX[("Outbox sự kiện")]
+  end
+  LLM["LLM nhỏ qua API, tắt thinking"]
+  DB[("PostgreSQL: bài, lộ trình, sản phẩm, giá, hội thoại")]
+  REDIS[("Redis: giới hạn lượt, cache giá 5 phút")]
+  UI --> GW --> ROUTER
+  ROUTER --> PARSE
+  ROUTER --> LOOP
+  LOOP <--> LLM
+  LOOP --> TOOLS
+  ROUTER --> TOOLS
+  TOOLS --> IDX
+  TOOLS --> PRICE
+  TOOLS --> CAND
+  PARSE --> LEX
+  LOOP --> GUARD --> UI
+  LOOP --> COST --> DB
+  PRICE --> DB
+  PRICE --> REDIS
+  CAND --> DB
+  GW --> REDIS
+  DB --> OUTBOX --> INDEXER --> IDX
+```
+
+Triển khai cho demo: **một backend duy nhất** (module AI, Search, Booking là các thư mục trong cùng dự án), một tiến trình worker cho outbox và indexer, một PostgreSQL, một Redis. Không tách microservice, không thêm Elasticsearch hay vector database.
+
+### 4.2. Index là gì, chứa gì
+
+Index là một bảng **phẳng hóa**: mỗi bài có lộ trình là một dòng, gom sẵn mọi thứ cần để lọc và xếp hạng. Truy vấn tìm kiếm chỉ đọc một bảng, không JOIN năm bảng mỗi lần hỏi.
+
+```sql
+CREATE TABLE itinerary_search_docs (
+  post_id          uuid PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+  post_public_id   text NOT NULL,                    -- pst_x91a: ID trả cho agent
+  itinerary_id     uuid NOT NULL REFERENCES post_itineraries(id) ON DELETE CASCADE,
+  author_handle    text NOT NULL,
+  title            text,
+  destination_ids  uuid[] NOT NULL,
+  n_days           smallint NOT NULL,
+  n_nights         smallint NOT NULL,
+  party_type       text,
+  vibe_tags        text[] NOT NULL DEFAULT '{}',
+  hashtags         text[] NOT NULL DEFAULT '{}',
+  product_ids      uuid[] NOT NULL DEFAULT '{}',     -- sản phẩm có trong lộ trình (để đếm "đã có người đi")
+  item_types       text[] NOT NULL DEFAULT '{}',     -- stay, activity, transport…
+  has_flight       boolean NOT NULL DEFAULT false,
+  search_text      text NOT NULL,                    -- caption + hashtag + vibe + mẹo, đã bỏ dấu, viết thường
+  search_tsv       tsvector GENERATED ALWAYS AS (to_tsvector('simple', search_text)) STORED,
+  popularity       real NOT NULL DEFAULT 0,          -- log(1 + lưu + 3 × đặt y chang), cập nhật hằng giờ
+  verified_trip    boolean NOT NULL,
+  is_sponsored     boolean NOT NULL DEFAULT false,
+  visible          boolean NOT NULL,                 -- false ngay khi bài bị ẩn/xóa
+  source_updated_at timestamptz NOT NULL,            -- thời điểm bài gốc đổi lần cuối
+  indexed_at       timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX isd_tsv_gin   ON itinerary_search_docs USING gin (search_tsv) WHERE visible;
+CREATE INDEX isd_dest_gin  ON itinerary_search_docs USING gin (destination_ids) WHERE visible;
+CREATE INDEX isd_prod_gin  ON itinerary_search_docs USING gin (product_ids) WHERE visible;
+CREATE INDEX isd_days_idx  ON itinerary_search_docs (n_days) WHERE visible;
+
+-- Đếm "bao nhiêu lộ trình người đã đi có dùng sản phẩm này" cho bảng so sánh; làm mới hằng giờ
+CREATE MATERIALIZED VIEW product_usage_stats AS
+SELECT unnest(product_ids) AS product_id, count(*) AS used_in_itineraries, max(indexed_at) AS last_seen
+  FROM itinerary_search_docs
+ WHERE visible
+ GROUP BY 1;
+CREATE UNIQUE INDEX product_usage_stats_pk ON product_usage_stats (product_id);
+```
+
+**Không đưa vào index:** giá. Giá đổi theo ngày và số người, nên tính lúc hỏi (vài chục mili giây cho ≤ 20 ứng viên) và cache 5 phút trong Redis theo `(sku, ngày, số người)`. Ngày thật, giá người đăng đã trả, mã đặt chỗ **không bao giờ** vào index.
+
+**Từ điển** (`destination_aliases`, `slang_lexicon`) chỉ vài trăm dòng: nạp vào bộ nhớ lúc khởi động, làm mới khi có thay đổi. Không cần index riêng.
+
+### 4.3. Index được cập nhật thế nào
+
+Dùng outbox sự kiện đã có trong báo cáo kiến trúc. Worker đọc sự kiện và cập nhật đúng một dòng:
+
+| Sự kiện | Worker làm gì | Ghi chú |
+|---|---|---|
+| `post.published` | Dựng dòng mới từ `posts`, `post_itineraries`, `post_itinerary_items`, `post_hashtags`, đặt `visible = true` | Chỉ bài có lộ trình và đã duyệt |
+| `post.updated` | Dựng lại dòng | So `source_updated_at` để bỏ sự kiện cũ đến muộn |
+| `post.hidden`, `post.deleted` | `visible = false` | **Ưu tiên cao**: đề bài A14 yêu cầu bài ẩn biến mất khỏi trợ lý trong thời gian ngắn |
+| `post.restored` | `visible = true` | |
+| `interaction.created` (lưu, đặt y chang) | Không cập nhật từng lần; job hằng giờ tính lại `popularity` | Tránh ghi liên tục |
+| `product.discontinued` | Không sửa index; hàm tính giá trả "ngừng bán" và lộ trình bị hạ điểm | Index không giữ trạng thái bán |
+| Khởi động lần đầu, đổi cấu trúc | Job `reindex_all` dựng lại toàn bộ | Vài trăm bài: vài giây |
+
+Hai lớp chặn bài ẩn: index đặt `visible = false`, và khi dựng thẻ, server đọc lại trạng thái bài từ bảng gốc. Nếu sự kiện đến chậm, thẻ vẫn không hiện bài đã ẩn.
+
+### 4.4. Một câu hỏi đi qua các thành phần, tính theo thời gian
+
+| Bước | Thành phần | Thời gian ước tính |
+|---|---|---|
+| 1. Nhận câu, kiểm tra giới hạn lượt, khóa hội thoại | Cổng API, Redis | ~5 ms |
+| 2. Chuẩn hóa bằng luật ("8 củ", "2 đứa", "NT") | Bộ chuẩn hóa | ~1 ms |
+| 3. LLM đọc câu + gợi ý từ bước 2, quyết định gọi `find_itineraries` | LLM | ~0,7–1,5 s |
+| 4. Tìm trong index, lấy ≤ 20 ứng viên | Search | ~5–20 ms |
+| 5. Tính giá ứng viên, chấm điểm, lấy top 3, lấy chi tiết lộ trình tốt nhất | Booking, Search | ~30–100 ms |
+| 6. LLM viết lời giới thiệu | LLM | ~0,8–1,5 s |
+| 7. Kiểm tra ID, dựng thẻ, lưu tin nhắn, ghi chi phí | Module AI | ~10 ms |
+| **Tổng** | | **khoảng 2–3,5 giây** |
+
+Thời gian LLM là ước tính cho model nhỏ đã tắt thinking, chưa đo thật. Có thể bỏ bước 3 bằng cách để server gọi thẳng `find_itineraries` khi bộ chuẩn hóa đã đủ điểm đến. Khi đó chỉ còn một lần gọi LLM, khoảng 1–2 giây.
+
+Nút bấm (Đổi, Chọn) chỉ đi qua bước 1, 4–5, 7: **dưới 200 ms, không tốn tiền LLM**.
+
+### 4.5. Gợi ý cấu trúc thư mục
+
+Không phụ thuộc NestJS hay FastAPI:
+
+```text
+backend/
+  modules/
+    assistant/                 # Bảo
+      api.(ts|py)              # POST /v1/assistant/conversations/{id}/messages
+      router.(ts|py)           # nút bấm → công cụ; câu chữ → agent loop
+      agent_loop.(ts|py)       # vòng lặp tối đa 4 lượt gọi công cụ
+      rule_parser.(ts|py)      # tiếng lóng, alias, số người, tiền, số ngày
+      tools/                   # find_itineraries, get_itinerary, suggest_replacements, apply_change
+      guard.(ts|py)            # kiểm tra ID, dựng thẻ
+      prompts/system_vi.txt
+      cost_logger.(ts|py)      # ghi llm_calls
+      eval/                    # 200 câu thử + script chạy
+    search/                    # Duy
+      itinerary_index.(ts|py)  # truy vấn itinerary_search_docs
+      indexer_worker.(ts|py)   # nghe outbox, cập nhật index
+    booking/                   # Thắng
+      pricing.(ts|py)          # tính giá theo ngày và số người
+      replacements.(ts|py)     # ứng viên thay thế cùng loại
+  workers/outbox_dispatcher.(ts|py)
+```
+
+### 4.6. Khi nào mới cần thêm vector
+
+| Dấu hiệu | Thêm gì |
+|---|---|
+| Người dùng hay hỏi kiểu mô tả, không chứa từ có trong caption ("chỗ nào yên tĩnh, ít người") | Cột `embedding vector(1024)` vào `itinerary_search_docs`, chỉ mục HNSW, trộn điểm full-text và điểm vector |
+| Bài lên hàng chục nghìn | Vẫn PostgreSQL; chỉ cân nhắc công cụ tìm kiếm riêng khi truy vấn chậm thật |
+| Cần hiểu nội dung video | Thêm transcript theo lô (xem thiết kế database lớn), đưa vào `search_text` |
+
+Với vài trăm lộ trình mẫu của demo, cả ba đều chưa cần.
+
+---
+
+## 5. Dữ liệu cần dùng
+
+Khoảng **15 bảng** đã có trong thiết kế lớn, cộng **bảng index `itinerary_search_docs` và view `product_usage_stats`** (mục 4.2).
 
 | Dùng để | Bảng | Trường agent thực sự đọc |
 |---|---|---|
 | Hiểu "đi đâu" | `destinations`, `destination_aliases` | `public_id`, `name`, `alias` ("NT", "nhatrang") |
 | Hiểu tiếng lóng | `slang_lexicon` | `term` ("củ", "lít", "k", "đứa", "2n1đ", "chill"), `mapping` |
-| Tìm lộ trình | `posts`, `post_itineraries`, `post_itinerary_items`, `post_hashtags` | caption, hashtag, `n_days`, `n_nights`, `vibe_tags`, `party_type`, các mục (`day_index`, `item_type`, `product_id`, `sku_id`, `nights`, `author_tip`) |
+| Tìm lộ trình | `itinerary_search_docs` (index); nguồn để dựng index: `posts`, `post_itineraries`, `post_itinerary_items`, `post_hashtags` | caption, hashtag, `n_days`, `n_nights`, `vibe_tags`, `party_type`, các mục (`day_index`, `item_type`, `product_id`, `sku_id`, `nights`, `author_tip`) |
 | Độ phổ biến | `posts` | `save_count`, `copy_book_count` |
 | Sản phẩm | `products`, `skus`, `properties`, `room_types` | tên, loại, hạng sao, `max_occupancy` để tính số phòng |
 | Giá và còn chỗ | `stay_rates`, `room_inventory`, `ticket_prices`, `combo_prices` (+ `transport_fares` nếu có vé bay) | giá theo ngày, còn/hết |
@@ -97,11 +278,11 @@ Lộ trình đang xét được lưu **trong `conversations.context` dạng JSON
 
 ---
 
-## 5. Bốn công cụ
+## 6. Bốn công cụ
 
 Mọi công cụ **chỉ đọc**, trừ `apply_change` (chỉ ghi vào `conversations.context`). Giá do server tính, LLM không tự cộng.
 
-### 5.1. `find_itineraries`
+### 6.1. `find_itineraries`
 
 ```json
 {
@@ -136,8 +317,8 @@ Trả về tối đa 3 lộ trình:
 
 **Cách làm ở server:**
 
-1. Lọc bằng SQL (dưới đây): bài công khai, đã duyệt, có lộ trình, đúng điểm đến, số ngày ±1.
-2. Với ≤ 20 ứng viên, tính giá cho `people` người, ngày `start_date` (mục 6).
+1. Tìm trong bảng index (SQL dưới đây): chỉ bài đang hiện, đúng điểm đến, số ngày ±1.
+2. Với ≤ 20 ứng viên, tính giá cho `people` người, ngày `start_date` (mục 7).
 3. Chấm điểm, lấy top 3:
 
 ```
@@ -152,29 +333,22 @@ phổ_biến      = log(1 + lượt lưu + 3 × lượt đặt y chang), chuẩn
 4. Không có kết quả thì **nới dần**: bỏ từ khóa → nới số ngày ±2 → nới ngân sách 30%. Ghi lại đã nới gì vào `relaxed` để agent nói thật ("không có lộ trình 3 ngày dưới 8 triệu, gần nhất là…").
 
 ```sql
-SELECT p.public_id AS post_id, u.handle, i.public_id AS itinerary_id, i.title,
-       i.n_days, i.n_nights, i.vibe_tags, p.save_count, p.copy_book_count,
-       ts_rank(
-         to_tsvector('simple', f_unaccent(
-             coalesce(p.caption, '') || ' ' ||
-             array_to_string(i.vibe_tags, ' ') || ' ' ||
-             coalesce((SELECT string_agg(h.tag, ' ') FROM post_hashtags h WHERE h.post_id = p.id), '') || ' ' ||
-             coalesce((SELECT string_agg(it.author_tip, ' ') FROM post_itinerary_items it WHERE it.itinerary_id = i.id), ''))),
-         plainto_tsquery('simple', f_unaccent($keywords))
-       ) AS text_score
-  FROM posts p
-  JOIN users u            ON u.id = p.author_id
-  JOIN post_itineraries i ON i.post_id = p.id
- WHERE p.status = 'published' AND p.moderation_state = 'approved' AND p.visibility = 'public'
-   AND $destination_id = ANY (i.destination_ids)
-   AND ($days IS NULL OR i.n_days BETWEEN $days - 1 AND $days + 1)
- ORDER BY text_score DESC, p.copy_book_count DESC
+-- Tìm trong index (mục 4.2). Từ khóa nối bằng OR để một từ không khớp không loại cả bài
+SELECT d.post_public_id AS post_id, d.author_handle, d.title, d.n_days, d.n_nights,
+       d.vibe_tags, d.product_ids, d.popularity,
+       ts_rank(d.search_tsv, q) AS text_score
+  FROM itinerary_search_docs d,
+       LATERAL (SELECT nullif(replace(plainto_tsquery('simple', f_unaccent($keywords))::text, '&', '|'), '')::tsquery AS q) kw
+ WHERE d.visible
+   AND d.destination_ids @> ARRAY[$destination_id]::uuid[]
+   AND ($days IS NULL OR d.n_days BETWEEN $days - 1 AND $days + 1)
+ ORDER BY text_score DESC NULLS LAST, d.popularity DESC
  LIMIT 20;
 ```
 
 Với vài trăm bài mẫu, truy vấn này chạy trong vài mili giây, **không cần vector hay embedding**. Khi bài nhiều lên hoặc người dùng hay hỏi kiểu mô tả ("chỗ nào yên tĩnh có hồ bơi đẹp"), thêm embedding sau.
 
-### 5.2. `get_itinerary`
+### 6.2. `get_itinerary`
 
 Đầu vào: `{ "post_id": "pst_x91a" }` (số người và ngày lấy từ ngữ cảnh hội thoại). Server lấy các mục của lộ trình, tính giá, **lưu thành `plan` trong `conversations.context`**, trả lộ trình chi tiết:
 
@@ -191,7 +365,7 @@ Với vài trăm bài mẫu, truy vấn này chạy trong vài mili giây, **kh�
   ] }
 ```
 
-### 5.3. `suggest_replacements`
+### 6.3. `suggest_replacements`
 
 Đầu vào: `{ "item_no": 1, "goal": "cheaper" | "closer" | "better_rating" | "remove" }`.
 
@@ -206,17 +380,18 @@ Server tìm sản phẩm **cùng loại, cùng điểm đến, còn chỗ đúng
 | Tới VinWonders | 1,2 km | 0,8 km | 6,5 km | 7,1 km |
 | Có trong lộ trình người đã đi | 37 | 21 | 9 | 3 |
 
-Hàng cuối là **dữ liệu riêng của Tripflix**: đếm số lộ trình đã đăng có dùng sản phẩm đó (`post_itinerary_items`). Nó trả lời câu "chỗ này có ai đi chưa", điều OTA khác không có.
+Hàng cuối là **dữ liệu riêng của Tripflix**: đếm số lộ trình đã đăng có dùng sản phẩm đó (view `product_usage_stats`, mục 4.2). Nó trả lời câu "chỗ này có ai đi chưa", điều OTA khác không có.
 
 ```sql
 -- Ứng viên thay khách sạn; giá tính tiếp trong code cho đúng ngày và số phòng
 SELECT pr.public_id, pr.name, prop.star_rating, ra.rating_avg, ra.rating_count,
        ST_Distance(po.location, $ref_location)::int AS distance_m,      -- điểm tham chiếu: mục vui chơi trong lộ trình
-       (SELECT count(*) FROM post_itinerary_items x WHERE x.product_id = pr.id) AS used_in_itineraries
+       coalesce(us.used_in_itineraries, 0) AS used_in_itineraries
   FROM products pr
   JOIN properties prop ON prop.product_id = pr.id
   JOIN pois po         ON po.id = pr.poi_id
   LEFT JOIN rating_aggregates ra ON ra.subject_type = 'product' AND ra.subject_id = pr.id AND ra.source = 'tripflix'
+  LEFT JOIN product_usage_stats us ON us.product_id = pr.id
  WHERE pr.product_type = 'stay' AND pr.status = 'active'
    AND pr.destination_id = $destination_id
    AND pr.id <> $current_product_id
@@ -227,13 +402,13 @@ Nếu chưa bật PostGIS, đổi `ST_Distance` thành công thức haversine tr
 
 Với vé vui chơi, đổi thành vé khác cùng điểm đến. Với vé máy bay, "không đi máy bay" ở bản tối giản xử lý bằng `remove`: bỏ chặng bay, ghi "tự túc di chuyển", trừ tiền tương ứng. Không làm bộ tìm xe/tàu ở bản này.
 
-### 5.4. `apply_change`
+### 6.4. `apply_change`
 
 Đầu vào: `{ "item_no": 1, "product_id": "htl_vpnt" }` hoặc `{ "item_no": 4, "remove": true }`. Server kiểm tra `product_id` nằm trong kết quả `suggest_replacements` gần nhất, thay mục, tính lại tổng, ghi vào `plan.changes` (để hoàn tác bằng một câu "quay lại khách sạn cũ").
 
 ---
 
-## 6. Tính giá: code làm, không để LLM làm
+## 7. Tính giá: code làm, không để LLM làm
 
 | Loại mục | Cách tính |
 |---|---|
@@ -251,7 +426,7 @@ Với vé vui chơi, đổi thành vé khác cùng điểm đến. Với vé má
 
 ---
 
-## 7. Vòng lặp agent (giả mã)
+## 8. Vòng lặp agent (giả mã)
 
 ```python
 MAX_TOOL_ROUNDS = 4
@@ -291,7 +466,7 @@ Hai điểm giữ cho agent đơn giản:
 
 ---
 
-## 8. Prompt hệ thống (rút gọn)
+## 9. Prompt hệ thống (rút gọn)
 
 ```text
 Bạn là trợ lý du lịch của Tripflix, chỉ gợi ý dịch vụ Vinpearl có trong hệ thống.
@@ -307,9 +482,9 @@ Bạn là trợ lý du lịch của Tripflix, chỉ gợi ý dịch vụ Vinpear
 
 ---
 
-## 9. Ví dụ hội thoại
+## 10. Ví dụ hội thoại
 
-Tên cơ sở, giá, khoảng cách và người đăng trong ví dụ (ở đây và mục 4–5) là **dữ liệu mô phỏng** để minh họa.
+Tên cơ sở, giá, khoảng cách và người đăng trong ví dụ (ở đây và mục 5–6) là **dữ liệu mô phỏng** để minh họa.
 
 > **Người dùng:** đi nha trang 2 đứa tầm 8 củ, thích chill chill
 
@@ -318,7 +493,7 @@ Tên cơ sở, giá, khoảng cách và người đăng trong ví dụ (ở đâ
 
 > **Người dùng:** *(bấm Đổi ở mục khách sạn)*
 
-> **Agent:** `[Bảng so sánh 3 khách sạn như mục 5.3, mỗi cột có nút Chọn]` *(không gọi LLM)*
+> **Agent:** `[Bảng so sánh 3 khách sạn như mục 6.3, mỗi cột có nút Chọn]` *(không gọi LLM)*
 
 > **Người dùng:** cái nào gần vinwonders mà rẻ hơn
 
@@ -335,7 +510,7 @@ Tên cơ sở, giá, khoảng cách và người đăng trong ví dụ (ở đâ
 
 ---
 
-## 10. API
+## 11. API
 
 Giữ endpoint của báo cáo Module AI, chỉ thêm `action` cho nút bấm.
 
@@ -370,7 +545,7 @@ Trả lời một lần dạng JSON là đủ. Stream SSE không bắt buộc, v
 
 ---
 
-## 11. Chi phí, tốc độ, chất lượng
+## 12. Chi phí, tốc độ, chất lượng
 
 | | Con số | Ghi chú |
 |---|---|---|
@@ -384,7 +559,7 @@ Bộ câu thử nên có: tiếng lóng (củ, lít, k, 2n1đ), gõ không dấu
 
 ---
 
-## 12. Cố ý không làm (tránh "dao mổ trâu")
+## 13. Cố ý không làm (tránh "dao mổ trâu")
 
 | Không làm | Vì sao đủ rồi |
 |---|---|
@@ -401,18 +576,18 @@ Khi demo chạy ổn mà còn thời gian, nâng cấp theo thứ tự: embeddin
 
 ---
 
-## 13. Kế hoạch 4 tuần
+## 14. Kế hoạch 4 tuần
 
 | Tuần | Việc | Xong khi |
 |---|---|---|
-| 1 | Nhập dữ liệu: ~30 lộ trình mẫu cho 3–4 điểm đến (có caption, hashtag, vibe), bảng alias và tiếng lóng. Viết `rule_parse`, truy vấn `find_itineraries`, hàm tính giá. Soạn 200 câu thử | Gõ "nha trang 2 người 8 triệu" trả đúng 3 lộ trình bằng API, chưa có LLM |
-| 2 | Vòng lặp agent với 4 công cụ, prompt, kiểm tra ID, ghi `llm_calls`, thẻ lộ trình + video trên app và web | Hội thoại mục 9 chạy được đến bước giới thiệu lộ trình |
+| 1 | Nhập dữ liệu: ~30 lộ trình mẫu cho 3–4 điểm đến (có caption, hashtag, vibe), bảng alias và tiếng lóng. Viết `rule_parse`, bảng index + worker cập nhật, truy vấn `find_itineraries`, hàm tính giá. Soạn 200 câu thử | Gõ "nha trang 2 người 8 triệu" trả đúng 3 lộ trình bằng API, chưa có LLM |
+| 2 | Vòng lặp agent với 4 công cụ, prompt, kiểm tra ID, ghi `llm_calls`, thẻ lộ trình + video trên app và web | Hội thoại mục 10 chạy được đến bước giới thiệu lộ trình |
 | 3 | `suggest_replacements`, `apply_change`, bảng so sánh, nút bấm, nút "Đặt theo lộ trình này" nối sang Đặt y chang | Đổi khách sạn và chốt sang màn Đặt y chang được |
 | 4 | Chạy bộ câu thử, sửa lỗi, đo chi phí và thời gian, chuẩn bị demo | 100% ID hợp lệ, có số VNĐ/hội thoại |
 
 ---
 
-## 14. Cần chốt với nhóm
+## 15. Cần chốt với nhóm
 
 - **Thanh (Social):** lộ trình bài đăng cần có `title`, `vibe_tags`, `author_tip` và hashtag. Đây là "nguyên liệu" duy nhất agent dùng để khớp nhu cầu, nên màn đăng bài nên gợi ý người đăng điền.
 - **Thắng (Booking):** `replicate` nhận thêm danh sách mục đã thay (không chỉ `itinerary_id`), hoặc nhận một lộ trình JSON.
