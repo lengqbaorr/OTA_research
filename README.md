@@ -8,7 +8,9 @@ Nền tảng du lịch lấy nội dung làm trung tâm: **người đã đi** �
 | 02 | [Đề bài](docs/02-de-bai-vinpearl-cho-nguoi-tre.md) | Giữ nguyên văn |
 | 03 | [Tripflix – ý tưởng triển khai (bản đã chốt)](docs/03-y-tuong-trien-khai.md) | Quyết định đã chốt, vai trò và phân quyền, tính năng A1–A16, luồng Đặt y chang, đăng bài và dấu "đã đi thật", quy tắc thanh toán, đề xuất cho câu hỏi mở, module và phân công, kiến trúc, dữ liệu, sơ đồ, cách đo, lộ trình 4 tuần, rủi ro, câu hỏi mentor |
 
-**Tài liệu làm việc nhóm**: [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công 10 module cho 7 người, khung báo cáo chung, ranh giới module, trạng thái các điểm cần chốt.
+**Tài liệu làm việc nhóm**:
+- [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công 10 module cho 7 người, khung báo cáo chung, ranh giới module, trạng thái các điểm cần chốt.
+- [reports/Kiến trúc module Tripflix.md](<reports/Kiến trúc module Tripflix.md>): nghiên cứu kiến trúc 8 module theo ảnh 3 tầng (Access, Notification, Administration, AI, Booking, Social, Payment, Search), mapping với 10 module nhỏ, quy ước API, danh mục sự kiện, luồng liên module, và 8 bản báo cáo theo khung 8 mục. Ghi chú nghiên cứu gốc ở `research_notes/Kiến trúc module Tripflix/`.
 
 **Trình bày**:
 - [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow Tripflix (cần mạng để tải thư viện vẽ).
