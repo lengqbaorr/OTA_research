@@ -1,19 +1,25 @@
-# Đi Ngay – nền tảng video du lịch "xem là đi được"
+# Tripflix – Vinpearl cho người trẻ (Dự án VSF)
 
-Người dùng đăng video kèm **lộ trình dạng điểm** (đi từ đâu, ở đâu, chơi gì, ăn gì). Người xem bấm **"Đi ngay"**: hệ thống dùng **AI hiểu yêu cầu + luật tính toán** để lên phương án đi lại và chỗ ở vừa ngân sách, tính từ thành phố của họ, rồi đặt luôn.
-
-> Đề tài mở, nền tảng của riêng đội. Đề bài Vinpearl được giữ nguyên văn và dùng làm tham chiếu yêu cầu.
+Ứng dụng video du lịch dọc kiểu TikTok: ai cũng đăng được video kèm lộ trình; người xem lướt và bấm **"Đi tương tự"** để đặt trọn gói vé và phòng qua "Traveloka lõi" (giả định có sẵn, demo dùng mock). Bài có mục đặt qua dịch vụ của app thì có huy hiệu **Verified**. Mở rộng AI: tóm tắt bình luận "Người đi rồi nói gì" và chatbot đơn giản. Scope hiện hành ở [docs/04](docs/04-scope-tinh-gon.md).
 
 | # | Tài liệu | Nội dung |
 |---|---|---|
-| 01 | [Kiến thức nền ngành OTA](docs/01-kien-thuc-nganh-OTA.md) | Lý thuyết: khái niệm, hệ sinh thái, mô hình kinh doanh, ngành hàng, vận hành, đối thủ, pháp lý, KPI, xu hướng, thuật ngữ |
+| 01 | [Kiến thức nền ngành OTA](docs/01-kien-thuc-nganh-OTA.md) | Lý thuyết ngành |
 | 02 | [Đề bài](docs/02-de-bai-vinpearl-cho-nguoi-tre.md) | Giữ nguyên văn |
-| 03 | [Ý tưởng triển khai (bản chốt)](docs/03-y-tuong-trien-khai.md) | Quyết định đã chốt, ý tưởng, đối chiếu đề bài, tính năng, đăng bài, Đi ngay (AI + luật), đặt chỗ, nguồn hàng, xu hướng, kiểm duyệt, trợ lý, quản trị, kiến trúc, dữ liệu, sơ đồ workflow, cách đo, kế hoạch 4 tuần cho 7 người, thị trường và khả thi, rủi ro, câu hỏi |
+| 03 | [Tripflix – ý tưởng triển khai (bản đã chốt)](docs/03-y-tuong-trien-khai.md) | Quyết định đã chốt, vai trò và phân quyền, tính năng A1–A16, luồng Đặt y chang, đăng bài và dấu "đã đi thật", quy tắc thanh toán, đề xuất cho câu hỏi mở, module và phân công, kiến trúc, dữ liệu, sơ đồ, cách đo, lộ trình 4 tuần, rủi ro, câu hỏi mentor |
+| 04 | [**Scope tinh gọn (bản mới nhất)**](docs/04-scope-tinh-gon.md) | Lõi là feed video dọc kiểu TikTok; đăng video + lộ trình tự do, huy hiệu Verified khi dùng dịch vụ của app; "Đi tương tự" đặt trọn gói qua Traveloka lõi (mock); tóm tắt bình luận "Người đi rồi nói gì"; chatbot đơn giản; phân quyền JSON + if-else; dữ liệu mock; đối chiếu với đề bài |
 
-**Bản mô phỏng** (mở bằng trình duyệt):
-- [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): giao diện điện thoại kiểu TikTok. Lướt video → Đi ngay (nơi đi, ngày, số người, ngân sách, ưu tiên, hoặc gõ tự do) → 3 phương án → đặt và thanh toán giả lập; nút + để đăng bài và dựng lộ trình; Tôi → Chế độ đối tác. Không cần mạng.
-- [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow trên nền tối để trình bày. Cần mạng để tải thư viện vẽ.
+**Tài liệu làm việc nhóm**:
+- [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công 10 module cho 7 người, khung báo cáo chung, ranh giới module, trạng thái các điểm cần chốt.
+- [reports/Kiến trúc module Tripflix.md](<reports/Kiến trúc module Tripflix.md>): nghiên cứu kiến trúc 8 module theo ảnh 3 tầng (Access, Notification, Administration, AI, Booking, Social, Payment, Search), mapping với 10 module nhỏ, quy ước API, danh mục sự kiện, luồng liên module, và 8 bản báo cáo theo khung 8 mục. Ghi chú nghiên cứu gốc ở `research_notes/Kiến trúc module Tripflix/`.
+- [reports/Module AI Tripflix chuyên sâu.md](<reports/Module AI Tripflix chuyên sâu.md>): nghiên cứu chuyên sâu module AI (Bảo): AI đặt ở đâu và phần nào không cần LLM, bài học từ TikTok/Meta/OTA, định nghĩa trợ lý như một product (dữ liệu thu, công cụ, đầu ra), chi phí/độ trễ/chất lượng/tradeoff, guardrail và bộ đánh giá, API, sự kiện và móc nối với các module khác, kế hoạch 4 tuần. Ghi chú gốc ở `research_notes/Module AI Tripflix chuyên sâu/`.
+- [reports/Thiết kế database AI Agent Tripflix.md](<reports/Thiết kế database AI Agent Tripflix.md>): cấu trúc database (PostgreSQL + PostGIS + pgvector, 110 bảng, 920 trường, DDL đã chạy thử, có từ điển dữ liệu liệt kê từng trường) để AI Agent đọc video, lộ trình, khách sạn, bản đồ, đánh giá, vé bay/tàu/xe; lên lịch trình, tìm video phù hợp, đổi phương tiện, đổi khách sạn gần đó, so sánh giá; lớp đọc an toàn cho agent, bộ 26 công cụ, kịch bản mẫu, MVP và mở rộng.
+- [reports/Chatbot agent tối giản Tripflix.md](<reports/Chatbot agent tối giản Tripflix.md>): bản tối giản cho demo 4 tuần: nói đi đâu, mấy người, bao nhiêu tiền → gợi ý lộ trình lấy từ lộ trình người đã đi đăng (không quét video) kèm video; đổi từng mục có bảng so sánh; 4 công cụ, ~15 bảng có sẵn, nút bấm thay câu nói, chuyển sang Đặt y chang để đặt.
 
-**Thứ tự đọc**: 03 → 02 → 01.
+**Trình bày**:
+- [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow Tripflix (cần mạng để tải thư viện vẽ).
+- [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): bản mô phỏng **thử nghiệm ý tưởng "Đi ngay"** trước khi chốt hướng. Không phải giao diện Tripflix đã chốt; giữ lại làm tham khảo cho hướng phát triển (03, mục 16).
 
-Các tài liệu nghiên cứu chi tiết trước đây (khảo sát thị trường, Mindtrip, xác minh đã đi, tính năng mở rộng…) đã được gộp vào 03; bản gốc vẫn còn trong lịch sử git.
+**Thứ tự đọc**: 04 → 02 → 03 (tham khảo chi tiết) → team/01 → 01.
+
+Các tài liệu nghiên cứu trước đây vẫn còn trong lịch sử git.
