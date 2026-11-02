@@ -18,8 +18,6 @@
 
 **Trình bày**:
 - [demo/tripflix-prototype.html](demo/tripflix-prototype.html): **prototype tương tác theo scope tinh gọn (docs/04)**: feed video dọc, lộ trình + Verified, tóm tắt bình luận, Đi tương tự tới thanh toán giả lập, đăng video, trợ lý, phân quyền accounts.json. Mở trực tiếp bằng trình duyệt.
-- [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow Tripflix (cần mạng để tải thư viện vẽ).
-- [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): bản mô phỏng **thử nghiệm ý tưởng "Đi ngay"** trước khi chốt hướng. Không phải giao diện Tripflix đã chốt; giữ lại làm tham khảo cho hướng phát triển (03, mục 16).
 
 **Thứ tự đọc**: 04 → 02 → 03 (tham khảo chi tiết) → team/01 → 01.
 
