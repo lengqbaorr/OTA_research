@@ -7,6 +7,7 @@ Nền tảng du lịch lấy nội dung làm trung tâm: **người đã đi** �
 | 01 | [Kiến thức nền ngành OTA](docs/01-kien-thuc-nganh-OTA.md) | Lý thuyết ngành |
 | 02 | [Đề bài](docs/02-de-bai-vinpearl-cho-nguoi-tre.md) | Giữ nguyên văn |
 | 03 | [Tripflix – ý tưởng triển khai (bản đã chốt)](docs/03-y-tuong-trien-khai.md) | Quyết định đã chốt, vai trò và phân quyền, tính năng A1–A16, luồng Đặt y chang, đăng bài và dấu "đã đi thật", quy tắc thanh toán, đề xuất cho câu hỏi mở, module và phân công, kiến trúc, dữ liệu, sơ đồ, cách đo, lộ trình 4 tuần, rủi ro, câu hỏi mentor |
+| 04 | [**Scope tinh gọn (bản mới nhất)**](docs/04-scope-tinh-gon.md) | Lõi là feed video dọc kiểu TikTok; đăng video + lộ trình tự do, huy hiệu Verified khi dùng dịch vụ của app; "Đi tương tự" đặt trọn gói qua Traveloka lõi (mock); tóm tắt bình luận "Người đi rồi nói gì"; chatbot đơn giản; phân quyền JSON + if-else; dữ liệu mock; đối chiếu với đề bài |
 
 **Tài liệu làm việc nhóm**:
 - [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công 10 module cho 7 người, khung báo cáo chung, ranh giới module, trạng thái các điểm cần chốt.
@@ -19,6 +20,6 @@ Nền tảng du lịch lấy nội dung làm trung tâm: **người đã đi** �
 - [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow Tripflix (cần mạng để tải thư viện vẽ).
 - [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): bản mô phỏng **thử nghiệm ý tưởng "Đi ngay"** trước khi chốt hướng. Không phải giao diện Tripflix đã chốt; giữ lại làm tham khảo cho hướng phát triển (03, mục 16).
 
-**Thứ tự đọc**: 03 → 02 → team/01 → 01.
+**Thứ tự đọc**: 04 → 02 → 03 (tham khảo chi tiết) → team/01 → 01.
 
 Các tài liệu nghiên cứu trước đây vẫn còn trong lịch sử git.

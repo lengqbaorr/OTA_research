@@ -1,5 +1,7 @@
 # 03. Tripflix – Ý tưởng triển khai (bản đã chốt)
 
+> ⚠ **Scope đã được thu gọn ở [04 – Scope tinh gọn](04-scope-tinh-gon.md).** Chỗ nào khác nhau thì theo 04; tài liệu này giữ làm tham khảo chi tiết.
+>
 > **Dự án VSF · Vinpearl cho người trẻ.** Tài liệu này theo đúng hướng nhóm đã chốt (artifact "Bản đồ tính năng Tripflix" và [phân công module](../team/01-phan-cong-nghien-cuu-module.md)).
 > Nguồn yêu cầu: [02 – Đề bài](02-de-bai-vinpearl-cho-nguoi-tre.md). Nền lý thuyết: [01 – Kiến thức ngành OTA](01-kien-thuc-nganh-OTA.md).
 > Các con số (ngưỡng, thời gian, trọng số) là **giá trị khởi điểm**, chốt ở tuần 2 sau khi đo. Dấu **\*** là giả định của nhóm, cần hỏi lại mentor.
