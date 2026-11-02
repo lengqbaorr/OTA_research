@@ -1,6 +1,6 @@
 # Tripflix – Vinpearl cho người trẻ (Dự án VSF)
 
-Nền tảng du lịch lấy nội dung làm trung tâm: **người đã đi** đăng video và lộ trình thật của chuyến đi; người khác xem trên bảng tin kiểu TikTok và bấm **"Đặt y chang"** để đặt cả lộ trình (chỗ ở, vé vui chơi, vé máy bay, combo) bằng một chạm. Bốn sản phẩm: app Android, web OTA, trợ lý gợi ý, trang quản trị.
+Ứng dụng video du lịch dọc kiểu TikTok: ai cũng đăng được video kèm lộ trình; người xem lướt và bấm **"Đi tương tự"** để đặt trọn gói vé và phòng qua "Traveloka lõi" (giả định có sẵn, demo dùng mock). Bài có mục đặt qua dịch vụ của app thì có huy hiệu **Verified**. Mở rộng AI: tóm tắt bình luận "Người đi rồi nói gì" và chatbot đơn giản. Scope hiện hành ở [docs/04](docs/04-scope-tinh-gon.md).
 
 | # | Tài liệu | Nội dung |
 |---|---|---|
