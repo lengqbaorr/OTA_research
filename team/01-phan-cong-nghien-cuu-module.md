@@ -227,13 +227,15 @@ Mọi người nộp theo đúng 8 mục, **tối đa 2 trang**, để buổi h�
 
 ---
 
-## 8. Các điểm chưa thống nhất cần chốt (phát hiện khi cấu trúc lại)
+## 8. Trạng thái các điểm cần chốt
 
-| # | Điểm | Chi tiết | Đề xuất |
-|---|---|---|---|
-| 1 | **Đánh số module trong sơ đồ không khớp bảng phân công** | Sơ đồ gốc dùng #2–#7, trong đó **#4 dùng hai lần** (API chung và Mạng xã hội), **#3 dùng cho cả Web và Quản trị**; không có #1; thiếu Feed & Trending, Moderation, Analytics, Notification. Bảng phân công lại có 10 module | Dùng cách đánh số ở mục 2 (M1–M10 cho module, N1–N4 cho nền tảng) và cập nhật lại hình |
-| 2 | **Có xác minh "đã đi thật" hay không** | Phân công vẫn có dấu "đã đi thật", vai trò "Người đã đi", lộ trình lấy từ đơn đã đi (đúng A2 đặc tả). Trong khi đó bản ý tưởng mới nhất (`docs/03`) đã đề xuất **bỏ xác minh** và cho người dùng dựng lộ trình bằng ô chọn địa điểm | Chốt trong họp ghép và hỏi mentor; nếu giữ đúng A2 thì giữ nguyên phân công hiện tại |
-| 3 | **"Đặt theo lộ trình" (A11) hay "Đi ngay"** | Phân công mô tả A11 là "đặt cả lộ trình, dời ngày theo lộ trình gốc". Bản ý tưởng mới đề xuất "Đi ngay": lập kế hoạch lại theo nơi đi, ngân sách người xem bằng AI + luật | Nếu chọn "Đi ngay": phần lập kế hoạch thuộc ai? Gợi ý: **lớp luật** cho Thắng (M3), **lớp AI hiểu câu nói** cho Bảo (M5) |
-| 4 | **Nguồn dịch vụ** | Phân công nhắc "bộ dữ liệu được cấp" (sản phẩm Vinpearl). Bản ý tưởng mới coi đây là đề tài mở, nguồn hàng mô phỏng tự tạo | Chờ câu trả lời của mentor (câu hỏi đã soạn) |
-| 5 | **Tên sản phẩm** | Phân công dùng "Tripflix"; bản ý tưởng dùng "Đi Ngay" | Thống nhất một tên |
-| 6 | **Chọn công nghệ đang chia cho 3 người** | App (Phong), Web (Thanh), Backend (Dung) chọn riêng | Cần một buổi chốt chung, vì đã có phân tích hai hướng (TypeScript toàn bộ, hoặc Kotlin native cho app) |
+| # | Điểm | Trạng thái |
+|---|---|---|
+| 1 | Đánh số module trong sơ đồ gốc bị trùng (#4 dùng hai lần, #3 cho cả Web và Quản trị, thiếu Feed, Moderation, Analytics, Notification) | **Cần cập nhật hình** theo cách đánh số M1–M10, N1–N4 ở mục 2 |
+| 2 | Có xác minh "đã đi thật" hay không | ✅ **Đã chốt: có.** Chỉ người đã đặt và đã đi mới đăng bài; vai trò "Người đã đi" là trạng thái của thành viên |
+| 3 | Nút chính | ✅ **Đã chốt: "Đặt y chang" (A11)**, sao chép lộ trình và dời ngày. "Đi ngay" (lên phương án từ nơi người xem ở) chỉ là hướng phát triển nếu có thêm thời gian |
+| 4 | Nguồn dịch vụ | ✅ **Đã chốt: dịch vụ Vinpearl** trong bộ dữ liệu được cấp; bài đăng mô phỏng có nhãn |
+| 5 | Tên sản phẩm | ✅ **Đã chốt: Tripflix** |
+| 6 | Công nghệ (app, web, backend) | ⏳ **Chưa chốt**: so sánh hai phương án ở `docs/03` mục 10.3; chốt ở buổi họp ghép và hỏi mentor |
+
+Bản tổng hợp toàn dự án theo hướng đã chốt: [docs/03-y-tuong-trien-khai.md](../docs/03-y-tuong-trien-khai.md).

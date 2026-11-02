@@ -1,22 +1,19 @@
-# Đi Ngay – nền tảng video du lịch "xem là đi được"
+# Tripflix – Vinpearl cho người trẻ (Dự án VSF)
 
-Người dùng đăng video kèm **lộ trình dạng điểm** (đi từ đâu, ở đâu, chơi gì, ăn gì). Người xem bấm **"Đi ngay"**: hệ thống dùng **AI hiểu yêu cầu + luật tính toán** để lên phương án đi lại và chỗ ở vừa ngân sách, tính từ thành phố của họ, rồi đặt luôn.
-
-> Đề tài mở, nền tảng của riêng đội. Đề bài Vinpearl được giữ nguyên văn và dùng làm tham chiếu yêu cầu.
+Nền tảng du lịch lấy nội dung làm trung tâm: **người đã đi** đăng video và lộ trình thật của chuyến đi; người khác xem trên bảng tin kiểu TikTok và bấm **"Đặt y chang"** để đặt cả lộ trình (chỗ ở, vé vui chơi, vé máy bay, combo) bằng một chạm. Bốn sản phẩm: app Android, web OTA, trợ lý gợi ý, trang quản trị.
 
 | # | Tài liệu | Nội dung |
 |---|---|---|
-| 01 | [Kiến thức nền ngành OTA](docs/01-kien-thuc-nganh-OTA.md) | Lý thuyết: khái niệm, hệ sinh thái, mô hình kinh doanh, ngành hàng, vận hành, đối thủ, pháp lý, KPI, xu hướng, thuật ngữ |
+| 01 | [Kiến thức nền ngành OTA](docs/01-kien-thuc-nganh-OTA.md) | Lý thuyết ngành |
 | 02 | [Đề bài](docs/02-de-bai-vinpearl-cho-nguoi-tre.md) | Giữ nguyên văn |
-| 03 | [Ý tưởng triển khai (bản chốt)](docs/03-y-tuong-trien-khai.md) | Quyết định đã chốt, ý tưởng, đối chiếu đề bài, tính năng, đăng bài, Đi ngay (AI + luật), đặt chỗ, nguồn hàng, xu hướng, kiểm duyệt, trợ lý, quản trị, kiến trúc, dữ liệu, sơ đồ workflow, cách đo, kế hoạch 4 tuần cho 7 người, thị trường và khả thi, rủi ro, câu hỏi |
+| 03 | [Tripflix – ý tưởng triển khai (bản đã chốt)](docs/03-y-tuong-trien-khai.md) | Quyết định đã chốt, vai trò và phân quyền, tính năng A1–A16, luồng Đặt y chang, đăng bài và dấu "đã đi thật", quy tắc thanh toán, đề xuất cho câu hỏi mở, module và phân công, kiến trúc, dữ liệu, sơ đồ, cách đo, lộ trình 4 tuần, rủi ro, câu hỏi mentor |
 
-**Bản mô phỏng** (mở bằng trình duyệt):
-- [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): giao diện điện thoại kiểu TikTok. Lướt video → Đi ngay (nơi đi, ngày, số người, ngân sách, ưu tiên, hoặc gõ tự do) → 3 phương án → đặt và thanh toán giả lập; nút + để đăng bài và dựng lộ trình; Tôi → Chế độ đối tác. Không cần mạng.
-- [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow trên nền tối để trình bày. Cần mạng để tải thư viện vẽ.
+**Tài liệu làm việc nhóm**: [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công 10 module cho 7 người, khung báo cáo chung, ranh giới module, trạng thái các điểm cần chốt.
 
-**Tài liệu làm việc nhóm**:
-- [team/01-phan-cong-nghien-cuu-module.md](team/01-phan-cong-nghien-cuu-module.md): phân công nghiên cứu 10 module cho 7 người, sơ đồ module, khung báo cáo chung, ranh giới giữa module, các điểm cần chốt.
+**Trình bày**:
+- [demo/workflow-diagram.html](demo/workflow-diagram.html): sơ đồ workflow Tripflix (cần mạng để tải thư viện vẽ).
+- [demo/mo-phong-di-ngay.html](demo/mo-phong-di-ngay.html): bản mô phỏng **thử nghiệm ý tưởng "Đi ngay"** trước khi chốt hướng. Không phải giao diện Tripflix đã chốt; giữ lại làm tham khảo cho hướng phát triển (03, mục 16).
 
-**Thứ tự đọc**: 03 → 02 → 01.
+**Thứ tự đọc**: 03 → 02 → team/01 → 01.
 
-Các tài liệu nghiên cứu chi tiết trước đây (khảo sát thị trường, Mindtrip, xác minh đã đi, tính năng mở rộng…) đã được gộp vào 03; bản gốc vẫn còn trong lịch sử git.
+Các tài liệu nghiên cứu trước đây vẫn còn trong lịch sử git.
